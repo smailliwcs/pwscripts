@@ -137,7 +137,7 @@ def getScaleFormatter(power, formatSpec = "g"):
     return matplotlib.ticker.FuncFormatter(formatter)
 
 def isRunPath(path):
-    return os.path.isfile(os.path.join(path, "original.wf"))
+    return os.path.isfile(os.path.join(path, "endStep.txt"))
 
 def printProperties(artist):
     return matplotlib.artist.getp(artist)
