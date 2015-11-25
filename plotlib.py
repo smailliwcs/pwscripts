@@ -35,8 +35,11 @@ class LogFormatter(matplotlib.ticker.Formatter):
         self.formatSpec = formatSpec
     
     def __call__(self, tick, index):
+        def getDistance(tick1, tick2):
+            return math.log10(tick2 / tick1)
+        
         bounds = self.axis.get_view_interval()
-        if tick < bounds[1] and math.log10(bounds[1] / tick) / math.log10(bounds[1] / bounds[0]) < 0.1:
+        if tick < bounds[1] and getDistance(tick, bounds[1]) / getDistance(bounds[0], bounds[1]) < 0.1:
             return ""
         else:
             return self.format(tick)
