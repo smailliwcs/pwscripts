@@ -14,16 +14,20 @@ args = parseArgs()
 figure = plotlib.getFigure()
 axes = figure.gca()
 runs = list(plotlib.getRunPaths(args.runs))
+fileName = "energy-{0}.txt".format(args.type)
 for run in runs:
     lifeSpans, births, deaths = plotlib.getLifeSpans(run)
-    energies = {}
-    for agent in lifeSpans:
-        if agent % 1000 == 0:
-            sys.stderr.write("{0}\n".format(agent))
-        path = os.path.join(run, "energy", args.type, "agent_{0}.txt".format(agent))
-        data = plotlib.getDataColumns(path, "AgentEnergy{0}".format(args.type.title()))
-        energies[agent] = sum(data["Energy"]) / lifeSpans[agent]
-    zipped = plotlib.zipData(deaths, energies)
+    energies = plotlib.readAgentData(run, fileName)
+    if energies is None:
+        energies = {}
+        for agent in lifeSpans:
+            if agent % 1000 == 0:
+                sys.stderr.write("{0}\n".format(agent))
+            path = os.path.join(run, "energy", args.type, "agent_{0}.txt".format(agent))
+            data = plotlib.getDataColumns(path, "AgentEnergy{0}".format(args.type.title()))
+            energies[agent] = sum(data["Energy"]) / lifeSpans[agent]
+        plotlib.saveAgentData(run, fileName, energies)
+    zipped = plotlib.zipAgentData(deaths, energies)
     binned = plotlib.binData(zipped[0], zipped[1], args.bin_width)
     axes.plot(binned[0], binned[1], alpha = 1.0 / len(runs))
 axes.set_xlabel("Timestep")

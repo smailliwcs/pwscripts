@@ -145,6 +145,17 @@ def isRunPath(path):
 def printProperties(artist):
     return matplotlib.artist.getp(artist)
 
+def readAgentData(run, fileName):
+    data = {}
+    path = os.path.join(run, "plots", "data", fileName)
+    if not os.path.isfile(path):
+        return None
+    with open(path) as f:
+        for line in f:
+            agent, value = line.split()
+            data[int(agent)] = float(value)
+    return data
+
 def readLines(f, start = 0, stop = float("inf")):
     if isReadable(f):
         return readLinesFromFile(f, start, stop)
@@ -166,11 +177,20 @@ def readLinesFromPath(path, start, stop):
         for line, index in readLinesFromFile(f, start, stop):
             yield line, index
 
-def zipData(x, y):
+def saveAgentData(run, fileName, data):
+    path = os.path.join(run, "plots", "data")
+    if not os.path.isdir(path):
+        os.makedirs(path, 0755)
+    path = os.path.join(path, fileName)
+    with open(path, "w") as f:
+        for agent in data:
+            f.write("{0} {1}\n".format(agent, data[agent]))
+
+def zipAgentData(x, y):
     zipped = numpy.empty((2, len(x)))
     index = 0
-    for key in x:
-        zipped[0, index] = x[key]
-        zipped[1, index] = y[key]
+    for agent in x:
+        zipped[0, index] = x[agent]
+        zipped[1, index] = y[agent]
         index += 1
     return zipped
