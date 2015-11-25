@@ -13,7 +13,8 @@ def parseArgs():
 args = parseArgs()
 figure = plotlib.getFigure()
 axes = figure.gca()
-for run in plotlib.getRunPaths(args.runs):
+runs = list(plotlib.getRunPaths(args.runs))
+for run in runs:
     lifeSpans, births, deaths = plotlib.getLifeSpans(run)
     energies = {}
     for agent in lifeSpans:
@@ -24,7 +25,7 @@ for run in plotlib.getRunPaths(args.runs):
         energies[agent] = sum(data["Energy"]) / lifeSpans[agent]
     zipped = plotlib.zipData(deaths, energies)
     binned = plotlib.binData(zipped[0], zipped[1], args.bin_width)
-    axes.plot(binned[0], binned[1], alpha = 0.2)
+    axes.plot(binned[0], binned[1], alpha = 1.0 / len(runs))
 axes.set_xlabel("Timestep")
 if args.type == "total":
     ylabel = "Total energy"

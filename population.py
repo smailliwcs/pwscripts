@@ -10,10 +10,11 @@ def parseArgs():
 args = parseArgs()
 figure = plotlib.getFigure()
 axes = figure.gca()
-for run in plotlib.getRunPaths(args.runs):
+runs = list(plotlib.getRunPaths(args.runs))
+for run in runs:
     path = os.path.join(run, "population.txt")
     data = plotlib.getDataColumns(path, "Population")
-    axes.plot(data["T"], data["Population"], alpha = 0.2)
+    axes.plot(data["T"], data["Population"], alpha = 1.0 / len(runs))
 axes.set_xlabel("Timestep")
 axes.set_ylabel("Population")
 axes.set_ylim(bottom = 0)

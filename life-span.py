@@ -11,11 +11,12 @@ def parseArgs():
 args = parseArgs()
 figure = plotlib.getFigure()
 axes = figure.gca()
-for run in plotlib.getRunPaths(args.runs):
+runs = list(plotlib.getRunPaths(args.runs))
+for run in runs:
     lifeSpans, births, deaths = plotlib.getLifeSpans(run)
     zipped = plotlib.zipData(deaths, lifeSpans)
     binned = plotlib.binData(zipped[0], zipped[1], args.bin_width)
-    axes.plot(binned[0], binned[1], alpha = 0.2)
+    axes.plot(binned[0], binned[1], alpha = 1.0 / len(runs))
 axes.set_xlabel("Timestep")
 axes.set_ylabel("Life span")
 axes.set_ylim(bottom = 0)
