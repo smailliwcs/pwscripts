@@ -47,7 +47,7 @@ with plotlib.getPdf("alleles.pdf") as pdf:
         axes.set_ylabel(titles[index])
         axes.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(32))
         colorbar = figure.colorbar(image)
-        colorbar.set_label("Births")
+        colorbar.set_label("Birth count")
         colorbar.locator = plotlib.LogLocator()
         colorbar.formatter = plotlib.LogFormatter()
         colorbar.update_ticks()
