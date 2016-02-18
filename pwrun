@@ -16,8 +16,14 @@ if [[ -e "runs/$key" ]]; then
     exit 1
 fi
 shift 3
-mkdir -p "runs/$key"
+if [[ $count -gt 1 ]]; then
+    mkdir -p "runs/$key"
+fi
 for index in `seq 0 $((count - 1))`; do
     ./Polyworld --InitSeed $(date +"%s") "$@" "$worldfile"
-    mv run "runs/$key/run_$index"
+    if [[ $count -gt 1 ]]; then
+        mv run "runs/$key/run_$index"
+    else
+        mv run "runs/$key"
+    fi
 done
