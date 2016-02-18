@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 if [[ $# -lt 3 ]]; then
-    echo "Usage: $(basename "$0") WORLDFILE COUNT KEY [PARAMETER]..."
+    echo "Usage: $(basename "$0") WORLDFILE COUNT KEY [--complete] [PARAMETER]..."
     exit 1
 fi
 worldfile="$1"
@@ -16,11 +16,28 @@ if [[ -e "runs/$key" ]]; then
     exit 1
 fi
 shift 3
+if [[ $1 = "--complete" ]]; then
+    complete=1
+    shift
+else
+    complete=0
+fi
 if [[ $count -gt 1 ]]; then
     mkdir -p "runs/$key"
 fi
 for index in `seq 0 $((count - 1))`; do
-    ./Polyworld --InitSeed $(date +"%s") "$@" "$worldfile"
+    while true; do
+        ./Polyworld --InitSeed $(date +"%s") "$@" "$worldfile"
+        if [[ $complete -eq 1 ]]; then
+            if [[ -e run/endReason.txt && $(cat run/endReason.txt) == "MaxSteps" ]]; then
+                break
+            else
+                rm -rf run
+            fi
+        else
+            break
+        fi
+    done
     if [[ $count -gt 1 ]]; then
         mv run "runs/$key/run_$index"
     else
