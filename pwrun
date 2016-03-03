@@ -24,6 +24,8 @@ else
 fi
 if [[ $count -gt 1 ]]; then
     mkdir -p "runs/$key"
+else
+    mkdir -p runs
 fi
 for index in `seq 0 $((count - 1))`; do
     while true; do
