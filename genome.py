@@ -37,7 +37,7 @@ bins = [
     numpy.linspace(0, 256, 65)
 ]
 titles = plotlib.getGeneTitles(args.run, geneMin, geneMax + 1)
-with plotlib.getPdf("alleles.pdf") as pdf:
+with plotlib.getPdf("genome.pdf") as pdf:
     for index in range(geneMin, geneMax + 1):
         sys.stderr.write("{0}\n".format(index))
         figure = plotlib.getFigure()
