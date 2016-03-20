@@ -4,7 +4,7 @@ import java.util.*;
 public class ApparentTransferEntropy {
     public static void main(String[] args) throws Exception {
         TransferEntropyCalculatorKraskov calculator = new TransferEntropyCalculatorKraskov();
-        calculator.setProperty("k", "4");
+        Utility.setProperties("ApparentTransferEntropy.properties", calculator);
         try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(System.in)) {
             while (true) {
                 TimeSeriesEnsemble ensemble = reader.read();
