@@ -8,8 +8,8 @@ public class TimeSeriesEnsembleReader implements AutoCloseable {
     
     private BufferedReader reader;
     
-    public TimeSeriesEnsembleReader(InputStream input) {
-        reader = new BufferedReader(new InputStreamReader(input));
+    public TimeSeriesEnsembleReader(InputStream in) {
+        reader = new BufferedReader(new InputStreamReader(in));
     }
     
     public TimeSeriesEnsemble read() throws IOException {
