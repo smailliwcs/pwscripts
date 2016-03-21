@@ -23,7 +23,7 @@ public class ApparentTransferEntropy {
                     calculator.finaliseAddObservations();
                     results.add(calculator.computeAverageLocalOfObservations());
                 }
-                double result = results.isEmpty() ? 0.0 : Utility.getMean(results);
+                double result = results.isEmpty() ? 0.0 : Utility.getSum(results);
                 System.out.printf("%d %g%n", ensemble.getAgentIndex(), result);
             }
         }

@@ -3,14 +3,12 @@ import java.io.*;
 import java.util.*;
 
 public class Utility {
-    public static double getMean(Iterable<Double> values) {
-        int count = 0;
+    public static double getSum(Iterable<Double> values) {
         double sum = 0.0;
         for (double value : values) {
-            count++;
             sum += value;
         }
-        return sum / count;
+        return sum;
     }
     
     public static void setProperties(String resourceName, ChannelCalculatorCommon calculator) throws Exception {
