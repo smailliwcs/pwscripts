@@ -24,7 +24,7 @@ public class ApparentTransferEntropy {
                     results.add(calculator.computeAverageLocalOfObservations());
                 }
                 double result = results.isEmpty() ? 0.0 : Utility.getSum(results);
-                System.out.printf("%d %g%n", ensemble.getAgentIndex(), result);
+                System.out.printf("%d %d %g%n", ensemble.getAgentIndex(), ensemble.getSynapses().size(), result);
             }
         }
     }

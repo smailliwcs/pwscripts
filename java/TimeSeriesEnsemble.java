@@ -33,7 +33,7 @@ public class TimeSeriesEnsemble {
         return outputNeuronCount;
     }
     
-    public Iterable<Synapse> getSynapses() {
+    public Collection<Synapse> getSynapses() {
         return synapses;
     }
     
@@ -41,7 +41,7 @@ public class TimeSeriesEnsemble {
         synapses.add(synapse);
     }
     
-    public Iterable<TimeSeries> getTimeSeries() {
+    public Collection<TimeSeries> getTimeSeries() {
         return timeSeries;
     }
     
