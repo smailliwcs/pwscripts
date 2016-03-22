@@ -2,41 +2,40 @@ import java.util.*;
 
 public class TimeSeries {
     private int dimension;
-    private Collection<double[]> timeSeries;
+    private Collection<double[]> data;
     
     public TimeSeries(int dimension) {
         this.dimension = dimension;
-        timeSeries = new LinkedList<double[]>();
+        data = new LinkedList<double[]>();
     }
     
     public double[] get(int index) {
-        double[] result = new double[timeSeries.size()];
+        double[] results = new double[data.size()];
         int time = 0;
-        for (double[] values : timeSeries) {
-            result[time] = values[index];
+        for (double[] datum : data) {
+            results[time] = datum[index];
             time++;
         }
-        return result;
+        return results;
     }
     
     public double[][] get(int[] indices) {
-        double[][] result = new double[timeSeries.size()][indices.length];
+        double[][] results = new double[data.size()][indices.length];
         int time = 0;
-        for (double[] values : timeSeries) {
-            int resultIndex = 0;
-            for (int valueIndex : indices) {
-                result[time][resultIndex] = values[valueIndex];
-                resultIndex++;
+        for (double[] datum : data) {
+            double[] result = results[time];
+            for (int index = 0; index < indices.length; index++) {
+                result[index] = datum[indices[index]];
             }
             time++;
         }
-        return result;
+        return results;
     }
     
-    public void add(double[] values) {
-        if (values.length != dimension) {
-            throw new IllegalArgumentException(String.format("Number of values %d does not match dimension %d.", values.length, dimension));
+    public void add(double[] datum) {
+        if (datum.length != dimension) {
+            throw new IllegalArgumentException(String.format("Number of values %d does not match dimension %d.", datum.length, dimension));
         }
-        timeSeries.add(values);
+        data.add(datum);
     }
 }
