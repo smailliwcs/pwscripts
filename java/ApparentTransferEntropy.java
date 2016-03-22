@@ -9,6 +9,7 @@ public class ApparentTransferEntropy {
     public static void main(String[] args) throws Exception {
         calculator = new TransferEntropyCalculatorKraskov();
         properties = Utility.setProperties(calculator);
+        Utility.printProperties(properties, System.out);
         try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(System.in)) {
             while (true) {
                 TimeSeriesEnsemble ensemble = reader.read();

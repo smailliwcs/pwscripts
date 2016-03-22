@@ -11,6 +11,12 @@ public class Utility {
         return sum;
     }
     
+    public static void printProperties(Properties properties, PrintStream out) {
+        for (String key : properties.stringPropertyNames()) {
+            out.printf("# %s = %s%n", key, properties.getProperty(key));
+        }
+    }
+    
     public static Properties setProperties(ChannelCalculatorCommon calculator) throws Exception {
         String resourceName = String.format("%s.properties", calculator.getClass().getSimpleName());
         Properties properties = new Properties();
