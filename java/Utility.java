@@ -22,4 +22,14 @@ public class Utility {
         }
         return properties;
     }
+    
+    public static int[] toPrimitive(Collection<Integer> values) {
+        int[] result = new int[values.size()];
+        int index = 0;
+        for (int value : values) {
+            result[index] = value;
+            index++;
+        }
+        return result;
+    }
 }

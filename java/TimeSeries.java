@@ -20,6 +20,9 @@ public class TimeSeries {
     }
     
     public double[][] get(int[] indices) {
+        if (indices.length == 0) {
+            return null;
+        }
         double[][] results = new double[data.size()][indices.length];
         int time = 0;
         for (double[] datum : data) {
