@@ -61,9 +61,9 @@ public class CompleteTransferEntropy {
         setConditionalProperty(ConditionalTransferEntropyCalculator.COND_DELAYS_PROP_NAME, dimension);
     }
     
-    private static void setConditionalProperty(String propertyName, int dimension) throws Exception {
+    private static void setConditionalProperty(String key, int dimension) throws Exception {
         int[] values = new int[dimension];
-        Arrays.fill(values, Integer.parseInt(properties.getProperty(propertyName)));
-        calculator.setProperty(propertyName, MatrixUtils.arrayToString(values));
+        Arrays.fill(values, Integer.parseInt(properties.getProperty(key)));
+        calculator.setProperty(key, MatrixUtils.arrayToString(values));
     }
 }
