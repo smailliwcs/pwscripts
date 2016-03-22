@@ -11,7 +11,7 @@ public class Utility {
         return sum;
     }
     
-    public static void setProperties(ChannelCalculatorCommon calculator) throws Exception {
+    public static Properties setProperties(ChannelCalculatorCommon calculator) throws Exception {
         String resourceName = String.format("%s.properties", calculator.getClass().getSimpleName());
         Properties properties = new Properties();
         try (InputStream in = Utility.class.getResourceAsStream(resourceName)) {
@@ -20,5 +20,6 @@ public class Utility {
         for (String key : properties.stringPropertyNames()) {
             calculator.setProperty(key, properties.getProperty(key));
         }
+        return properties;
     }
 }

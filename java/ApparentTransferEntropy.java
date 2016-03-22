@@ -1,10 +1,14 @@
+import infodynamics.measures.continuous.*;
 import infodynamics.measures.continuous.kraskov.*;
 import java.util.*;
 
 public class ApparentTransferEntropy {
+    private static TransferEntropyCalculator calculator;
+    private static Properties properties;
+    
     public static void main(String[] args) throws Exception {
-        TransferEntropyCalculatorKraskov calculator = new TransferEntropyCalculatorKraskov();
-        Utility.setProperties(calculator);
+        calculator = new TransferEntropyCalculatorKraskov();
+        properties = Utility.setProperties(calculator);
         try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(System.in)) {
             while (true) {
                 TimeSeriesEnsemble ensemble = reader.read();
@@ -13,19 +17,23 @@ public class ApparentTransferEntropy {
                 }
                 Collection<Double> results = new LinkedList<Double>();
                 for (Synapse synapse : ensemble.getSynapses()) {
-                    calculator.initialise();
-                    calculator.startAddObservations();
-                    for (TimeSeries timeSeries : ensemble.getTimeSeries()) {
-                        double[] source = timeSeries.get(synapse.getPreNeuronIndex());
-                        double[] target = timeSeries.get(synapse.getPostNeuronIndex());
-                        calculator.addObservations(source, target);
-                    }
-                    calculator.finaliseAddObservations();
-                    results.add(calculator.computeAverageLocalOfObservations());
+                    results.add(calculate(ensemble, synapse));
                 }
                 double result = results.isEmpty() ? 0.0 : Utility.getSum(results);
                 System.out.printf("%d %d %g%n", ensemble.getAgentIndex(), ensemble.getSynapses().size(), result);
             }
         }
+    }
+    
+    private static double calculate(TimeSeriesEnsemble ensemble, Synapse synapse) throws Exception {
+        calculator.initialise();
+        calculator.startAddObservations();
+        for (TimeSeries timeSeries : ensemble.getTimeSeries()) {
+            double[] source = timeSeries.get(synapse.getPreNeuronIndex());
+            double[] target = timeSeries.get(synapse.getPostNeuronIndex());
+            calculator.addObservations(source, target);
+        }
+        calculator.finaliseAddObservations();
+        return calculator.computeAverageLocalOfObservations();
     }
 }
