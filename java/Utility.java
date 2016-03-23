@@ -3,14 +3,6 @@ import java.io.*;
 import java.util.*;
 
 public class Utility {
-    public static double getSum(Iterable<Double> values) {
-        double sum = 0.0;
-        for (double value : values) {
-            sum += value;
-        }
-        return sum;
-    }
-    
     public static void printProperties(Properties properties, PrintStream out) {
         for (String key : properties.stringPropertyNames()) {
             out.printf("# %s = %s%n", key, properties.getProperty(key));

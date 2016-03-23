@@ -16,12 +16,14 @@ public class ApparentTransferEntropy {
                 if (ensemble == null) {
                     break;
                 }
-                Collection<Double> results = new LinkedList<Double>();
                 for (Synapse synapse : ensemble.getSynapses()) {
-                    results.add(calculate(ensemble, synapse));
+                    System.out.printf(
+                        "%d %d %d %g%n",
+                        ensemble.getAgentIndex(),
+                        synapse.getPreNeuronIndex(),
+                        synapse.getPostNeuronIndex(),
+                        calculate(ensemble, synapse));
                 }
-                double result = results.isEmpty() ? 0.0 : Utility.getSum(results);
-                System.out.printf("%d %d %g%n", ensemble.getAgentIndex(), ensemble.getSynapses().size(), result);
             }
         }
     }
