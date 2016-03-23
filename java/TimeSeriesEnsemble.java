@@ -33,6 +33,34 @@ public class TimeSeriesEnsemble {
         return outputNeuronCount;
     }
     
+    public int getInternalNeuronCount() {
+        return neuronCount - inputNeuronCount - outputNeuronCount;
+    }
+    
+    public int getProcessingNeuronCount() {
+        return neuronCount - inputNeuronCount;
+    }
+    
+    public int[] getNeuronIndices() {
+        return Utility.getRange(0, neuronCount);
+    }
+    
+    public int[] getInputNeuronIndices() {
+        return Utility.getRange(0, inputNeuronCount);
+    }
+    
+    public int[] getOutputNeuronIndices() {
+        return Utility.getRange(inputNeuronCount, outputNeuronCount);
+    }
+    
+    public int[] getInternalNeuronIndices() {
+        return Utility.getRange(inputNeuronCount + outputNeuronCount, getInternalNeuronCount());
+    }
+    
+    public int[] getProcessingNeuronIndices() {
+        return Utility.getRange(inputNeuronCount, getProcessingNeuronCount());
+    }
+    
     public Collection<Synapse> getSynapses() {
         return synapses;
     }

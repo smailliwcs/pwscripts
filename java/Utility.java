@@ -1,22 +1,32 @@
 import infodynamics.measures.continuous.*;
 import java.io.*;
+import java.lang.reflect.*;
 import java.util.*;
 
 public class Utility {
+    public static int[] getRange(int start, int count) {
+        int[] range = new int[count];
+        for (int index = 0; index < count; index++) {
+            range[index] = start + index;
+        }
+        return range;
+    }
+    
     public static void printProperties(Properties properties, PrintStream out) {
         for (String key : properties.stringPropertyNames()) {
             out.printf("# %s = %s%n", key, properties.getProperty(key));
         }
     }
     
-    public static Properties setProperties(ChannelCalculatorCommon calculator) throws Exception {
+    public static Properties setProperties(Object calculator) throws Exception {
         String resourceName = String.format("%s.properties", calculator.getClass().getSimpleName());
         Properties properties = new Properties();
         try (InputStream in = Utility.class.getResourceAsStream(resourceName)) {
             properties.load(in);
         }
+        Method method = calculator.getClass().getMethod("setProperty", String.class, String.class);
         for (String key : properties.stringPropertyNames()) {
-            calculator.setProperty(key, properties.getProperty(key));
+            method.invoke(calculator, key, properties.getProperty(key));
         }
         return properties;
     }
