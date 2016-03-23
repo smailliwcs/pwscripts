@@ -26,6 +26,9 @@ public class Utility {
         String resourceName = String.format("%s.properties", calculator.getClass().getSimpleName());
         Properties properties = new Properties();
         try (InputStream in = Utility.class.getResourceAsStream(resourceName)) {
+            if (in == null) {
+                return null;
+            }
             properties.load(in);
         }
         Method method = calculator.getClass().getMethod("setProperty", String.class, String.class);
@@ -36,6 +39,9 @@ public class Utility {
     }
     
     public static void printProperties(Properties properties, PrintStream out) {
+        if (properties == null) {
+            return;
+        }
         for (String key : properties.stringPropertyNames()) {
             out.printf("# %s = %s%n", key, properties.getProperty(key));
         }

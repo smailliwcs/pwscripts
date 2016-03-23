@@ -65,8 +65,14 @@ public class CompleteTransferEntropy {
     }
     
     private static void setConditionalProperty(String key, int dimension) throws Exception {
+        int value;
+        if (properties == null) {
+            value = 1;
+        } else {
+            value = Integer.parseInt(properties.getProperty(key));
+        }
         int[] values = new int[dimension];
-        Arrays.fill(values, Integer.parseInt(properties.getProperty(key)));
+        Arrays.fill(values, value);
         calculator.setProperty(key, MatrixUtils.arrayToString(values));
     }
 }
