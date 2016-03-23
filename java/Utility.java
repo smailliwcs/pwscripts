@@ -12,10 +12,14 @@ public class Utility {
         return range;
     }
     
-    public static void printProperties(Properties properties, PrintStream out) {
-        for (String key : properties.stringPropertyNames()) {
-            out.printf("# %s = %s%n", key, properties.getProperty(key));
+    public static int[] toPrimitive(Collection<Integer> values) {
+        int[] result = new int[values.size()];
+        int index = 0;
+        for (int value : values) {
+            result[index] = value;
+            index++;
         }
+        return result;
     }
     
     public static Properties setProperties(Object calculator) throws Exception {
@@ -31,13 +35,9 @@ public class Utility {
         return properties;
     }
     
-    public static int[] toPrimitive(Collection<Integer> values) {
-        int[] result = new int[values.size()];
-        int index = 0;
-        for (int value : values) {
-            result[index] = value;
-            index++;
+    public static void printProperties(Properties properties, PrintStream out) {
+        for (String key : properties.stringPropertyNames()) {
+            out.printf("# %s = %s%n", key, properties.getProperty(key));
         }
-        return result;
     }
 }
