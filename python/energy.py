@@ -26,7 +26,7 @@ for run in runs:
             path = os.path.join(run, "energy", args.type, "agent_{0}.txt".format(agent))
             data = plotlib.getDataColumns(path, "AgentEnergy{0}".format(args.type.title()))
             energies[agent] = sum(data["Energy"]) / lifeSpans[agent]
-        plotlib.saveAgentData(run, fileName, energies)
+        plotlib.writeAgentData(run, fileName, energies)
     zipped = plotlib.zipAgentData(deaths, energies)
     binned = plotlib.binData(zipped[0], zipped[1], args.bin_width)
     axes.plot(binned[0], binned[1], alpha = 1.0 / len(runs))

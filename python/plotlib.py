@@ -177,7 +177,7 @@ def readLinesFromPath(path, start, stop):
         for line, index in readLinesFromFile(f, start, stop):
             yield line, index
 
-def saveAgentData(run, fileName, data):
+def writeAgentData(run, fileName, data):
     path = os.path.join(run, "plots", "data")
     if not os.path.isdir(path):
         os.makedirs(path, 0755)
