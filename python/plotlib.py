@@ -139,6 +139,27 @@ def getScaleFormatter(power, formatSpec = "g"):
     formatter = lambda tick, position: format(tick / divisor, formatSpec)
     return matplotlib.ticker.FuncFormatter(formatter)
 
+def getStatistic(data, statistic, predicate = lambda value: True):
+    if statistic == "mean":
+        count = 0
+        sum = 0.0
+        for value in values:
+            if predicate(value):
+                count += 1
+                sum += value
+        if count == 0:
+            return 0.0
+        else:
+            return sum / count
+    elif statistic == "sum":
+        sum = 0.0
+        for value in data:
+            if predicate(value):
+                sum += value
+        return sum
+    else:
+        raise ValueError("unrecognized statistic '{0}'".format(statistic))
+
 def isRun(path):
     return os.path.isfile(os.path.join(path, "endStep.txt"))
 
