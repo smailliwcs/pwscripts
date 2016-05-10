@@ -13,7 +13,7 @@ axes = figure.gca()
 runs = list(plotlib.getRuns(args.runs))
 for run in runs:
     lifeSpans, births, deaths = plotlib.getLifeSpans(run)
-    zipped = plotlib.zipAgentData(deaths, lifeSpans)
+    zipped = plotlib.zipAgentData(births, lifeSpans)
     binned = plotlib.binData(zipped[0], zipped[1], args.bin_width)
     axes.plot(binned[0], binned[1], alpha = 1.0 / len(runs))
 axes.set_xlabel("Timestep")

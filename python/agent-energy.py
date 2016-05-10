@@ -27,7 +27,7 @@ for run in runs:
             data = plotlib.getDataColumns(path, "AgentEnergy{0}".format(args.type.title()))
             energies[agent] = sum(data["Energy"]) / lifeSpans[agent]
         plotlib.writeAgentData(run, fileName, energies)
-    zipped = plotlib.zipAgentData(deaths, energies)
+    zipped = plotlib.zipAgentData(births, energies)
     binned = plotlib.binData(zipped[0], zipped[1], args.bin_width)
     axes.plot(binned[0], binned[1], alpha = 1.0 / len(runs))
 axes.set_xlabel("Timestep")
