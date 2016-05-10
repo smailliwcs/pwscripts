@@ -10,7 +10,7 @@ def parseArgs():
 args = parseArgs()
 figure = plotlib.getFigure()
 axes = figure.gca()
-runs = list(plotlib.getRunPaths(args.runs))
+runs = list(plotlib.getRuns(args.runs))
 for run in runs:
     path = os.path.join(run, "energy", "food.txt")
     energies = plotlib.getDataColumns(path, "FoodEnergy")["Energy"]
@@ -23,4 +23,4 @@ axes.xaxis.set_major_formatter(plotlib.getScaleFormatter(3))
 axes.set_ylabel("Population")
 axes.set_ylim(bottom = 0)
 figure.tight_layout()
-figure.savefig("food-2d.pdf")
+figure.savefig("food-energy-2d.pdf")

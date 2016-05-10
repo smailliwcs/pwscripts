@@ -13,8 +13,8 @@ def parseArgs():
 args = parseArgs()
 figure = plotlib.getFigure()
 axes = figure.gca()
-runs = list(plotlib.getRunPaths(args.runs))
-fileName = "energy-{0}.txt".format(args.type)
+runs = list(plotlib.getRuns(args.runs))
+fileName = "agent-energy-{0}.txt".format(args.type)
 for run in runs:
     lifeSpans, births, deaths = plotlib.getLifeSpans(run)
     energies = plotlib.readAgentData(run, fileName)
@@ -38,4 +38,4 @@ else:
 axes.set_ylabel(ylabel)
 axes.set_ylim(bottom = 0)
 figure.tight_layout()
-figure.savefig("energy-{0}.pdf".format(args.type))
+figure.savefig("agent-energy-{0}.pdf".format(args.type))

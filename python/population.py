@@ -10,7 +10,7 @@ def parseArgs():
 args = parseArgs()
 figure = plotlib.getFigure()
 axes = figure.gca()
-runs = list(plotlib.getRunPaths(args.runs))
+runs = list(plotlib.getRuns(args.runs))
 for run in runs:
     path = os.path.join(run, "population.txt")
     data = plotlib.getDataColumns(path, "Population")

@@ -10,7 +10,7 @@ def parseArgs():
 args = parseArgs()
 figure = plotlib.getFigure()
 axes = figure.gca()
-runs = list(plotlib.getRunPaths(args.runs))
+runs = list(plotlib.getRuns(args.runs))
 for run in runs:
     lifeSpans, births, deaths = plotlib.getLifeSpans(run)
     zipped = plotlib.zipAgentData(deaths, lifeSpans)

@@ -122,16 +122,16 @@ def getLifeSpans(run, predicate = lambda row: True):
         lifeSpans[agent] = death - (birth - 1)
     return lifeSpans, births, deaths
 
-def getPdf(*args):
-    return matplotlib.backends.backend_pdf.PdfPages(*args)
+def getPdf(path):
+    return matplotlib.backends.backend_pdf.PdfPages(path)
 
-def getRunPaths(path):
-    if isRunPath(path):
+def getRuns(path):
+    if isRun(path):
         yield path
     else:
         for directory in os.listdir(path):
             subpath = os.path.join(path, directory)
-            if isRunPath(subpath):
+            if isRun(subpath):
                 yield subpath
 
 def getScaleFormatter(power, formatSpec = "g"):
@@ -139,8 +139,14 @@ def getScaleFormatter(power, formatSpec = "g"):
     formatter = lambda tick, position: format(tick / divisor, formatSpec)
     return matplotlib.ticker.FuncFormatter(formatter)
 
-def isRunPath(path):
+def isRun(path):
     return os.path.isfile(os.path.join(path, "endStep.txt"))
+
+def makeDirectory(*args):
+    path = os.path.join(*args)
+    if not os.path.isdir(path):
+        os.makedirs(path, 0755)
+    return path
 
 def printProperties(artist):
     return matplotlib.artist.getp(artist)
@@ -178,11 +184,8 @@ def readLinesFromPath(path, start, stop):
             yield line, index
 
 def writeAgentData(run, fileName, data):
-    path = os.path.join(run, "plots", "data")
-    if not os.path.isdir(path):
-        os.makedirs(path, 0755)
-    path = os.path.join(path, fileName)
-    with open(path, "w") as f:
+    path = makeDirectory(run, "plots", "data")
+    with open(os.path.join(path, fileName), "w") as f:
         for agent in data:
             f.write("{0} {1}\n".format(agent, data[agent]))
 
