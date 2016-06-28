@@ -49,11 +49,10 @@ class LogFormatter(matplotlib.ticker.Formatter):
 
 def binData(x, y, width, statistic = "mean"):
     xMax = max(x)
-    bins = numpy.arange(0, xMax, width)
-    bins = numpy.append(bins, xMax + 1)
-    centers = (bins + width / 2.0)[:-1]
+    bins = [0] + list(numpy.arange(1, xMax, width)) + [xMax]
+    edges = list(numpy.arange(0, xMax, width)) + [xMax]
     binned = scipy.stats.binned_statistic(x, numpy.asarray(y), statistic, bins)[0]
-    return centers, binned
+    return edges, binned
 
 def close(figure):
     matplotlib.pyplot.close(figure)
