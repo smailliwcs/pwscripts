@@ -13,10 +13,10 @@ axes = figure.gca()
 runs = list(plotlib.getRuns(args.runs))
 for run in runs:
     path = os.path.join(run, "energy", "food.txt")
-    energies = plotlib.getDataColumns(path, "FoodEnergy")["Energy"]
+    values = plotlib.getDataColumns(path, "FoodEnergy")["Energy"]
     path = os.path.join(run, "population.txt")
     populations = plotlib.getDataColumns(path, "Population")["Population"]
-    axes.plot(energies, populations, alpha = 1.0 / len(runs))
+    axes.plot(values, populations, alpha = 1.0 / len(runs))
 axes.set_xlabel(r"Food energy $(\times 10^3)$")
 axes.set_xlim(left = 0)
 axes.xaxis.set_major_formatter(plotlib.getScaleFormatter(3))
