@@ -98,6 +98,9 @@ def getFigure(width = 4, height = 3, fontSize = 8):
     matplotlib.rcParams["font.size"] = fontSize
     return matplotlib.pyplot.figure(figsize = (width, height))
 
+def getGeneTitle(run, index):
+    return getGeneTitles(run, index, index + 1)[index]
+
 def getGeneTitles(run, start = 0, stop = float("inf")):
     titles = {}
     path = os.path.join(run, "genome", "meta", "geneindex.txt")
@@ -208,6 +211,9 @@ def readAgentData(run, fileName):
             agent, value = line.split()
             data[int(agent)] = float(value)
     return data
+
+def readLine(f, index):
+    return list(readLines(f, index, index + 1))[0][0]
 
 def readLines(f, start = 0, stop = float("inf")):
     if isReadable(f):
