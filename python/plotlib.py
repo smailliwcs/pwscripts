@@ -1,10 +1,12 @@
 import datalib
+import gzip
 import math
 import matplotlib
 import matplotlib.backends.backend_pdf
 import matplotlib.pyplot
 import numpy
 import os
+import re
 import scipy.stats
 
 matplotlib.rcParams["axes.color_cycle"] = ["0"]
@@ -18,6 +20,7 @@ matplotlib.rcParams["text.latex.preamble"] = [
     r"\usepackage{newtxmath}"
 ]
 
+synapses_header = re.compile(r"^synapses (?P<agent>\d+) numsynapses=(?P<synapses>\d+) numneurons=(?P<neurons>\d+) numinputneurons=(?P<inputs>\d+) numoutputneurons=(?P<outputs>\d+)$")
 gray_partial = matplotlib.colors.LinearSegmentedColormap.from_list("gray_partial", ("0", "0.9"))
 gray_r_partial = matplotlib.colors.LinearSegmentedColormap.from_list("gray_r_partial", ("0.9", "0"))
 
@@ -104,6 +107,30 @@ def getGeneTitles(run, start = 0, stop = float("inf")):
     for line, index in readLines(path, start, stop):
         titles[index] = line.split(" :: ")[0]
     return titles
+
+def getGraph(run, agent, stage):
+    path = os.path.join(run, "brain", "synapses", "synapses_{0}_{1}.txt.gz".format(agent, stage))
+    with gzip.open(path) as f:
+        match = synapses_header.match(f.readline())
+        neurons = int(match.group("neurons"))
+        inputs = int(match.group("inputs"))
+        outputs = int(match.group("outputs"))
+        nodes = neurons - inputs
+        graph = []
+        for node in range(nodes):
+            graph.append([0] * nodes)
+        while True:
+            line = f.readline()
+            if line == "":
+                break
+            data = line.split()
+            preNeuron = int(data[0]) - inputs
+            postNeuron = int(data[1]) - inputs
+            if preNeuron < 0 or postNeuron < 0:
+                continue
+            weight = float(data[2])
+            graph[preNeuron][postNeuron] = weight
+    return graph
 
 def getLifeSpans(run, predicate = lambda row: True):
     births = {}
