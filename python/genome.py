@@ -45,6 +45,7 @@ with plotlib.getPdf("genome.pdf") as pdf:
         image = axes.hist2d(data[index][0], data[index][1], bins, cmap = plotlib.gray_r_partial, norm = matplotlib.colors.LogNorm())[3]
         axes.set_xlabel("Timestep")
         axes.set_ylabel(titles[index])
+        axes.set_ylim(0, 256)
         axes.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(32))
         colorbar = figure.colorbar(image)
         colorbar.set_label("Birth count")
