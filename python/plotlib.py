@@ -121,7 +121,7 @@ def getGraph(run, agent, stage):
         nodes = neurons - inputs
         graph = []
         for node in range(nodes):
-            graph.append([0] * nodes)
+            graph.append([None] * nodes)
         while True:
             line = f.readline()
             if line == "":
@@ -132,7 +132,10 @@ def getGraph(run, agent, stage):
             if preNeuron < 0 or postNeuron < 0:
                 continue
             weight = float(data[2])
-            graph[preNeuron][postNeuron] = weight
+            if graph[preNeuron][postNeuron] is None:
+                graph[preNeuron][postNeuron] = weight
+            else:
+                graph[preNeuron][postNeuron] += weight
     return graph
 
 def getLifeSpans(run, predicate = lambda row: True):
