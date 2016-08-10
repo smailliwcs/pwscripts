@@ -250,6 +250,8 @@ def zipAgentData(x, y):
     zipped = numpy.empty((2, len(x)))
     index = 0
     for agent in x:
+        if agent not in y:
+            continue
         zipped[0, index] = x[agent]
         zipped[1, index] = y[agent]
         index += 1
