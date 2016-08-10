@@ -20,9 +20,10 @@ matplotlib.rcParams["text.latex.preamble"] = [
     r"\usepackage{newtxmath}"
 ]
 
-synapses_header = re.compile(r"^synapses (?P<agent>\d+) numsynapses=(?P<synapses>\d+) numneurons=(?P<neurons>\d+) numinputneurons=(?P<inputs>\d+) numoutputneurons=(?P<outputs>\d+)$")
 gray_partial = matplotlib.colors.LinearSegmentedColormap.from_list("gray_partial", ("0", "0.9"))
 gray_r_partial = matplotlib.colors.LinearSegmentedColormap.from_list("gray_r_partial", ("0.9", "0"))
+
+synapsesHeader = re.compile(r"^synapses (?P<agent>\d+) numsynapses=(?P<synapses>\d+) numneurons=(?P<neurons>\d+) numinputneurons=(?P<inputs>\d+) numoutputneurons=(?P<outputs>\d+)$")
 
 class LogLocator(matplotlib.ticker.Locator):
     def __call__(self):
@@ -114,7 +115,7 @@ def getGeneTitles(run, start = 0, stop = float("inf")):
 def getGraph(run, agent, stage):
     path = os.path.join(run, "brain", "synapses", "synapses_{0}_{1}.txt.gz".format(agent, stage))
     with gzip.open(path) as f:
-        match = synapses_header.match(f.readline())
+        match = synapsesHeader.match(f.readline())
         neurons = int(match.group("neurons"))
         inputs = int(match.group("inputs"))
         outputs = int(match.group("outputs"))
@@ -126,12 +127,12 @@ def getGraph(run, agent, stage):
             line = f.readline()
             if line == "":
                 break
-            data = line.split()
-            preNeuron = int(data[0]) - inputs
-            postNeuron = int(data[1]) - inputs
+            chunks = line.split()
+            preNeuron = int(chunks[0]) - inputs
+            postNeuron = int(chunks[1]) - inputs
             if preNeuron < 0 or postNeuron < 0:
                 continue
-            weight = float(data[2])
+            weight = float(chunks[2])
             if graph[preNeuron][postNeuron] is None:
                 graph[preNeuron][postNeuron] = weight
             else:
@@ -171,24 +172,24 @@ def getScaleFormatter(power, formatSpec = "g"):
     formatter = lambda tick, position: format(tick / divisor, formatSpec)
     return matplotlib.ticker.FuncFormatter(formatter)
 
-def getStatistic(data, statistic, predicate = lambda value: True):
+def getStatistic(values, statistic, predicate = lambda value: True):
     if statistic == "mean":
         count = 0
-        sum = 0.0
+        total = 0.0
         for value in values:
             if predicate(value):
                 count += 1
-                sum += value
+                total += value
         if count == 0:
             return 0.0
         else:
-            return sum / count
+            return total / count
     elif statistic == "sum":
-        sum = 0.0
-        for value in data:
+        total = 0.0
+        for value in values:
             if predicate(value):
-                sum += value
-        return sum
+                total += value
+        return total
     else:
         raise ValueError("unrecognized statistic '{0}'".format(statistic))
 
@@ -205,15 +206,15 @@ def printProperties(artist):
     return matplotlib.artist.getp(artist)
 
 def readAgentData(run, fileName):
-    data = {}
+    values = {}
     path = os.path.join(run, "plots", "data", fileName)
     if not os.path.isfile(path):
         return None
     with open(path) as f:
         for line in f:
             agent, value = line.split()
-            data[int(agent)] = float(value)
-    return data
+            values[int(agent)] = float(value)
+    return values
 
 def readLine(f, index):
     return list(readLines(f, index, index + 1))[0][0]
@@ -239,11 +240,11 @@ def readLinesFromPath(path, start, stop):
         for line, index in readLinesFromFile(f, start, stop):
             yield line, index
 
-def writeAgentData(run, fileName, data):
+def writeAgentData(run, fileName, values):
     path = makeDirectory(run, "plots", "data")
     with open(os.path.join(path, fileName), "w") as f:
-        for agent in data:
-            f.write("{0} {1}\n".format(agent, data[agent]))
+        for agent in values:
+            f.write("{0} {1}\n".format(agent, values[agent]))
 
 def zipAgentData(x, y):
     zipped = numpy.empty((2, len(x)))
