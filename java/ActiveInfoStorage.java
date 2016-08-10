@@ -11,6 +11,7 @@ public class ActiveInfoStorage {
         properties = Utility.setProperties(calculator);
         Utility.printProperties(properties, System.out);
         try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(System.in)) {
+            reader.printArguments(System.out);
             while (true) {
                 TimeSeriesEnsemble ensemble = reader.read();
                 if (ensemble == null) {

@@ -3,6 +3,7 @@ import java.util.*;
 import java.util.regex.*;
 
 public class TimeSeriesEnsembleReader implements AutoCloseable {
+    private static final Pattern argument = Pattern.compile("[a-z0-9_]+ = .+", Pattern.CASE_INSENSITIVE);
     private static final Pattern agent = Pattern.compile("# AGENT (\\d+)");
     private static final Pattern dimensions = Pattern.compile("# DIMENSIONS (\\d+) (\\d+) (\\d+)");
     
@@ -10,6 +11,26 @@ public class TimeSeriesEnsembleReader implements AutoCloseable {
     
     public TimeSeriesEnsembleReader(InputStream in) {
         reader = new BufferedReader(new InputStreamReader(in));
+    }
+    
+    public void printArguments(PrintStream out) throws IOException {
+        {
+            String line = reader.readLine();
+            if (!line.equals("# BEGIN ARGUMENTS")) {
+                throw new IOException(getExceptionMessage(line));
+            }
+        }
+        while (true) {
+            String line = reader.readLine();
+            if (line.equals("# END ARGUMENTS")) {
+                break;
+            }
+            Matcher matcher = argument.matcher(line);
+            if (!matcher.matches()) {
+                throw new IOException(getExceptionMessage(line));
+            }
+            out.printf("# %s%n", line);
+        }
     }
     
     public TimeSeriesEnsemble read() throws IOException {
