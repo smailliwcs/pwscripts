@@ -25,9 +25,6 @@ for run in runs:
             values.setdefault(int(agent), []).append(float(value))
     for agent in values:
         values[agent] = plotlib.getStatistic(values[agent], args.stat)
-    for agent in lifeSpans:
-        if agent not in values:
-            values[agent] = 0
     zipped = plotlib.zipAgentData(births, values)
     binned = plotlib.binData(zipped[0], zipped[1], args.bin_width)
     axes.plot(binned[0], binned[1])

@@ -18,13 +18,17 @@ public class CompleteTransferEntropy {
                 if (ensemble == null) {
                     break;
                 }
-                for (Synapse synapse : ensemble.getSynapses()) {
-                    System.out.printf(
-                        "%d %d %d %g%n",
-                        ensemble.getAgentIndex(),
-                        synapse.getPreNeuronIndex(),
-                        synapse.getPostNeuronIndex(),
-                        calculate(ensemble, synapse));
+                if (ensemble.getSynapses().isEmpty()) {
+                    System.out.printf("%d - - 0%n", ensemble.getAgentIndex());
+                } else {
+                    for (Synapse synapse : ensemble.getSynapses()) {
+                        System.out.printf(
+                            "%d %d %d %g%n",
+                            ensemble.getAgentIndex(),
+                            synapse.getPreNeuronIndex(),
+                            synapse.getPostNeuronIndex(),
+                            calculate(ensemble, synapse));
+                    }
                 }
             }
         }

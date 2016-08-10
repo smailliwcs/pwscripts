@@ -29,6 +29,8 @@ for run in runs:
             if line.startswith("#"):
                 continue
             agent, preNeuron, postNeuron, value = line.split()
+            if preNeuron == "-" and postNeuron == "-":
+                continue
             values[int(agent)][int(postNeuron)] += float(value)
     valuesPos = {}
     valuesNeg = {}
