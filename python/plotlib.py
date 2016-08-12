@@ -120,6 +120,8 @@ def getGeneTitles(run, start = 0, stop = float("inf")):
 
 def getGraph(run, agent, stage):
     path = os.path.join(run, "brain", "synapses", "synapses_{0}_{1}.txt.gz".format(agent, stage))
+    if not os.path.isfile(path):
+        return None
     with gzip.open(path) as f:
         match = synapsesHeader.match(f.readline())
         neurons = int(match.group("neurons"))
