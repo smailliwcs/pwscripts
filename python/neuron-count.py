@@ -14,11 +14,11 @@ axes = figure.gca()
 runs = list(plotlib.getRuns(args.runs))
 fileName = "neuron-count.txt"
 for run in runs:
-    lifeSpans, births, deaths = plotlib.getLifeSpans(run)
+    births = plotlib.getBirths(run)
     values = plotlib.readAgentData(run, fileName)
     if values is None:
         values = {}
-        for agent in lifeSpans:
+        for agent in births:
             if agent % 1000 == 0:
                 sys.stderr.write("{0}\n".format(agent))
             graph = plotlib.getGraph(run, agent, "incept")

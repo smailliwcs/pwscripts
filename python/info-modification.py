@@ -14,7 +14,7 @@ figure = plotlib.getFigure()
 axes = figure.gca()
 runs = list(plotlib.getRuns(args.runs))
 for run in runs:
-    lifeSpans, births, deaths = plotlib.getLifeSpans(run)
+    births = plotlib.getBirths(run)
     values = {}
     path = os.path.join(run, "plots", "data", "info-storage.txt")
     with open(path) as f:

@@ -17,9 +17,9 @@ figure = plotlib.getFigure()
 axes = figure.gca()
 runs = list(plotlib.getRuns(args.runs))
 for run in runs:
-    lifeSpans, births, deaths = plotlib.getLifeSpans(run)
+    births = plotlib.getBirths(run)
     values = {}
-    for agent in lifeSpans:
+    for agent in births:
         if agent % 1000 == 0:
             sys.stderr.write("{0}\n".format(agent))
         path = os.path.join(run, "genome", "agents", "genome_{0}.txt.gz".format(agent))

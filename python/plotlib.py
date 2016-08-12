@@ -67,6 +67,9 @@ def isIterable(obj):
 def isReadable(obj):
     return hasattr(obj, "readline")
 
+def getBirths(run, predicate = lambda row: True):
+    return getLifeSpanData(run, predicate, "BirthStep")
+
 def getData(path, tableNames = None):
     multiple = tableNames is None or isIterable(tableNames)
     if multiple:
@@ -90,6 +93,9 @@ def getDataRows(path, tableName):
     data = getData(path, tableName)
     for row in data.rows():
         yield row
+
+def getDeaths(run, predicate = lambda row: True):
+    return getLifeSpanData(run, predicate, "DeathStep")
 
 def getEndTimestep(run):
     with open(os.path.join(run, "endStep.txt")) as f:
@@ -139,21 +145,21 @@ def getGraph(run, agent, stage):
                 graph[preNeuron][postNeuron] += weight
     return graph
 
-def getLifeSpans(run, predicate = lambda row: True):
-    births = {}
-    deaths = {}
-    lifeSpans = {}
+def getLifeSpanData(run, predicate, key = lambda row: row):
+    values = {}
     path = os.path.join(run, "lifespans.txt")
     for row in getDataRows(path, "LifeSpans"):
         if not predicate(row):
             continue
-        agent = row["Agent"]
-        birth = row["BirthStep"]
-        death = row["DeathStep"]
-        births[agent] = birth
-        deaths[agent] = death
-        lifeSpans[agent] = death - (birth - 1)
-    return lifeSpans, births, deaths
+        if isinstance(key, basestring):
+            value = row[key]
+        else:
+            value = key(row)
+        values[row["Agent"]] = value
+    return values
+
+def getLifeSpans(run, predicate = lambda row: True):
+    return getLifeSpanData(run, predicate, lambda row: row["DeathStep"] - (row["BirthStep"] - 1))
 
 def getPdf(path):
     return matplotlib.backends.backend_pdf.PdfPages(path)
@@ -193,8 +199,20 @@ def getStatistic(values, statistic, predicate = lambda value: True):
     else:
         raise ValueError("unrecognized statistic '{0}'".format(statistic))
 
+def isNotSeedLifeSpan(row):
+    return not isSeedLifeSpan(row)
+
+def isNotTruncatedLifeSpan(row):
+    return not isTruncatedLifeSpan(row)
+
 def isRun(path):
     return os.path.isfile(os.path.join(path, "endStep.txt"))
+
+def isSeedLifeSpan(row):
+    return row["BirthReason"] == "SIMINIT"
+
+def isTruncatedLifeSpan(row):
+    return row["DeathReason"] == "SIMEND"
 
 def makeDirectory(*args):
     path = os.path.join(*args)
