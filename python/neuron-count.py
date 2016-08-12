@@ -21,7 +21,7 @@ for run in runs:
         for agent in births:
             if agent % 1000 == 0:
                 sys.stderr.write("{0}\n".format(agent))
-            graph = plotlib.getGraph(run, agent, "incept")
+            graph = plotlib.getGraph(run, agent, "birth")
             values[agent] = len(graph)
         plotlib.writeAgentData(run, fileName, values)
     zipped = plotlib.zipAgentData(births, values)
