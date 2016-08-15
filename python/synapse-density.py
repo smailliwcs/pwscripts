@@ -27,6 +27,7 @@ for run in runs:
             for preNeuron in range(neuronCount):
                 for postNeuron in range(neuronCount):
                     if graph[preNeuron][postNeuron] is not None:
+                        assert preNeuron != postNeuron, "self-loop in agent {0}".format(agent)
                         synapseCount += 1
             values[agent] = float(synapseCount) / (neuronCount * (neuronCount - 1))
         plotlib.writeAgentData(run, fileName, values)
