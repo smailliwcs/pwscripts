@@ -163,6 +163,18 @@ def getLifeSpanData(run, predicate, key = lambda row: row):
 def getLifeSpans(run, predicate = lambda row: True):
     return getLifeSpanData(run, predicate, lambda row: row["DeathStep"] - (row["BirthStep"] - 1))
 
+def getMean(values, predicate = lambda value: True):
+    count = 0
+    total = 0.0
+    for value in values:
+        if predicate(value):
+            count += 1
+            total += value
+    if count == 0:
+        return 0.0
+    else:
+        return total / count
+
 def getPdf(path):
     return matplotlib.backends.backend_pdf.PdfPages(path)
 
@@ -182,24 +194,18 @@ def getScaleFormatter(power, formatSpec = "g"):
 
 def getStatistic(values, statistic, predicate = lambda value: True):
     if statistic == "mean":
-        count = 0
-        total = 0.0
-        for value in values:
-            if predicate(value):
-                count += 1
-                total += value
-        if count == 0:
-            return 0.0
-        else:
-            return total / count
+        return getMean(values, predicate)
     elif statistic == "sum":
-        total = 0.0
-        for value in values:
-            if predicate(value):
-                total += value
-        return total
+        return getSum(values, predicate)
     else:
         raise ValueError("unrecognized statistic '{0}'".format(statistic))
+
+def getSum(values, predicate = lambda value: True):
+    total = 0.0
+    for value in values:
+        if predicate(value):
+            total += value
+    return total
 
 def isNotSeedLifeSpan(row):
     return not isSeedLifeSpan(row)
