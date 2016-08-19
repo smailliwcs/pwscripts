@@ -4,19 +4,19 @@ if [[ $# -lt 3 ]]; then
     echo "Usage: $(basename "$0") WORLDFILE COUNT KEY [--complete] [PARAMETER]..."
     exit 1
 fi
-worldfile="$1"
-count="$2"
+worldfile=$1
+count=$2
 if [[ $count -le 0 ]]; then
     echo "Count must be greater than zero."
     exit 1
 fi
-key="$3"
+key=$3
 if [[ -e "runs/$key" ]]; then
     echo "Key '$key' is already in use."
     exit 1
 fi
 shift 3
-if [[ $1 = "--complete" ]]; then
+if [[ $1 == "--complete" ]]; then
     complete=1
     shift
 else
@@ -27,9 +27,9 @@ if [[ $count -gt 1 ]]; then
 else
     mkdir -p runs
 fi
-for index in `seq 0 $((count - 1))`; do
+for index in $(seq 0 $((count - 1))); do
     while true; do
-        ./Polyworld --InitSeed $(date +"%s") "$@" "$worldfile"
+        ./Polyworld --InitSeed "$(date +%s)" "$@" "$worldfile"
         if [[ $complete -eq 1 ]]; then
             if [[ -e run/endReason.txt && $(cat run/endReason.txt) == "MaxSteps" ]]; then
                 break
