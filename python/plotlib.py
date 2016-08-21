@@ -128,9 +128,9 @@ def getGraph(run, agent, stage):
         inputs = int(match.group("inputs"))
         outputs = int(match.group("outputs"))
         nodes = neurons - inputs
-        graph = []
+        graph = [None] * nodes
         for node in range(nodes):
-            graph.append([None] * nodes)
+            graph[node] = [None] * nodes
         while True:
             line = f.readline()
             if line == "":
