@@ -65,5 +65,6 @@ for run in runs:
         axes.plot(binned[0], binned[1], linestyle = style, alpha = 1.0 / len(runs))
 axes.set_xlabel("Timestep")
 axes.set_ylabel(getLabel(args.type))
+axes.set_ylim(bottom = 0)
 figure.tight_layout()
 figure.savefig("synapse-weight-{0}.pdf".format(args.type))

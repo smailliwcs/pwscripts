@@ -36,5 +36,6 @@ for run in runs:
     axes.plot(binned[0], binned[1], alpha = 1.0 / len(runs))
 axes.set_xlabel("Timestep")
 axes.set_ylabel("Synapse density")
+axes.set_ylim(0, 1)
 figure.tight_layout()
 figure.savefig("synapse-density.pdf")
