@@ -170,13 +170,13 @@ def getLifeSpans(run, predicate = lambda row: True):
 
 def getMean(values, predicate = lambda value: True):
     count = 0
-    total = 0.0
+    total = 0
     for value in values:
         if predicate(value):
             count += 1
             total += value
     if count == 0:
-        return 0.0
+        return 0
     else:
         return total / count
 
@@ -193,7 +193,7 @@ def getRuns(path):
                 yield subpath
 
 def getScaleFormatter(power, formatSpec = "g"):
-    divisor = 10.0 ** power
+    divisor = 10 ** power
     formatter = lambda tick, position: format(tick / divisor, formatSpec)
     return matplotlib.ticker.FuncFormatter(formatter)
 
@@ -206,7 +206,7 @@ def getStatistic(values, statistic, predicate = lambda value: True):
         raise ValueError("unrecognized statistic '{0}'".format(statistic))
 
 def getSum(values, predicate = lambda value: True):
-    total = 0.0
+    total = 0
     for value in values:
         if predicate(value):
             total += value
