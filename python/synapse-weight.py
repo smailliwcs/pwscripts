@@ -18,11 +18,10 @@ def getValues(type, births):
             if agent % 1000 == 0:
                 sys.stderr.write("{0}\n".format(agent))
             graph = plotlib.getGraph(run, agent, "birth")
-            neuronCount = len(graph)
             weights = []
-            for preNeuron in range(neuronCount):
-                for postNeuron in range(neuronCount):
-                    weight = graph[preNeuron][postNeuron]
+            for preNeuron in range(graph.size):
+                for postNeuron in range(graph.size):
+                    weight = graph.weights[preNeuron][postNeuron]
                     if weight is None:
                         continue
                     if type == "pos" and weight >= 0:

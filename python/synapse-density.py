@@ -22,14 +22,14 @@ for run in runs:
             if agent % 1000 == 0:
                 sys.stderr.write("{0}\n".format(agent))
             graph = plotlib.getGraph(run, agent, "birth")
-            neuronCount = len(graph)
-            synapseCount = 0
-            for preNeuron in range(neuronCount):
-                for postNeuron in range(neuronCount):
-                    if graph[preNeuron][postNeuron] is not None:
+            count = 0
+            for preNeuron in range(graph.size):
+                for postNeuron in range(graph.size):
+                    if graph.weights[preNeuron][postNeuron] is not None:
                         assert preNeuron != postNeuron, "self-loop in agent {0}".format(agent)
-                        synapseCount += 1
-            values[agent] = float(synapseCount) / (neuronCount * (neuronCount - 1))
+                        count += 1
+            countMax = graph.inputSize * graph.processingSize + graph.processingSize * (graph.processingSize - 1)
+            values[agent] = float(count) / countMax
         plotlib.writeAgentData(run, fileName, values)
     zipped = plotlib.zipAgentData(births, values)
     binned = plotlib.binData(zipped[0], zipped[1], args.bin_width)

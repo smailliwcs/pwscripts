@@ -25,6 +25,16 @@ gray_r_partial = matplotlib.colors.LinearSegmentedColormap.from_list("gray_r_par
 
 synapsesHeader = re.compile(r"^synapses (?P<agent>\d+) numsynapses=(?P<synapses>\d+) numneurons=(?P<neurons>\d+) numinputneurons=(?P<inputs>\d+) numoutputneurons=(?P<outputs>\d+)$")
 
+class Graph:
+    def __init__(self, size, inputSize = 0, outputSize = 0):
+        self.size = size
+        self.inputSize = inputSize
+        self.outputSize = outputSize
+        self.processingSize = size - inputSize
+        self.weights = [None] * size
+        for neuron in range(size):
+            self.weights[neuron] = [None] * size
+
 class LogLocator(matplotlib.ticker.Locator):
     def __call__(self):
         bounds = self.axis.get_view_interval()
@@ -127,24 +137,19 @@ def getGraph(run, agent, stage):
         neurons = int(match.group("neurons"))
         inputs = int(match.group("inputs"))
         outputs = int(match.group("outputs"))
-        nodes = neurons - inputs
-        graph = [None] * nodes
-        for node in range(nodes):
-            graph[node] = [None] * nodes
+        graph = Graph(neurons, inputs, outputs)
         while True:
             line = f.readline()
             if line == "":
                 break
             chunks = line.split()
-            preNeuron = int(chunks[0]) - inputs
-            postNeuron = int(chunks[1]) - inputs
-            if preNeuron < 0 or postNeuron < 0:
-                continue
+            preNeuron = int(chunks[0])
+            postNeuron = int(chunks[1])
             weight = float(chunks[2])
-            if graph[preNeuron][postNeuron] is None:
-                graph[preNeuron][postNeuron] = weight
+            if graph.weights[preNeuron][postNeuron] is None:
+                graph.weights[preNeuron][postNeuron] = weight
             else:
-                graph[preNeuron][postNeuron] += weight
+                graph.weights[preNeuron][postNeuron] += weight
     return graph
 
 def getLifeSpanData(run, predicate, key = lambda row: row):
