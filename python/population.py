@@ -17,6 +17,5 @@ for run in runs:
     axes.plot(data["T"], data["Population"], alpha = 1.0 / len(runs))
 axes.set_xlabel("Timestep")
 axes.set_ylabel("Population")
-axes.set_ylim(bottom = 0)
 figure.tight_layout()
 figure.savefig("population.pdf")

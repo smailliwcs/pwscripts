@@ -18,9 +18,7 @@ for run in runs:
     populations = plotlib.getDataColumns(path, "Population")["Population"]
     axes.plot(values, populations, alpha = 1.0 / len(runs))
 axes.set_xlabel(r"Food energy $(\times 10^3)$")
-axes.set_xlim(left = 0)
 axes.xaxis.set_major_formatter(plotlib.getScaleFormatter(3))
 axes.set_ylabel("Population")
-axes.set_ylim(bottom = 0)
 figure.tight_layout()
 figure.savefig("food-energy-2d.pdf")

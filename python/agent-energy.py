@@ -37,6 +37,5 @@ if args.type == "total":
 else:
     ylabel = "Energy {0}".format(args.type)
 axes.set_ylabel(ylabel)
-axes.set_ylim(bottom = 0)
 figure.tight_layout()
 figure.savefig("agent-energy-{0}.pdf".format(args.type))

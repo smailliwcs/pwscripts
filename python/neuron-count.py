@@ -29,6 +29,5 @@ for run in runs:
     axes.plot(binned[0], binned[1], alpha = 1.0 / len(runs))
 axes.set_xlabel("Timestep")
 axes.set_ylabel("Neuron count")
-axes.set_ylim(bottom = 0)
 figure.tight_layout()
 figure.savefig("neuron-count.pdf")
