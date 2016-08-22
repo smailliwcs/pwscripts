@@ -25,11 +25,11 @@ def getValues(type, births):
                     weight = graph[preNeuron][postNeuron]
                     if weight is None:
                         continue
-                    if args.type == "pos" and weight >= 0:
+                    if type == "pos" and weight >= 0:
                         weights.append(weight)
-                    elif args.type == "neg" and weight <= 0:
+                    elif type == "neg" and weight <= 0:
                         weights.append(-weight)
-                    elif args.type == "abs":
+                    elif type == "abs":
                         weights.append(abs(weight))
             values[agent] = plotlib.getMean(weights)
         plotlib.writeAgentData(run, fileName, values)
