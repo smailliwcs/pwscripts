@@ -11,26 +11,37 @@ def parseArgs():
     parser.add_argument("--bin-width", metavar = "BIN_WIDTH", type = int, default = 1000, help = "bin width")
     return parser.parse_args()
 
-# https://en.wikipedia.org/wiki/Floyd%E2%80%93Warshall_algorithm
+# https://en.wikipedia.org/wiki/Dijkstra's_algorithm
 def getDistances(G):
     N = len(G)
-    D = [None] * N
+    L = {}
     for i in range(N):
-        D_i = [inf] * N
-        D_i[i] = 0
-        D[i] = D_i
-    for i in range(N):
+        L_i = {}
         for j in range(N):
+            if j == i:
+                continue
             w_ij = G[i][j]
             if w_ij is not None and w_ij != 0:
-                D[i][j] = 1.0 / abs(w_ij)
-    for k in range(N):
-        for i in range(N):
-            D_ik = D[i][k]
-            for j in range(N):
-                D_ikj = D_ik + D[k][j]
-                if D[i][j] > D_ikj:
-                    D[i][j] = D_ikj
+                L_i[j] = 1.0 / abs(w_ij)
+        L[i] = L_i
+    D = {}
+    for i in range(N):
+        D_i = {}
+        for j in range(N):
+            if j == i:
+                D_i[j] = 0
+            else:
+                D_i[j] = inf
+        Q = set(range(N))
+        while len(Q) > 0:
+            j = min(Q, key = lambda j: D_i[j])
+            D_ij = D_i[j]
+            for k, L_jk in L[j].items():
+                D_ijk = D_ij + L_jk
+                if D_ijk < D_i[k]:
+                    D_i[k] = D_ijk
+            Q.remove(j)
+        D[i] = D_i
     return D
 
 def getEfficiency(D):
