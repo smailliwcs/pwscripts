@@ -23,7 +23,7 @@ matplotlib.rcParams["text.latex.preamble"] = [
 gray_partial = matplotlib.colors.LinearSegmentedColormap.from_list("gray_partial", ("0", "0.9"))
 gray_r_partial = matplotlib.colors.LinearSegmentedColormap.from_list("gray_r_partial", ("0.9", "0"))
 
-synapsesHeader = re.compile(r"^synapses (?P<agent>\d+) maxweight=(?P<wmax>[^ ]+) numsynapses=(?P<synapses>\d+) numneurons=(?P<neurons>\d+) numinputneurons=(?P<inputs>\d+) numoutputneurons=(?P<outputs>\d+)$")
+synapsesHeader = re.compile(r"^synapses (?P<agent>\d+) maxweight=(?P<weightMax>[^ ]+) numsynapses=(?P<synapses>\d+) numneurons=(?P<neurons>\d+) numinputneurons=(?P<inputs>\d+) numoutputneurons=(?P<outputs>\d+)$")
 
 class Graph:
     def __init__(self, size, inputSize = 0, outputSize = 0):
@@ -134,7 +134,7 @@ def getGraph(run, agent, stage):
         return None
     with gzip.open(path) as f:
         match = synapsesHeader.match(f.readline())
-        wmax = float(match.group("wmax"))
+        weightMax = float(match.group("weightMax"))
         neurons = int(match.group("neurons"))
         inputs = int(match.group("inputs"))
         outputs = int(match.group("outputs"))
@@ -146,7 +146,7 @@ def getGraph(run, agent, stage):
             chunks = line.split()
             preNeuron = int(chunks[0])
             postNeuron = int(chunks[1])
-            weight = float(chunks[2]) / wmax
+            weight = float(chunks[2]) / weightMax
             if graph.weights[preNeuron][postNeuron] is None:
                 graph.weights[preNeuron][postNeuron] = weight
             else:
