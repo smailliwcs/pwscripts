@@ -26,7 +26,7 @@ gray_r_partial = matplotlib.colors.LinearSegmentedColormap.from_list("gray_r_par
 synapsesHeader = re.compile(r"^synapses (?P<agent>\d+) maxweight=(?P<weightMax>[^ ]+) numsynapses=(?P<synapses>\d+) numneurons=(?P<neurons>\d+) numinputneurons=(?P<inputs>\d+) numoutputneurons=(?P<outputs>\d+)$")
 
 class Graph:
-    def __init__(self, size, inputSize = 0, outputSize = 0):
+    def __init__(self, size, inputSize, outputSize):
         self.size = size
         self.inputSize = inputSize
         self.outputSize = outputSize
@@ -34,6 +34,26 @@ class Graph:
         self.weights = [None] * size
         for neuron in range(size):
             self.weights[neuron] = [None] * size
+    
+    def getSubgraph(self, target, include):
+        neurons = []
+        if include:
+            neurons.append(target)
+        for neuron in range(self.size):
+            if neuron == target:
+                continue
+            if self.weights[neuron][target] is not None or self.weights[target][neuron] is not None:
+                neurons.append(neuron)
+        size = len(neurons)
+        inputSize = len([neuron for neuron in neurons if neuron < self.inputSize])
+        outputSize = len([neuron for neuron in neurons if neuron >= self.inputSize and neuron < self.inputSize + self.outputSize])
+        subgraph = Graph(size, inputSize, outputSize)
+        for preIndex in range(size):
+            preNeuron = neurons[preIndex]
+            for postIndex in range(size):
+                postNeuron = neurons[postIndex]
+                subgraph.weights[preIndex][postIndex] = self.weights[preNeuron][postNeuron]
+        return subgraph
 
 class LogLocator(matplotlib.ticker.Locator):
     def __call__(self):
