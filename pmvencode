@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+if [[ $# -lt 2 ]]; then
+    echo "Usage: $(basename "$0") INPUT OUTPUT [PARAMETER]..."
+    exit 1
+fi
+input=$1
+output=$2
+if [[ ! -e "$input" ]]; then
+    echo "Input file '$input' does not exist."
+    exit 1
+fi
+shift 2
+./bin/PwMoviePlayer -f "$input" "$@" -w | ffmpeg -f rawvideo -pix_fmt rgba -s 640x480 -r 60 -i pipe:0 -vcodec libx264 -y "$output"
