@@ -11,4 +11,6 @@ if [[ ! -e "$input" ]]; then
     exit 1
 fi
 shift 2
-./bin/PwMoviePlayer -f "$input" "$@" -w | ffmpeg -f rawvideo -pix_fmt rgba -s 640x480 -r 60 -i pipe:0 -vcodec libx264 -y "$output"
+./bin/PwMoviePlayer -f "$input" "$@" -w | ffmpeg \
+    -f rawvideo -pix_fmt rgba -s 640x480 -r 60 -i pipe:0 \
+    -vcodec libx264 -vf "vflip, drawtext=text=%{n}: start_number=1: x=10: y=10: fontcolor=white" -y "$output"
