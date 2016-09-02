@@ -58,10 +58,10 @@ for run in runs:
         zipped = plotlib.zipAgentData(births, values)
         binned = plotlib.binData(zipped[0], zipped[1], args.bin_width)
         if args.type == "both" and type == "neg":
-            style = "dotted"
+            dashes = plotlib.dashes
         else:
-            style = "solid"
-        axes.plot(binned[0], binned[1], linestyle = style, alpha = 1.0 / len(runs))
+            dashes = ()
+        axes.plot(binned[0], binned[1], dashes = dashes, alpha = 1.0 / len(runs))
 axes.set_xlabel("Timestep")
 axes.set_ylabel(getLabel(args.type))
 figure.tight_layout()

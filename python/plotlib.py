@@ -20,6 +20,7 @@ matplotlib.rcParams["text.latex.preamble"] = [
     r"\usepackage{newtxmath}"
 ]
 
+dashes = (4, 1)
 gray_partial = matplotlib.colors.LinearSegmentedColormap.from_list("gray_partial", ("0", "0.9"))
 gray_r_partial = matplotlib.colors.LinearSegmentedColormap.from_list("gray_r_partial", ("0.9", "0"))
 

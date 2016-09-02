@@ -30,6 +30,6 @@ for run in runs:
     axes.plot(binned[0], binned[1])
 axes.set_xlabel("Timestep")
 axes.set_ylabel("Complete transfer entropy")
-axes.axhline(color = "0", linestyle = "dotted", linewidth = 0.5)
+axes.axhline(color = "0", dashes = plotlib.dashes, linewidth = 0.5)
 figure.tight_layout()
 figure.savefig("info-transfer-c-{0}.pdf".format(args.stat))
