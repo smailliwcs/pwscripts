@@ -53,10 +53,10 @@ public class CompleteTransferEntropy {
         Collection<Integer> conditionalNeuronIndices = new LinkedList<Integer>();
         for (Synapse conditionalSynapse : synapses) {
             if (conditionalSynapse.getPostNeuronIndex() != synapse.getPostNeuronIndex()) {
-                break;
+                continue;
             }
             if (conditionalSynapse.getPreNeuronIndex() == synapse.getPreNeuronIndex()) {
-                break;
+                continue;
             }
             conditionalNeuronIndices.add(conditionalSynapse.getPreNeuronIndex());
         }
