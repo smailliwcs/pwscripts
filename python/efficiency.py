@@ -55,6 +55,9 @@ def getEfficiency(D):
             sum_D_inv += 1.0 / D[i][j]
     return sum_D_inv / (N * (N - 1))
 
+def getLabel(type):
+    return "{0} efficiency".format(args.type.capitalize())
+
 args = parseArgs()
 figure = plotlib.getFigure()
 axes = figure.gca()
@@ -94,6 +97,6 @@ for run in runs:
     binned = plotlib.binData(zipped[0], zipped[1], args.bin_width)
     axes.plot(binned[0], binned[1], alpha = 1.0 / len(runs))
 axes.set_xlabel("Timestep")
-axes.set_ylabel("{0} efficiency".format(args.type.title()))
+axes.set_ylabel(getLabel(args.type))
 figure.tight_layout()
 figure.savefig("efficiency-{0}-{1}.pdf".format(args.type, args.stage))

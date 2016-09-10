@@ -10,6 +10,13 @@ def parseArgs():
     parser.add_argument("--bin-width", metavar = "BIN_WIDTH", type = int, default = 1000, help = "bin width")
     return parser.parse_args()
 
+def getLabel(type):
+    metric = "energy"
+    if type == "total":
+        return "Total {0}".format(metric)
+    else:
+        return "{0} {1}".format(metric.capitalize(), type)
+
 args = parseArgs()
 figure = plotlib.getFigure()
 axes = figure.gca()
@@ -32,10 +39,6 @@ for run in runs:
     binned = plotlib.binData(zipped[0], zipped[1], args.bin_width)
     axes.plot(binned[0], binned[1], alpha = 1.0 / len(runs))
 axes.set_xlabel("Timestep")
-if args.type == "total":
-    ylabel = "Total energy"
-else:
-    ylabel = "Energy {0}".format(args.type)
-axes.set_ylabel(ylabel)
+axes.set_ylabel(getLabel(args.type))
 figure.tight_layout()
 figure.savefig("agent-energy-{0}.pdf".format(args.type))
