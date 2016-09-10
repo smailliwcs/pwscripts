@@ -4,6 +4,7 @@ import plotlib
 def parseArgs():
     parser = argparse.ArgumentParser()
     parser.add_argument("runs", metavar = "RUNS", help = "runs directory")
+    parser.add_argument("stage", metavar = "STAGE", choices = ("incept", "birth", "death"), help = "life stage")
     parser.add_argument("--bin-width", metavar = "BIN_WIDTH", type = int, default = 1000, help = "bin width")
     return parser.parse_args()
 
@@ -13,8 +14,8 @@ axes = figure.gca()
 runs = list(plotlib.getRuns(args.runs))
 for run in runs:
     births = plotlib.getBirths(run)
-    localValues = plotlib.readAgentData(run, "efficiency-local.txt")
-    globalValues = plotlib.readAgentData(run, "efficiency-global.txt")
+    localValues = plotlib.readAgentData(run, "efficiency-local-{0}.txt".format(args.stage))
+    globalValues = plotlib.readAgentData(run, "efficiency-global-{0}.txt".format(args.stage))
     values = {}
     for agent in births:
         values[agent] = localValues[agent] * globalValues[agent]
@@ -24,4 +25,4 @@ for run in runs:
 axes.set_xlabel("Timestep")
 axes.set_ylabel("Small-worldness")
 figure.tight_layout()
-figure.savefig("small-worldness.pdf")
+figure.savefig("small-worldness-{0}.pdf".format(args.stage))
