@@ -23,7 +23,7 @@ for run in runs:
                 continue
             agent, neuron, value = line.split()
             values.setdefault(int(agent), {})[int(neuron)] = float(value)
-    path = os.path.join(run, "plots", "data", "info-transfer-a.txt")
+    path = os.path.join(run, "plots", "data", "info-transfer-apparent.txt")
     with open(path) as f:
         for line in f:
             if line.startswith("#"):

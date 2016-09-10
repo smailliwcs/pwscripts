@@ -16,7 +16,7 @@ runs = list(plotlib.getRuns(args.runs))
 for run in runs:
     births = plotlib.getBirths(run)
     values = {}
-    path = os.path.join(run, "plots", "data", "info-transfer-a.txt")
+    path = os.path.join(run, "plots", "data", "info-transfer-complete.txt")
     with open(path) as f:
         for line in f:
             if line.startswith("#"):
@@ -29,7 +29,7 @@ for run in runs:
     binned = plotlib.binData(zipped[0], zipped[1], args.bin_width)
     axes.plot(binned[0], binned[1])
 axes.set_xlabel("Timestep")
-axes.set_ylabel("Apparent transfer entropy")
+axes.set_ylabel("Complete transfer entropy")
 axes.axhline(color = "0", dashes = plotlib.dashes, linewidth = 0.5)
 figure.tight_layout()
-figure.savefig("info-transfer-a-{0}.pdf".format(args.stat))
+figure.savefig("info-transfer-complete-{0}.pdf".format(args.stat))
