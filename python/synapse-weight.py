@@ -5,6 +5,7 @@ import sys
 def parseArgs():
     parser = argparse.ArgumentParser()
     parser.add_argument("runs", metavar = "RUNS", help = "runs directory")
+    parser.add_argument("stage", metavar = "STAGE", choices = ("incept", "birth", "death"), help = "life stage")
     parser.add_argument("type", metavar = "TYPE", choices = ("excitatory", "inhibitory", "absolute"), help = "weight type")
     parser.add_argument("--bin-width", metavar = "BIN_WIDTH", type = int, default = 1000, help = "bin width")
     return parser.parse_args()
@@ -22,7 +23,9 @@ for run in runs:
         for agent in births:
             if agent % 1000 == 0:
                 sys.stderr.write("{0}\n".format(agent))
-            graph = plotlib.getGraph(run, agent, "birth")
+            graph = plotlib.getGraph(run, agent, args.stage)
+            if graph is None:
+                continue
             weights = []
             for preNeuron in range(graph.size):
                 for postNeuron in range(graph.size):

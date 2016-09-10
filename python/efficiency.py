@@ -7,6 +7,7 @@ inf = float("inf")
 def parseArgs():
     parser = argparse.ArgumentParser()
     parser.add_argument("runs", metavar = "RUNS", help = "runs directory")
+    parser.add_argument("stage", metavar = "STAGE", choices = ("incept", "birth", "death"), help = "life stage")
     parser.add_argument("type", metavar = "TYPE", choices = ("global", "local"), help = "efficiency type")
     parser.add_argument("--bin-width", metavar = "BIN_WIDTH", type = int, default = 1000, help = "bin width")
     return parser.parse_args()
@@ -71,7 +72,7 @@ for run in runs:
                 sys.stderr.write("{0}\n".format(agent))
             if agent in values:
                 continue
-            graph = plotlib.getGraph(run, agent, "birth")
+            graph = plotlib.getGraph(run, agent, args.stage)
             if graph is None:
                 continue
             if args.type == "global":
