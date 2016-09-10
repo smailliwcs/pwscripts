@@ -64,9 +64,13 @@ for run in runs:
     values = plotlib.readAgentData(run, fileName)
     if values is None:
         values = {}
+    if len(values) < len(births):
         for agent in births:
-            if agent % 1000 == 0:
+            if agent % 100 == 0:
+                plotlib.writeAgentData(run, fileName, values)
                 sys.stderr.write("{0}\n".format(agent))
+            if agent in values:
+                continue
             graph = plotlib.getGraph(run, agent, "birth")
             if graph is None:
                 continue
