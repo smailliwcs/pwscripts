@@ -31,6 +31,7 @@ class Graph:
         self.size = size
         self.inputSize = inputSize
         self.outputSize = outputSize
+        self.internalSize = size - inputSize - outputSize
         self.processingSize = size - inputSize
         self.weights = [None] * size
         for neuron in range(size):
@@ -149,7 +150,7 @@ def getGeneTitles(run, start = 0, stop = float("inf")):
         titles[index] = line.split(" :: ")[0]
     return titles
 
-def getGraph(run, agent, stage):
+def getGraph(run, agent, stage, sizeOnly = False):
     path = os.path.join(run, "brain", "synapses", "synapses_{0}_{1}.txt.gz".format(agent, stage))
     if not os.path.isfile(path):
         return None
@@ -160,6 +161,8 @@ def getGraph(run, agent, stage):
         inputs = int(match.group("inputs"))
         outputs = int(match.group("outputs"))
         graph = Graph(neurons, inputs, outputs)
+        if sizeOnly:
+            return graph
         while True:
             line = f.readline()
             if line == "":
@@ -173,6 +176,13 @@ def getGraph(run, agent, stage):
             else:
                 graph.weights[preNeuron][postNeuron] += weight
     return graph
+
+def getGraphSize(run, agent, type):
+    graph = getGraph(run, agent, "birth", True)
+    if type == "all":
+        return graph.size
+    else:
+        return getattr(graph, "{0}Size".format(type))
 
 def getLifeSpanData(run, predicate, key = lambda row: row):
     values = {}
