@@ -24,7 +24,7 @@ dashes = (4, 1)
 gray_partial = matplotlib.colors.LinearSegmentedColormap.from_list("gray_partial", ("0", "0.9"))
 gray_r_partial = matplotlib.colors.LinearSegmentedColormap.from_list("gray_r_partial", ("0.9", "0"))
 
-synapsesHeader = re.compile(r"^synapses (?P<agent>\d+) maxweight=(?P<weightMax>[^ ]+) numsynapses=(?P<synapses>\d+) numneurons=(?P<neurons>\d+) numinputneurons=(?P<inputs>\d+) numoutputneurons=(?P<outputs>\d+)$")
+synapseHeader = re.compile(r"^synapses (?P<agent>\d+) maxweight=(?P<weightMax>[^ ]+) numsynapses=(?P<synapses>\d+) numneurons=(?P<neurons>\d+) numinputneurons=(?P<inputs>\d+) numoutputneurons=(?P<outputs>\d+)$")
 
 class Graph:
     def __init__(self, size, inputSize, outputSize):
@@ -154,7 +154,7 @@ def getGraph(run, agent, stage):
     if not os.path.isfile(path):
         return None
     with gzip.open(path) as f:
-        match = synapsesHeader.match(f.readline())
+        match = synapseHeader.match(f.readline())
         weightMax = float(match.group("weightMax"))
         neurons = int(match.group("neurons"))
         inputs = int(match.group("inputs"))
