@@ -38,6 +38,12 @@ public class Utility {
         return properties;
     }
     
+    public static Properties setProperties(Object calculator, PrintStream out) throws Exception {
+        Properties properties = setProperties(calculator);
+        printProperties(properties, out);
+        return properties;
+    }
+    
     public static void printProperties(Properties properties, PrintStream out) {
         if (properties == null) {
             return;

@@ -4,12 +4,10 @@ import java.util.*;
 
 public class ActiveInfoStorage {
     private static ActiveInfoStorageCalculator calculator;
-    private static Properties properties;
     
     public static void main(String[] args) throws Exception {
         calculator = new ActiveInfoStorageCalculatorKraskov();
-        properties = Utility.setProperties(calculator);
-        Utility.printProperties(properties, System.out);
+        Utility.setProperties(calculator, System.out);
         try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(System.in)) {
             reader.printArguments(System.out);
             while (true) {

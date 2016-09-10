@@ -9,8 +9,7 @@ public class CompleteTransferEntropy {
     
     public static void main(String[] args) throws Exception {
         calculator = new ConditionalTransferEntropyCalculatorKraskov();
-        properties = Utility.setProperties(calculator);
-        Utility.printProperties(properties, System.out);
+        properties = Utility.setProperties(calculator, System.out);
         try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(System.in)) {
             reader.printArguments(System.out);
             while (true) {
