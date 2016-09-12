@@ -18,6 +18,8 @@ for run in runs:
     globalValues = plotlib.readAgentData(run, "efficiency-global-{0}.txt".format(args.stage))
     values = {}
     for agent in births:
+        if agent not in localValues or agent not in globalValues:
+            continue
         values[agent] = localValues[agent] * globalValues[agent]
     zipped = plotlib.zipAgentData(births, values)
     binned = plotlib.binData(zipped[0], zipped[1], args.bin_width)
