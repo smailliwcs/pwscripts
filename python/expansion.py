@@ -5,6 +5,7 @@ import plotlib
 def parseArgs():
     parser = argparse.ArgumentParser()
     parser.add_argument("runs", metavar = "RUNS", help = "runs directory")
+    parser.add_argument("stage", metavar = "STAGE", choices = ("incept", "birth", "death"), help = "life stage")
     parser.add_argument("--bin-width", metavar = "BIN_WIDTH", type = int, default = 1000, help = "bin width")
     return parser.parse_args()
 
@@ -15,7 +16,7 @@ runs = list(plotlib.getRuns(args.runs))
 for run in runs:
     births = plotlib.getBirths(run)
     values = {}
-    path = os.path.join(run, "plots", "data", "expansion.txt")
+    path = os.path.join(run, "plots", "data", "expansion-{0}.txt".format(args.stage))
     with open(path) as f:
         for line in f:
             if line.startswith("#"):
@@ -28,4 +29,4 @@ for run in runs:
 axes.set_xlabel("Timestep")
 axes.set_ylabel("Phase space expansion")
 figure.tight_layout()
-figure.savefig("expansion.pdf")
+figure.savefig("expansion-{0}.pdf".format(args.stage))

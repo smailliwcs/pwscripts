@@ -5,6 +5,7 @@ import plotlib
 def parseArgs():
     parser = argparse.ArgumentParser()
     parser.add_argument("runs", metavar = "RUNS", help = "runs directory")
+    parser.add_argument("stage", metavar = "STAGE", choices = ("incept", "birth", "death"), help = "life stage")
     parser.add_argument("stat", metavar = "STAT", choices = ("mean", "sum"), help = "statistic")
     parser.add_argument("--bin-width", metavar = "BIN_WIDTH", type = int, default = 1000, help = "bin width")
     return parser.parse_args()
@@ -16,14 +17,14 @@ runs = list(plotlib.getRuns(args.runs))
 for run in runs:
     births = plotlib.getBirths(run)
     values = {}
-    path = os.path.join(run, "plots", "data", "info-storage.txt")
+    path = os.path.join(run, "plots", "data", "info-storage-{0}.txt".format(args.stage))
     with open(path) as f:
         for line in f:
             if line.startswith("#"):
                 continue
             agent, neuron, value = line.split()
             values.setdefault(int(agent), {})[int(neuron)] = float(value)
-    path = os.path.join(run, "plots", "data", "info-transfer-apparent.txt")
+    path = os.path.join(run, "plots", "data", "info-transfer-apparent-{0}.txt".format(args.stage))
     with open(path) as f:
         for line in f:
             if line.startswith("#"):
@@ -47,4 +48,4 @@ axes.set_xlabel("Timestep")
 axes.set_ylabel("Separable information")
 axes.axhline(color = "0", dashes = plotlib.dashes, linewidth = 0.5)
 figure.tight_layout()
-figure.savefig("info-modification-{0}.pdf".format(args.stat))
+figure.savefig("info-modification-{0}-{1}.pdf".format(args.stage, args.stat))
