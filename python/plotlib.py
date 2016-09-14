@@ -93,12 +93,6 @@ def binData(x, y, width, statistic = "mean"):
 def close(figure):
     matplotlib.pyplot.close(figure)
 
-def isIterable(obj):
-    return hasattr(obj, "__iter__")
-
-def isReadable(obj):
-    return hasattr(obj, "readline")
-
 def getBirths(run, predicate = lambda row: True):
     return getLifeSpanData(run, predicate, "BirthStep")
 
@@ -244,11 +238,17 @@ def getSum(values, predicate = lambda value: True):
             total += value
     return total
 
+def isIterable(obj):
+    return hasattr(obj, "__iter__")
+
 def isNotSeedLifeSpan(row):
     return not isSeedLifeSpan(row)
 
 def isNotTruncatedLifeSpan(row):
     return not isTruncatedLifeSpan(row)
+
+def isReadable(obj):
+    return hasattr(obj, "readline")
 
 def isRun(path):
     return os.path.isfile(os.path.join(path, "endStep.txt"))
