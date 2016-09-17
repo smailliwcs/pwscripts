@@ -310,12 +310,10 @@ def writeAgentData(run, fileName, values):
             f.write("{0} {1}\n".format(agent, values[agent]))
 
 def zipAgentData(x, y):
-    zipped = numpy.empty((2, len(x)))
-    index = 0
+    zipped = [[], []]
     for agent in x:
         if agent not in y:
             continue
-        zipped[0, index] = x[agent]
-        zipped[1, index] = y[agent]
-        index += 1
+        zipped[0].append(x[agent])
+        zipped[1].append(y[agent])
     return zipped
