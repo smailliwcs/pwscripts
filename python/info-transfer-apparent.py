@@ -28,7 +28,7 @@ for run in runs:
         values[agent] = plotlib.getStatistic(values[agent], args.stat)
     zipped = plotlib.zipAgentData(births, values)
     binned = plotlib.binData(zipped[0], zipped[1], args.bin_width)
-    axes.plot(binned[0], binned[1])
+    axes.plot(binned[0], binned[1], alpha = 1.0 / len(runs))
 axes.set_xlabel("Timestep")
 axes.set_ylabel("Apparent transfer entropy")
 axes.axhline(color = "0", dashes = plotlib.dashes, linewidth = 0.5)
