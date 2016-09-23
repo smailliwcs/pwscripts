@@ -18,20 +18,16 @@ public class Complexity {
                 if (ensemble == null) {
                     break;
                 }
-                System.out.printf("%d %g%n", ensemble.getAgentIndex(), calculate(ensemble));
+                int[] processingNeuronIndices = ensemble.getProcessingNeuronIndices();
+                for (int neuronIndex : processingNeuronIndices) {
+                    int[] otherNeuronIndices = getOtherNeuronIndices(processingNeuronIndices, neuronIndex);
+                    double mutualInfo = calculateMutualInfo(ensemble, new int[] { neuronIndex }, otherNeuronIndices);
+                    System.out.printf("%d %d %g%n", ensemble.getAgentIndex(), neuronIndex, mutualInfo);
+                }
+                double integration = calculateIntegration(ensemble, processingNeuronIndices);
+                System.out.printf("%d - %g%n", ensemble.getAgentIndex(), integration);
             }
         }
-    }
-    
-    private static double calculate(TimeSeriesEnsemble ensemble) throws Exception {
-        int[] processingNeuronIndices = ensemble.getProcessingNeuronIndices();
-        double result = 0.0;
-        for (int neuronIndex : processingNeuronIndices) {
-            int[] otherNeuronIndices = getOtherNeuronIndices(processingNeuronIndices, neuronIndex);
-            result += calculateMutualInfo(ensemble, new int[] { neuronIndex }, otherNeuronIndices);
-        }
-        result -= calculateIntegration(ensemble, processingNeuronIndices);
-        return result;
     }
     
     private static double calculateMutualInfo(TimeSeriesEnsemble ensemble, int[] sourceNeuronIndices, int[] targetNeuronIndices) throws Exception {
