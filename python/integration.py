@@ -17,7 +17,7 @@ def getType(norm):
         return "raw"
 
 def getLabel(norm):
-    metric = "complexity"
+    metric = "integration"
     if norm:
         return "Normalized {0}".format(metric)
     else:
@@ -29,8 +29,8 @@ axes = figure.gca()
 runs = list(plotlib.getRuns(args.runs))
 for run in runs:
     births = plotlib.getBirths(run)
-    mutualInfoValues = {}
-    integrationValues = {}
+    counts = {}
+    values = {}
     path = os.path.join(run, "plots", "data", "complexity-{0}.txt".format(args.stage))
     with open(path) as f:
         for line in f:
@@ -38,21 +38,17 @@ for run in runs:
                 continue
             agent, neuron, value = line.split()
             agent = int(agent)
-            value = float(value)
             if neuron == "-":
-                integrationValues[agent] = value
+                values[agent] = float(value)
             else:
-                mutualInfoValues.setdefault(agent, []).append(value)
-    values = {}
-    for agent in mutualInfoValues:
-        value = sum(mutualInfoValues[agent]) - integrationValues[agent]
-        if args.norm:
-            value /= len(mutualInfoValues[agent])
-        values[agent] = value
+                counts[agent] = counts.get(agent, 0) + 1
+    if args.norm:
+        for agent in values:
+            values[agent] /= counts[agent]
     zipped = plotlib.zipAgentData(births, values)
     binned = plotlib.binData(zipped[0], zipped[1], args.bin_width)
     axes.plot(binned[0], binned[1], alpha = 1.0 / len(runs))
 axes.set_xlabel("Timestep")
 axes.set_ylabel(getLabel(args.norm))
 figure.tight_layout()
-figure.savefig("complexity-{0}-{1}.pdf".format(getType(args.norm), args.stage))
+figure.savefig("integration-{0}-{1}.pdf".format(getType(args.norm), args.stage))
