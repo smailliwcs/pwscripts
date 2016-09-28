@@ -1,12 +1,16 @@
 import java.util.*;
 
-public class TimeSeries {
+public class TimeSeries implements Iterable<double[]> {
     private int dimension;
     private Collection<double[]> data;
     
     public TimeSeries(int dimension) {
         this.dimension = dimension;
         data = new LinkedList<double[]>();
+    }
+    
+    public Iterator<double[]> iterator() {
+        return data.iterator();
     }
     
     public double[] get(int index) {

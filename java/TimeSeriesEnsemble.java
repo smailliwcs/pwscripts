@@ -73,6 +73,16 @@ public class TimeSeriesEnsemble {
         return timeSeries;
     }
     
+    public TimeSeries getCombinedTimeSeries() {
+        TimeSeries combinedTimeSeries = new TimeSeries(neuronCount);
+        for (TimeSeries _timeSeries : timeSeries) {
+            for (double[] datum : _timeSeries) {
+                combinedTimeSeries.add(datum);
+            }
+        }
+        return combinedTimeSeries;
+    }
+    
     public void addTimeSeries(TimeSeries timeSeries) {
         this.timeSeries.add(timeSeries);
     }
