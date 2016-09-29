@@ -14,7 +14,7 @@ runs = list(plotlib.getRuns(args.runs))
 for run in runs:
     path = os.path.join(run, "population.txt")
     data = plotlib.getDataColumns(path, "Population")
-    axes.plot(data["T"], data["Population"], linewidth = 0.5, alpha = 1.0 / len(runs))
+    axes.plot(data["T"], plotlib.smoothData(data["Population"], 100), alpha = 1.0 / len(runs))
 axes.set_xlabel("Timestep")
 axes.set_ylabel("Population")
 figure.tight_layout()

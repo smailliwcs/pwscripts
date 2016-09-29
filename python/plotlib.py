@@ -303,6 +303,10 @@ def readLinesFromPath(path, start, stop):
         for line, index in readLinesFromFile(f, start, stop):
             yield line, index
 
+def smoothData(values, window):
+    weights = numpy.repeat(1.0, window) / window
+    return numpy.convolve(values, weights, "same")
+
 def writeAgentData(run, fileName, values):
     path = makeDirectory(run, "plots", "data")
     with open(os.path.join(path, fileName), "w") as f:

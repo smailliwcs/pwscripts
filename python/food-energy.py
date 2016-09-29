@@ -14,7 +14,7 @@ runs = list(plotlib.getRuns(args.runs))
 for run in runs:
     path = os.path.join(run, "energy", "food.txt")
     data = plotlib.getDataColumns(path, "FoodEnergy")
-    axes.plot(data["Timestep"], data["Energy"], linewidth = 0.5, alpha = 1.0 / len(runs))
+    axes.plot(data["Timestep"], plotlib.smoothData(data["Energy"], 100), alpha = 1.0 / len(runs))
 axes.set_xlabel("Timestep")
 axes.set_ylabel(r"Food energy $(\times 10^3)$")
 axes.yaxis.set_major_formatter(plotlib.getScaleFormatter(3))
