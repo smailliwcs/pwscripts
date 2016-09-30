@@ -1,6 +1,5 @@
 import infodynamics.measures.continuous.*;
 import infodynamics.measures.continuous.kernel.*;
-import infodynamics.utils.*;
 import java.util.*;
 
 public class Entropy {
@@ -16,20 +15,16 @@ public class Entropy {
                 if (ensemble == null) {
                     break;
                 }
-                int[] processingNeuronIndices = ensemble.getProcessingNeuronIndices();
-                System.out.printf("%d %g%n", ensemble.getAgentIndex(), calculate(ensemble, processingNeuronIndices));
+                for (int neuronIndex : ensemble.getProcessingNeuronIndices()) {
+                    System.out.printf("%d %d %g%n", ensemble.getAgentIndex(), neuronIndex, calculate(ensemble, neuronIndex));
+                }
             }
         }
     }
     
-    private static double calculate(TimeSeriesEnsemble ensemble, int[] neuronIndices) throws Exception {
-        TimeSeries timeSeries = ensemble.getCombinedTimeSeries();
-        double[] values = new double[neuronIndices.length];
-        for (int valueIndex = 0; valueIndex < neuronIndices.length; valueIndex++) {
-            calculator.initialise();
-            calculator.setObservations(timeSeries.get(neuronIndices[valueIndex]));
-            values[valueIndex] = calculator.computeAverageLocalOfObservations();
-        }
-        return MatrixUtils.mean(values);
+    private static double calculate(TimeSeriesEnsemble ensemble, int neuronIndex) throws Exception {
+        calculator.initialise();
+        calculator.setObservations(ensemble.getCombinedTimeSeries().get(neuronIndex));
+        return calculator.computeAverageLocalOfObservations();
     }
 }
