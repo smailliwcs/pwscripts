@@ -206,6 +206,22 @@ def getMean(values, predicate = lambda value: True):
     else:
         return total / count
 
+def getOffspring(run):
+    values = {}
+    path = os.path.join(run, "BirthsDeaths.log")
+    with open(path) as f:
+        for line in f:
+            if line.startswith("%"):
+                continue
+            data = line.split()
+            if data[1] == "BIRTH":
+                agent = int(data[2])
+                parent1 = int(data[3])
+                parent2 = int(data[4])
+                values.setdefault(parent1, []).append(agent)
+                values.setdefault(parent2, []).append(agent)
+    return values
+
 def getPdf(path):
     return matplotlib.backends.backend_pdf.PdfPages(path)
 
