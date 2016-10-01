@@ -1,6 +1,5 @@
 import infodynamics.measures.continuous.*;
 import infodynamics.measures.continuous.kraskov.*;
-import java.util.*;
 
 public class ActiveInfoStorage {
     private static ActiveInfoStorageCalculator calculator;

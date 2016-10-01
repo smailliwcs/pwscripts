@@ -1,6 +1,5 @@
 import infodynamics.measures.continuous.*;
 import infodynamics.measures.continuous.kernel.*;
-import java.util.*;
 
 public class Entropy {
     private static EntropyCalculator calculator;
