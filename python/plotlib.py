@@ -20,9 +20,11 @@ matplotlib.rcParams["text.latex.preamble"] = [
     r"\usepackage{newtxmath}"
 ]
 
+colormaps = {
+    "gray": matplotlib.colors.LinearSegmentedColormap.from_list("gray", ("0", "1")),
+    "gray_r": matplotlib.colors.LinearSegmentedColormap.from_list("gray_r", ("1", "0"))
+}
 dashes = (4, 1)
-gray_partial = matplotlib.colors.LinearSegmentedColormap.from_list("gray_partial", ("0", "0.9"))
-gray_r_partial = matplotlib.colors.LinearSegmentedColormap.from_list("gray_r_partial", ("0.9", "0"))
 
 synapseHeader = re.compile(r"^synapses (?P<agent>\d+) maxweight=(?P<weightMax>[^ ]+) numsynapses=(?P<synapses>\d+) numneurons=(?P<neurons>\d+) numinputneurons=(?P<inputs>\d+) numoutputneurons=(?P<outputs>\d+)$")
 
