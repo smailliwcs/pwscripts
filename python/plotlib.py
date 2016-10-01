@@ -26,9 +26,9 @@ colormaps = {
 }
 dashes = (4, 1)
 
-synapseHeader = re.compile(r"^synapses (?P<agent>\d+) maxweight=(?P<weightMax>[^ ]+) numsynapses=(?P<synapses>\d+) numneurons=(?P<neurons>\d+) numinputneurons=(?P<inputs>\d+) numoutputneurons=(?P<outputs>\d+)$")
-
 class Graph:
+    header = re.compile(r"^synapses (?P<agent>\d+) maxweight=(?P<weightMax>[^ ]+) numsynapses=(?P<synapses>\d+) numneurons=(?P<neurons>\d+) numinputneurons=(?P<inputs>\d+) numoutputneurons=(?P<outputs>\d+)$")
+    
     def __init__(self, size, inputSize, outputSize):
         self.size = size
         self.inputSize = inputSize
@@ -151,7 +151,7 @@ def getGraph(run, agent, stage, sizeOnly = False):
     if not os.path.isfile(path):
         return None
     with gzip.open(path) as f:
-        match = synapseHeader.match(f.readline())
+        match = Graph.header.match(f.readline())
         weightMax = float(match.group("weightMax"))
         neurons = int(match.group("neurons"))
         inputs = int(match.group("inputs"))
