@@ -5,17 +5,19 @@ if [[ $# -lt 3 ]]; then
     exit 1
 fi
 worldfile=$1
-count=$2
+shift
+count=$1
+shift
 if [[ $count -le 0 ]]; then
     echo "Count must be greater than zero."
     exit 1
 fi
-key=$3
+key=$1
+shift
 if [[ -e "runs/$key" ]]; then
     echo "Key '$key' is already in use."
     exit 1
 fi
-shift 3
 if [[ $1 == "--complete" ]]; then
     complete=1
     shift
