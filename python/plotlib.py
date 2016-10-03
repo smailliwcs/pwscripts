@@ -237,9 +237,7 @@ def getRuns(path):
                 yield subpath
 
 def getScaleFormatter(power, formatSpec = "g"):
-    divisor = 10 ** power
-    formatter = lambda tick, position: format(tick / divisor, formatSpec)
-    return matplotlib.ticker.FuncFormatter(formatter)
+    return matplotlib.ticker.FuncFormatter(lambda tick, position: format(tick / 10 ** power, formatSpec))
 
 def getStatistic(values, statistic, predicate = lambda value: True):
     if statistic == "mean":
