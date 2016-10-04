@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-if [[ $# -ne 1 ]]; then
+if [[ $# -lt 1 ]]; then
     echo "Usage: $(basename "$0") METRIC"
     exit 1
 fi
 metric=$1
 shift
 path=$(dirname $(readlink -f "$0"))
-java -cp "$path/java/infodynamics.jar:$path/java" "$metric"
+java -cp "$path/java/infodynamics.jar:$path/java" "$metric" "$@"
