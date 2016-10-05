@@ -206,7 +206,20 @@ def getMean(values, predicate = lambda value: True):
     if count == 0:
         return 0
     else:
-        return total / count
+        return float(total) / count
+
+def getMedian(values, predicate = lambda value: True):
+    filtered = filter(predicate, values)
+    count = len(filtered)
+    if count == 0:
+        return 0
+    else:
+        filtered.sort()
+        index = count / 2
+        if count % 2 == 0:
+            return getMean(filtered[index - 1:index + 1])
+        else:
+            return filtered[index]
 
 def getOffspring(run):
     values = {}
@@ -242,6 +255,8 @@ def getScaleFormatter(power, formatSpec = "g"):
 def getStatistic(values, statistic, predicate = lambda value: True):
     if statistic == "mean":
         return getMean(values, predicate)
+    elif statistic == "median":
+        return getMedian(values, predicate)
     elif statistic == "sum":
         return getSum(values, predicate)
     else:
