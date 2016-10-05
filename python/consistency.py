@@ -42,4 +42,4 @@ for run in runs:
 axes.set_xlabel("Timestep")
 axes.set_ylabel("Genetic consistency")
 figure.tight_layout()
-figure.savefig("consistency.pdf")
+figure.savefig("consistency-{0}.pdf".format(args.base))
