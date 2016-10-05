@@ -13,17 +13,17 @@ def parseArgs():
     return parser.parse_args()
 
 # https://en.wikipedia.org/wiki/Dijkstra's_algorithm
-def getDistances(G):
-    N = len(G)
+def getDistances(W):
+    N = len(W)
     L = {}
     for i in range(N):
         L_i = {}
         for j in range(N):
             if j == i:
                 continue
-            w_ij = G[i][j]
-            if w_ij is not None and w_ij != 0:
-                L_i[j] = 1.0 / abs(w_ij)
+            W_ij = W[i][j]
+            if W_ij is not None and W_ij != 0:
+                L_i[j] = 1.0 / abs(W_ij)
         L[i] = L_i
     D = {}
     for i in range(N):
