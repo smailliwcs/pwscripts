@@ -12,7 +12,7 @@ args = parseArgs()
 figure = plotlib.getFigure()
 axes = figure.gca()
 runs = list(plotlib.getRuns(args.runs))
-fileName = "synapse-density.txt"
+fileName = "density.txt"
 for run in runs:
     births = plotlib.getBirths(run)
     values = plotlib.readAgentData(run, fileName)
@@ -37,4 +37,4 @@ for run in runs:
 axes.set_xlabel("Timestep")
 axes.set_ylabel("Synapse density")
 figure.tight_layout()
-figure.savefig("synapse-density.pdf")
+figure.savefig("density.pdf")
