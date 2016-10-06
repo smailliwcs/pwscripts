@@ -8,7 +8,7 @@ import sys
 def parseArgs():
     parser = argparse.ArgumentParser()
     parser.add_argument("runs", metavar = "RUNS", help = "runs directory")
-    parser.add_argument("base", metavar = "BASE", type = int, choices = range(8), help = "log2 of group size")
+    parser.add_argument("base", metavar = "BASE", type = int, choices = range(8), help = "base-2 log of group size")
     parser.add_argument("--bin-width", metavar = "BIN_WIDTH", type = int, default = 1000, help = "bin width")
     return parser.parse_args()
 
