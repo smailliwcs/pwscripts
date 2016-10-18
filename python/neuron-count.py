@@ -9,13 +9,6 @@ def parseArgs():
     parser.add_argument("--bin-width", metavar = "BIN_WIDTH", type = int, default = 1000, help = "bin width")
     return parser.parse_args()
 
-def getLabel(type):
-    metric = "neuron count"
-    if type == "all":
-        return metric.capitalize()
-    else:
-        return "{0} {1}".format(type.capitalize(), metric)
-
 args = parseArgs()
 figure = plotlib.getFigure()
 axes = figure.gca()
@@ -35,6 +28,6 @@ for run in runs:
     binned = plotlib.binData(zipped[0], zipped[1], args.bin_width)
     axes.plot(binned[0], binned[1], alpha = 1.0 / len(runs))
 axes.set_xlabel("Timestep")
-axes.set_ylabel(getLabel(args.type))
+axes.set_ylabel("Neuron count")
 figure.tight_layout()
 figure.savefig("neuron-count-{0}.pdf".format(args.type))

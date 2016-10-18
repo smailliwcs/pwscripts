@@ -13,7 +13,7 @@ def parseArgs():
 def getLabel(type):
     metric = "energy"
     if type == "total":
-        return "Total {0}".format(metric)
+        return metric.capitalize()
     else:
         return "{0} {1}".format(metric.capitalize(), type)
 
