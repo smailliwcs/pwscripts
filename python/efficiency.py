@@ -17,32 +17,30 @@ def getDistances(W):
     N = len(W)
     L = {}
     for i in range(N):
-        L_i = {}
+        L[i] = {}
         for j in range(N):
             if j == i:
                 continue
             W_ij = W[i][j]
             if W_ij is not None and W_ij != 0:
-                L_i[j] = 1.0 / abs(W_ij)
-        L[i] = L_i
+                L[i][j] = 1.0 / abs(W_ij)
     D = {}
     for i in range(N):
-        D_i = {}
+        D[i] = {}
         for j in range(N):
             if j == i:
-                D_i[j] = 0
+                D[i][j] = 0
             else:
-                D_i[j] = inf
+                D[i][j] = inf
         Q = set(range(N))
         while len(Q) > 0:
-            j = min(Q, key = lambda j: D_i[j])
-            D_ij = D_i[j]
+            j = min(Q, key = lambda j: D[i][j])
+            D_ij = D[i][j]
             for k, L_jk in L[j].items():
                 D_ijk = D_ij + L_jk
-                if D_ijk < D_i[k]:
-                    D_i[k] = D_ijk
+                if D_ijk < D[i][k]:
+                    D[i][k] = D_ijk
             Q.remove(j)
-        D[i] = D_i
     return D
 
 def getEfficiency(D):
