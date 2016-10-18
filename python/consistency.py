@@ -40,6 +40,6 @@ for run in runs:
         y[index] = plotlib.getMean(values)
     axes.plot(x, y, alpha = 1.0 / len(runs))
 axes.set_xlabel("Timestep")
-axes.set_ylabel("Genetic consistency")
+axes.set_ylabel("Consistency")
 figure.tight_layout()
 figure.savefig("consistency-{0}.pdf".format(args.base))

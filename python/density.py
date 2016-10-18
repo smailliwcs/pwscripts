@@ -35,6 +35,6 @@ for run in runs:
     binned = plotlib.binData(zipped[0], zipped[1], args.bin_width)
     axes.plot(binned[0], binned[1], alpha = 1.0 / len(runs))
 axes.set_xlabel("Timestep")
-axes.set_ylabel("Synapse density")
+axes.set_ylabel("Density")
 figure.tight_layout()
 figure.savefig("density.pdf")

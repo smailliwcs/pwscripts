@@ -12,7 +12,7 @@ def parseArgs():
     return parser.parse_args()
 
 def getLabel(type):
-    metric = "synapse strength"
+    metric = "strength"
     if type == "absolute":
         return metric.capitalize()
     else:
