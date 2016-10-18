@@ -15,6 +15,7 @@ def shuffled(items):
     random.shuffle(result)
     return result
 
+# https://arxiv.org/abs/0803.0476
 def getModularity(W):
     def clean(W0):
         N = len(W0)
