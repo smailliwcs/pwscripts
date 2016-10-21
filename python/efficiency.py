@@ -78,8 +78,11 @@ for run in runs:
             if graph is None:
                 continue
             if args.metric == "global":
-                distances = getDistances(graph.weights)
-                value = getEfficiency(distances)
+                if graph.size <= 1:
+                    value = 0
+                else:
+                    distances = getDistances(graph.weights)
+                    value = getEfficiency(distances)
             elif args.metric == "local":
                 efficiencies = [None] * graph.size
                 for neuron in range(graph.size):

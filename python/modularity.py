@@ -95,6 +95,8 @@ def getModularity(W):
     Q0 = 0
     while True:
         init()
+        if N <= 1 or S == 0:
+            return 0
         while True:
             done = True
             for i in shuffled(range(N)):
