@@ -8,7 +8,7 @@ def parseArgs():
     parser = argparse.ArgumentParser()
     parser.add_argument("runs", metavar = "RUNS", help = "runs directory")
     parser.add_argument("stage", metavar = "STAGE", choices = ("incept", "birth", "death"), help = "life stage")
-    parser.add_argument("type", metavar = "TYPE", choices = ("global", "local"), help = "efficiency type")
+    parser.add_argument("metric", metavar = "METRIC", choices = ("global", "local"), help = "metric type")
     parser.add_argument("--bin-width", metavar = "BIN_WIDTH", type = int, default = 1000, help = "bin width")
     return parser.parse_args()
 
@@ -53,14 +53,14 @@ def getEfficiency(D):
             sum_D_inv += 1.0 / D[i][j]
     return sum_D_inv / (N * (N - 1))
 
-def getLabel(type):
-    return "{0} efficiency".format(args.type.capitalize())
+def getLabel(metric):
+    return "{0} efficiency".format(metric.capitalize())
 
 args = parseArgs()
 figure = plotlib.getFigure()
 axes = figure.gca()
 runs = list(plotlib.getRuns(args.runs))
-fileName = "efficiency-{0}-{1}.txt".format(args.type, args.stage)
+fileName = "efficiency-{0}-{1}.txt".format(args.metric, args.stage)
 for run in runs:
     births = plotlib.getBirths(run)
     values = plotlib.readAgentData(run, fileName)
@@ -76,10 +76,10 @@ for run in runs:
             graph = plotlib.getGraph(run, agent, args.stage)
             if graph is None:
                 continue
-            if args.type == "global":
+            if args.metric == "global":
                 distances = getDistances(graph.weights)
                 value = getEfficiency(distances)
-            elif args.type == "local":
+            elif args.metric == "local":
                 efficiencies = [None] * graph.size
                 for neuron in range(graph.size):
                     subgraph = graph.getSubgraph(neuron, False)
@@ -95,6 +95,6 @@ for run in runs:
     binned = plotlib.binData(zipped[0], zipped[1], args.bin_width)
     axes.plot(binned[0], binned[1], alpha = 1.0 / len(runs))
 axes.set_xlabel("Timestep")
-axes.set_ylabel(getLabel(args.type))
+axes.set_ylabel(getLabel(args.metric))
 figure.tight_layout()
-figure.savefig("efficiency-{0}-{1}.pdf".format(args.type, args.stage))
+figure.savefig("efficiency-{0}-{1}.pdf".format(args.metric, args.stage))

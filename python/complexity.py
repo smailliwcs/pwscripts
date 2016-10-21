@@ -10,18 +10,18 @@ def parseArgs():
     parser.add_argument("--bin-width", metavar = "BIN_WIDTH", type = int, default = 1000, help = "bin width")
     return parser.parse_args()
 
-def getType(norm):
+def getMetric(norm):
     if norm:
         return "norm"
     else:
         return "raw"
 
 def getLabel(norm):
-    metric = "complexity"
+    name = "complexity"
     if norm:
-        return "Normalized {0}".format(metric)
+        return "Normalized {0}".format(name)
     else:
-        return metric.capitalize()
+        return name.capitalize()
 
 args = parseArgs()
 figure = plotlib.getFigure()
@@ -55,4 +55,4 @@ for run in runs:
 axes.set_xlabel("Timestep")
 axes.set_ylabel(getLabel(args.norm))
 figure.tight_layout()
-figure.savefig("complexity-{0}-{1}.pdf".format(getType(args.norm), args.stage))
+figure.savefig("complexity-{0}-{1}.pdf".format(getMetric(args.norm), args.stage))
