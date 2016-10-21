@@ -29,35 +29,32 @@ dashes = (4, 1)
 class Graph:
     header = re.compile(r"^synapses (?P<agent>\d+) maxweight=(?P<weightMax>[^ ]+) numsynapses=(?P<synapses>\d+) numneurons=(?P<neurons>\d+) numinputneurons=(?P<inputs>\d+) numoutputneurons=(?P<outputs>\d+)$")
     
-    def __init__(self, size, inputSize, outputSize):
+    def __init__(self, size):
         self.size = size
-        self.inputSize = inputSize
-        self.outputSize = outputSize
-        self.internalSize = size - inputSize - outputSize
-        self.processingSize = size - inputSize
         self.weights = [None] * size
         for neuron in range(size):
             self.weights[neuron] = [None] * size
     
-    def getSubgraph(self, target, include):
-        neurons = []
-        if include:
-            neurons.append(target)
-        for neuron in range(self.size):
-            if neuron == target:
-                continue
-            if self.weights[neuron][target] is not None or self.weights[target][neuron] is not None:
-                neurons.append(neuron)
+    def getSubgraph(self, neurons):
         size = len(neurons)
-        inputSize = len([neuron for neuron in neurons if neuron < self.inputSize])
-        outputSize = len([neuron for neuron in neurons if neuron >= self.inputSize and neuron < self.inputSize + self.outputSize])
-        subgraph = Graph(size, inputSize, outputSize)
+        subgraph = Graph(size)
         for preIndex in range(size):
             preNeuron = neurons[preIndex]
             for postIndex in range(size):
                 postNeuron = neurons[postIndex]
                 subgraph.weights[preIndex][postIndex] = self.weights[preNeuron][postNeuron]
         return subgraph
+    
+    def getNeighborhood(self, neuron, include):
+        neurons = []
+        if include:
+            neurons.append(neuron)
+        for _neuron in range(self.size):
+            if _neuron == neuron:
+                continue
+            if self.weights[_neuron][neuron] is not None or self.weights[neuron][_neuron] is not None:
+                neurons.append(_neuron)
+        return self.getSubgraph(neurons)
 
 class LogLocator(matplotlib.ticker.Locator):
     def __call__(self):
@@ -146,19 +143,31 @@ def getGeneTitles(run, start = 0, stop = float("inf")):
         titles[index] = line.split(" :: ")[0]
     return titles
 
-def getGraph(run, agent, stage, sizeOnly = False):
+def getGraph(run, agent, stage, type, sizeOnly = False):
     path = os.path.join(run, "brain", "synapses", "synapses_{0}_{1}.txt.gz".format(agent, stage))
     if not os.path.isfile(path):
         return None
     with gzip.open(path) as f:
         match = Graph.header.match(f.readline())
         weightMax = float(match.group("weightMax"))
-        neurons = int(match.group("neurons"))
-        inputs = int(match.group("inputs"))
-        outputs = int(match.group("outputs"))
-        graph = Graph(neurons, inputs, outputs)
+        size = int(match.group("neurons"))
+        inputCount = int(match.group("inputs"))
+        outputCount = int(match.group("outputs"))
+        if type == "input":
+            neurons = range(inputCount)
+        elif type == "output":
+            neurons = range(inputCount, inputCount + outputCount)
+        elif type == "internal":
+            neurons = range(inputCount + outputCount, size)
+        elif type == "processing":
+            neurons = range(inputCount, size)
+        elif type == "all":
+            neurons = range(size)
+        else:
+            raise ValueError("unrecognized type '{0}'".format(type))
         if sizeOnly:
-            return graph
+            return len(neurons)
+        graph = Graph(len(neurons))
         while True:
             line = f.readline()
             if line == "":
@@ -166,19 +175,20 @@ def getGraph(run, agent, stage, sizeOnly = False):
             chunks = line.split()
             preNeuron = int(chunks[0])
             postNeuron = int(chunks[1])
+            assert preNeuron != postNeuron, "self-loop in agent {0}".format(agent)
+            if preNeuron not in neurons or postNeuron not in neurons:
+                continue
+            preIndex = neurons.index(preNeuron)
+            postIndex = neurons.index(postNeuron)
             weight = float(chunks[2]) / weightMax
-            if graph.weights[preNeuron][postNeuron] is None:
-                graph.weights[preNeuron][postNeuron] = weight
+            if graph.weights[preIndex][postIndex] is None:
+                graph.weights[preIndex][postIndex] = weight
             else:
-                graph.weights[preNeuron][postNeuron] += weight
+                graph.weights[preIndex][postIndex] += weight
     return graph
 
 def getGraphSize(run, agent, type):
-    graph = getGraph(run, agent, "birth", True)
-    if type == "all":
-        return graph.size
-    else:
-        return getattr(graph, "{0}Size".format(type))
+    return getGraph(run, agent, "birth", type, True)
 
 def getLifeSpanData(run, predicate, key = lambda row: row):
     values = {}

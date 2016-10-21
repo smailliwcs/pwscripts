@@ -7,6 +7,7 @@ def parseArgs():
     parser = argparse.ArgumentParser()
     parser.add_argument("runs", metavar = "RUNS", help = "runs directory")
     parser.add_argument("stage", metavar = "STAGE", choices = ("incept", "birth", "death"), help = "life stage")
+    parser.add_argument("graph", metavar = "GRAPH", choices = ("input", "output", "internal", "processing", "all"), help = "graph type")
     parser.add_argument("--bin-width", metavar = "BIN_WIDTH", type = int, default = 1000, help = "bin width")
     return parser.parse_args()
 
@@ -122,7 +123,7 @@ args = parseArgs()
 figure = plotlib.getFigure()
 axes = figure.gca()
 runs = list(plotlib.getRuns(args.runs))
-fileName = "modularity-{0}.txt".format(args.stage)
+fileName = "modularity-{0}-{1}.txt".format(args.stage, args.graph)
 for run in runs:
     births = plotlib.getBirths(run)
     values = plotlib.readAgentData(run, fileName)
@@ -135,7 +136,7 @@ for run in runs:
                 sys.stderr.write("{0}\n".format(agent))
             if agent in values:
                 continue
-            graph = plotlib.getGraph(run, agent, args.stage)
+            graph = plotlib.getGraph(run, agent, args.stage, args.graph)
             if graph is None:
                 continue
             values[agent] = getModularity(graph.weights)
@@ -146,4 +147,4 @@ for run in runs:
 axes.set_xlabel("Timestep")
 axes.set_ylabel("Modularity")
 figure.tight_layout()
-figure.savefig("modularity-{0}.pdf".format(args.stage))
+figure.savefig("modularity-{0}-{1}.pdf".format(args.stage, args.graph))

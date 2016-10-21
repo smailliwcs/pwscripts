@@ -8,6 +8,7 @@ def parseArgs():
     parser = argparse.ArgumentParser()
     parser.add_argument("runs", metavar = "RUNS", help = "runs directory")
     parser.add_argument("stage", metavar = "STAGE", choices = ("incept", "birth", "death"), help = "life stage")
+    parser.add_argument("graph", metavar = "GRAPH", choices = ("input", "output", "internal", "processing", "all"), help = "graph type")
     parser.add_argument("metric", metavar = "METRIC", choices = ("global", "local"), help = "metric type")
     parser.add_argument("--bin-width", metavar = "BIN_WIDTH", type = int, default = 1000, help = "bin width")
     return parser.parse_args()
@@ -60,7 +61,7 @@ args = parseArgs()
 figure = plotlib.getFigure()
 axes = figure.gca()
 runs = list(plotlib.getRuns(args.runs))
-fileName = "efficiency-{0}-{1}.txt".format(args.metric, args.stage)
+fileName = "efficiency-{0}-{1}-{2}.txt".format(args.metric, args.stage, args.graph)
 for run in runs:
     births = plotlib.getBirths(run)
     values = plotlib.readAgentData(run, fileName)
@@ -73,7 +74,7 @@ for run in runs:
                 sys.stderr.write("{0}\n".format(agent))
             if agent in values:
                 continue
-            graph = plotlib.getGraph(run, agent, args.stage)
+            graph = plotlib.getGraph(run, agent, args.stage, args.graph)
             if graph is None:
                 continue
             if args.metric == "global":
@@ -82,11 +83,11 @@ for run in runs:
             elif args.metric == "local":
                 efficiencies = [None] * graph.size
                 for neuron in range(graph.size):
-                    subgraph = graph.getSubgraph(neuron, False)
-                    if subgraph.size <= 1:
+                    neighborhood = graph.getNeighborhood(neuron, False)
+                    if neighborhood.size <= 1:
                         efficiencies[neuron] = 0
                     else:
-                        distances = getDistances(subgraph.weights)
+                        distances = getDistances(neighborhood.weights)
                         efficiencies[neuron] = getEfficiency(distances)
                 value = plotlib.getMean(efficiencies)
             values[agent] = value
@@ -97,4 +98,4 @@ for run in runs:
 axes.set_xlabel("Timestep")
 axes.set_ylabel(getLabel(args.metric))
 figure.tight_layout()
-figure.savefig("efficiency-{0}-{1}.pdf".format(args.metric, args.stage))
+figure.savefig("efficiency-{0}-{1}-{2}.pdf".format(args.metric, args.stage, args.graph))
