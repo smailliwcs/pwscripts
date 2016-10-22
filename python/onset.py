@@ -22,9 +22,13 @@ for run in runs:
             if line.startswith("#"):
                 continue
             agent, value = line.split()
-            values[int(agent)] = float(value)
+            if value == "-":
+                value = float("inf")
+            else:
+                value = float(value)
+            values[int(agent)] = value
     zipped = plotlib.zipAgentData(births, values)
-    binned = plotlib.binData(zipped[0], zipped[1], args.bin_width)
+    binned = plotlib.binData(zipped[0], zipped[1], args.bin_width, "median")
     axes.plot(binned[0], binned[1], alpha = 1.0 / len(runs))
 axes.set_xlabel("Timestep")
 axes.set_ylabel("Onset of criticality")
