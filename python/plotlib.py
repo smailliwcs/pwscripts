@@ -31,13 +31,24 @@ class Graph:
     
     def __init__(self, size):
         self.size = size
+        self.types = [None] * size
         self.weights = [None] * size
         for neuron in range(size):
             self.weights[neuron] = [None] * size
     
+    def getTypeCount(self, type):
+        count = 0
+        for _type in self.types:
+            if _type == type:
+                count += 1
+        return count
+    
     def getSubgraph(self, neurons):
         size = len(neurons)
         subgraph = Graph(size)
+        for index in range(size):
+            neuron = neurons[index]
+            subgraph.types[index] = self.types[neuron]
         for preIndex in range(size):
             preNeuron = neurons[preIndex]
             for postIndex in range(size):
@@ -150,7 +161,7 @@ def getGraph(run, agent, stage, type, sizeOnly = False):
     with gzip.open(path) as f:
         match = Graph.header.match(f.readline())
         weightMax = float(match.group("weightMax"))
-        size = int(match.group("neurons"))
+        neuronCount = int(match.group("neurons"))
         inputCount = int(match.group("inputs"))
         outputCount = int(match.group("outputs"))
         if type == "input":
@@ -158,16 +169,25 @@ def getGraph(run, agent, stage, type, sizeOnly = False):
         elif type == "output":
             neurons = range(inputCount, inputCount + outputCount)
         elif type == "internal":
-            neurons = range(inputCount + outputCount, size)
+            neurons = range(inputCount + outputCount, neuronCount)
         elif type == "processing":
-            neurons = range(inputCount, size)
+            neurons = range(inputCount, neuronCount)
         elif type == "all":
-            neurons = range(size)
+            neurons = range(neuronCount)
         else:
             raise ValueError("unrecognized type '{0}'".format(type))
+        size = len(neurons)
         if sizeOnly:
-            return len(neurons)
-        graph = Graph(len(neurons))
+            return size
+        graph = Graph(size)
+        for index in range(size):
+            neuron = neurons[index]
+            if neuron < inputCount:
+                graph.types[index] = "input"
+            elif neuron < inputCount + outputCount:
+                graph.types[index] = "output"
+            else:
+                graph.types[index] = "internal"
         while True:
             line = f.readline()
             if line == "":

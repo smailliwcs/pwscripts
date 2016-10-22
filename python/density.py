@@ -5,7 +5,7 @@ import sys
 def parseArgs():
     parser = argparse.ArgumentParser()
     parser.add_argument("runs", metavar = "RUNS", help = "runs directory")
-    parser.add_argument("graph", metavar = "GRAPH", choices = ("input", "output", "internal", "processing", "all"), help = "graph type")
+    parser.add_argument("graph", metavar = "GRAPH", choices = ("output", "internal", "processing", "all"), help = "graph type")
     parser.add_argument("--bin-width", metavar = "BIN_WIDTH", type = int, default = 1000, help = "bin width")
     return parser.parse_args()
 
@@ -28,7 +28,15 @@ for run in runs:
                 for postNeuron in range(graph.size):
                     if graph.weights[preNeuron][postNeuron] is not None:
                         count += 1
-            values[agent] = float(count) / (graph.size * (graph.size - 1))
+            if args.graph == "all":
+                countMax = graph.size * (graph.size - graph.getTypeCount("input") - 1)
+            else:
+                countMax = graph.size * (graph.size - 1)
+            if countMax == 0:
+                value = 0
+            else:
+                value = float(count) / countMax
+            values[agent] = value
         plotlib.writeAgentData(run, fileName, values)
     zipped = plotlib.zipAgentData(births, values)
     binned = plotlib.binData(zipped[0], zipped[1], args.bin_width)
