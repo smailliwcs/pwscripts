@@ -73,7 +73,7 @@ public class CompleteTransferEntropy {
         if (properties == null) {
             value = 1;
         } else {
-            value = Integer.parseInt(properties.getProperty(key));
+            value = Integer.parseInt(properties.getProperty(key, "1"));
         }
         int[] values = new int[dimension];
         Arrays.fill(values, value);
