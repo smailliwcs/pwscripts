@@ -32,5 +32,6 @@ for run in runs:
     axes.plot(binned[0], binned[1], alpha = 1.0 / len(runs))
 axes.set_xlabel("Timestep")
 axes.set_ylabel("Onset of criticality")
+axes.set_yscale("log")
 figure.tight_layout()
 figure.savefig("onset-{0}.pdf".format(args.stage))
