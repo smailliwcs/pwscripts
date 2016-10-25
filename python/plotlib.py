@@ -258,11 +258,11 @@ def getOffspring(run):
         for line in f:
             if line.startswith("%"):
                 continue
-            data = line.split()
-            if data[1] == "BIRTH":
-                agent = int(data[2])
-                parent1 = int(data[3])
-                parent2 = int(data[4])
+            chunks = line.split()
+            if chunks[1] == "BIRTH":
+                agent = int(chunks[2])
+                parent1 = int(chunks[3])
+                parent2 = int(chunks[4])
                 values.setdefault(parent1, []).append(agent)
                 values.setdefault(parent2, []).append(agent)
     return values
