@@ -299,6 +299,17 @@ def getSum(values, predicate = lambda value: True):
             total += value
     return total
 
+def getWeightMax(run):
+    return float(getWorldfileParameter(run, "MaxSynapseWeight"))
+
+def getWorldfileParameter(run, parameterName):
+    path = os.path.join(run, "normalized.wf")
+    with open(path) as f:
+        for line in f:
+            chunks = line.strip().split()
+            if chunks[0] == parameterName:
+                return chunks[1]
+
 def isIterable(obj):
     return hasattr(obj, "__iter__")
 

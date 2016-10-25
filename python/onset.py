@@ -33,5 +33,6 @@ for run in runs:
 axes.set_xlabel("Timestep")
 axes.set_ylabel("Onset of criticality")
 axes.set_yscale("log")
+axes.axhline(plotlib.getWeightMax(runs[0]), color = "0", dashes = plotlib.dashes, linewidth = 0.5)
 figure.tight_layout()
 figure.savefig("onset-{0}.pdf".format(args.stage))
