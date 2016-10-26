@@ -31,6 +31,6 @@ for run in runs:
     axes.plot(binned[0], binned[1], alpha = 1.0 / len(runs))
 axes.set_xlabel("Timestep")
 axes.set_ylabel("Active information storage")
-axes.axhline(color = "0", dashes = plotlib.dashes, linewidth = 0.5)
+axes.set_ylim(bottom = max(0, axes.get_ylim()[0]))
 figure.tight_layout()
 figure.savefig("info-storage-{0}-{1}.pdf".format(args.stage, args.stat))
