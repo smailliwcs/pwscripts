@@ -16,7 +16,7 @@ runs = list(plotlib.getRuns(args.runs))
 for run in runs:
     births = plotlib.getBirths(run)
     values = {}
-    path = os.path.join(run, "plots", "data", "expansion-{0}.txt".format(args.stage))
+    path = os.path.join(run, "plots", "data", "lyapunov-{0}.txt".format(args.stage))
     with open(path) as f:
         for line in f:
             if line.startswith("#"):
@@ -24,9 +24,9 @@ for run in runs:
             agent, value = line.split()
             values[int(agent)] = float(value)
     zipped = plotlib.zipAgentData(births, values)
-    binned = plotlib.binData(zipped[0], zipped[1], args.bin_width)
+    binned = plotlib.binData(zipped[0], zipped[1], args.bin_width, "median")
     axes.plot(binned[0], binned[1], alpha = 1.0 / len(runs))
 axes.set_xlabel("Timestep")
-axes.set_ylabel("Phase space expansion")
+axes.set_ylabel("Maximal Lyapunov exponent")
 figure.tight_layout()
-figure.savefig("expansion-{0}.pdf".format(args.stage))
+figure.savefig("lyapunov-{0}.pdf".format(args.stage))
