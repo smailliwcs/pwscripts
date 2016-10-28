@@ -8,13 +8,7 @@ public class Consistency {
     private static EntropyCalculatorDiscrete calculator;
     
     public static void main(String[] args) throws Exception {
-        if (args.length != 1) {
-            throw new IllegalArgumentException();
-        }
-        base = Integer.parseInt(args[0]);
-        if (base < 0 || base > 7) {
-            throw new IllegalArgumentException();
-        }
+        parseArgs(args);
         Collection<Iterator<Integer>> genomes = new LinkedList<Iterator<Integer>>();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
             while (true) {
@@ -36,6 +30,16 @@ public class Consistency {
                 values.add(genome.next() >> base);
             }
             System.out.println(calculate(Utility.toPrimitive(values)));
+        }
+    }
+    
+    private static void parseArgs(String[] args) {
+        if (args.length != 1) {
+            throw new IllegalArgumentException();
+        }
+        base = Integer.parseInt(args[0]);
+        if (base < 0 || base > 7) {
+            throw new IllegalArgumentException();
         }
     }
     
