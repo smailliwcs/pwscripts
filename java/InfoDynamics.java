@@ -5,7 +5,7 @@ public class InfoDynamics {
     
     public static void main(String[] args) throws Exception {
         parseArgs(args);
-        System.out.printf("# k = %d%n", embeddingLength);
+        System.out.printf("# k_HISTORY = %d%n", embeddingLength);
         calculator = new TransferEntropyCalculator(embeddingLength);
         Utility.setProperties(calculator, System.out);
         try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(System.in)) {

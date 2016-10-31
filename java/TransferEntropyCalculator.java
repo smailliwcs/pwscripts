@@ -3,11 +3,11 @@ import infodynamics.measures.continuous.kraskov.*;
 import infodynamics.utils.*;
 
 public class TransferEntropyCalculator {
-    private int k;
+    private int embeddingLength;
     private ConditionalMutualInfoCalculatorMultiVariate calculator;
     
-    public TransferEntropyCalculator(int k) {
-        this.k = k;
+    public TransferEntropyCalculator(int embeddingLength) {
+        this.embeddingLength = embeddingLength;
         calculator = new ConditionalMutualInfoCalculatorMultiVariateKraskov1();
     }
     
@@ -15,12 +15,12 @@ public class TransferEntropyCalculator {
         calculator.setProperty(key, value);
     }
     
-    public void initialise(int d_source, int d_target, int d_conditional) throws Exception {
-        calculator.initialise(k * d_source, d_target, k * (d_target + d_conditional));
+    public void initialise(int sourceDimension, int targetDimension, int conditionalDimension) throws Exception {
+        calculator.initialise(embeddingLength * sourceDimension, targetDimension, embeddingLength * (targetDimension + conditionalDimension));
     }
     
-    public void initialise(int d_source, int d_target) throws Exception {
-        initialise(d_source, d_target, 0);
+    public void initialise(int sourceDimension, int targetDimension) throws Exception {
+        initialise(sourceDimension, targetDimension, 0);
     }
     
     public void startAddObservations() {
@@ -29,9 +29,9 @@ public class TransferEntropyCalculator {
     
     private void addObservationsInternal(double[][] source, double[][] target, double[][] conditional) throws Exception {
         calculator.addObservations(
-            MatrixUtils.makeDelayEmbeddingVector(source, k, k - 1, source.length - k),
-            MatrixUtils.selectRows(target, k, target.length - k),
-            MatrixUtils.makeDelayEmbeddingVector(conditional, k, k - 1, conditional.length - k));
+            MatrixUtils.makeDelayEmbeddingVector(source, embeddingLength, embeddingLength - 1, source.length - embeddingLength),
+            MatrixUtils.selectRows(target, embeddingLength, target.length - embeddingLength),
+            MatrixUtils.makeDelayEmbeddingVector(conditional, embeddingLength, embeddingLength - 1, conditional.length - embeddingLength));
     }
     
     public void addObservations(double[][] source, double[][] target, double[][] conditional) throws Exception {
