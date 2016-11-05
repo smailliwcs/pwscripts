@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+if [[ $# -ne 2 ]]; then
+    echo "Usage: $(basename "$0") ARCHIVE RUN"
+    exit 1
+fi
+archive=$1
+shift
+if [[ -e "$archive" ]]; then
+    echo "Archive '$archive' already exists."
+    exit 1
+fi
+run=$1
+shift
+if [[ ! -e "$run/endStep.txt" ]]; then
+    echo "Run '$run' is not valid."
+    exit 1
+fi
+tar -czf $archive "$run/brain/synapses" "$run/genome" "$run/endStep.txt" "$run/lifespans.txt" "$run/original.wf" "$run/original.wfs"
