@@ -1,12 +1,16 @@
 public class InfoDynamics {
     private static String metric;
-    private static int embeddingLength;
+    private static int sourceEmbedding;
+    private static int targetEmbedding;
+    private static int conditionalEmbedding;
     private static TransferEntropyCalculator calculator;
     
     public static void main(String[] args) throws Exception {
         parseArgs(args);
-        System.out.printf("# k_HISTORY = %d%n", embeddingLength);
-        calculator = new TransferEntropyCalculator(embeddingLength);
+        System.out.printf("# l_HISTORY = %d%n", sourceEmbedding);
+        System.out.printf("# k_HISTORY = %d%n", targetEmbedding);
+        System.out.printf("# COND_EMBED_LENGTHS = %d%n", conditionalEmbedding);
+        calculator = new TransferEntropyCalculator(sourceEmbedding, targetEmbedding, conditionalEmbedding);
         Utility.setProperties(calculator, System.out);
         try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(System.in)) {
             reader.printArguments(System.out);
@@ -21,13 +25,23 @@ public class InfoDynamics {
     }
     
     private static void parseArgs(String[] args) {
-        if (args.length != 2) {
+        if (args.length < 3 || args.length > 4) {
             throw new IllegalArgumentException();
         }
         metric = args[0];
-        embeddingLength = Integer.parseInt(args[1]);
-        if (embeddingLength < 1) {
+        sourceEmbedding = Integer.parseInt(args[1]);
+        if (sourceEmbedding < 1) {
             throw new IllegalArgumentException();
+        }
+        targetEmbedding = Integer.parseInt(args[2]);
+        if (targetEmbedding < 0) {
+            throw new IllegalArgumentException();
+        }
+        if (args.length >= 4) {
+            conditionalEmbedding = Integer.parseInt(args[3]);
+            if (conditionalEmbedding < 0) {
+                throw new IllegalArgumentException();
+            }
         }
     }
     
