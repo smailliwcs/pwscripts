@@ -9,7 +9,7 @@ shift
 output=$1
 shift
 if [[ ! -e "$input" ]]; then
-    echo "Input file '$input' does not exist."
+    echo "Input '$input' does not exist."
     exit 1
 fi
 vf="vflip, drawtext=text=%{n}: start_number=1: x=10: y=10: fontcolor=white"
