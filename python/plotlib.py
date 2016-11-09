@@ -224,7 +224,7 @@ def getLifeSpanData(run, predicate, key = lambda row: row):
     return values
 
 def getLifeSpans(run, predicate = lambda row: True):
-    return getLifeSpanData(run, predicate, lambda row: row["DeathStep"] - (row["BirthStep"] - 1))
+    return getLifeSpanData(run, predicate, lambda row: row["DeathStep"] - row["BirthStep"])
 
 def getMean(values, predicate = lambda value: True):
     count = 0
