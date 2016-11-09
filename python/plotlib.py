@@ -301,6 +301,11 @@ def getSum(values, predicate = lambda value: True):
             total += value
     return total
 
+def getTrend(x, y):
+    fit = numpy.polyfit(x, y, 1)
+    fitFn = numpy.poly1d(fit)
+    return [[min(x), max(x)], [fitFn(min(x)), fitFn(max(x))]]
+
 def getWeightMax(run):
     return float(getWorldfileParameter(run, "MaxSynapseWeight"))
 
