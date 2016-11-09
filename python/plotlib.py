@@ -22,7 +22,9 @@ matplotlib.rcParams["text.latex.preamble"] = [
 
 colormaps = {
     "gray": matplotlib.colors.LinearSegmentedColormap.from_list("gray", ("0", "1")),
-    "gray_r": matplotlib.colors.LinearSegmentedColormap.from_list("gray_r", ("1", "0"))
+    "gray_r": matplotlib.colors.LinearSegmentedColormap.from_list("gray_r", ("1", "0")),
+    "gray_partial": matplotlib.colors.LinearSegmentedColormap.from_list("gray_partial", ("0", "0.9")),
+    "gray_partial_r": matplotlib.colors.LinearSegmentedColormap.from_list("gray_partial_r", ("0.9", "0"))
 }
 dashes = (4, 1)
 
