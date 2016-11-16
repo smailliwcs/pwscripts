@@ -8,6 +8,7 @@ import numpy
 import os
 import re
 import scipy.stats
+import viridis
 
 matplotlib.rcParams["axes.color_cycle"] = ["0"]
 matplotlib.rcParams["font.family"] = "serif"
@@ -24,7 +25,9 @@ colormaps = {
     "gray": matplotlib.colors.LinearSegmentedColormap.from_list("gray", ("0", "1")),
     "gray_r": matplotlib.colors.LinearSegmentedColormap.from_list("gray_r", ("1", "0")),
     "gray_partial": matplotlib.colors.LinearSegmentedColormap.from_list("gray_partial", ("0", "0.9")),
-    "gray_partial_r": matplotlib.colors.LinearSegmentedColormap.from_list("gray_partial_r", ("0.9", "0"))
+    "gray_partial_r": matplotlib.colors.LinearSegmentedColormap.from_list("gray_partial_r", ("0.9", "0")),
+    "viridis": matplotlib.colors.ListedColormap(viridis.data, "viridis"),
+    "viridis_r": matplotlib.colors.ListedColormap(list(reversed(viridis.data)), "viridis_r")
 }
 dashes = (4, 1)
 
