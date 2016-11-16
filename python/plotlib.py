@@ -146,6 +146,12 @@ def getFigure(width = 4, height = 3, fontSize = 8):
     matplotlib.rcParams["font.size"] = fontSize
     return matplotlib.pyplot.figure(figsize = (width, height))
 
+def getFit(x, y, degree = 1, count = 100):
+    fit = numpy.polyfit(x, y, degree)
+    fitFn = numpy.poly1d(fit)
+    points = numpy.linspace(min(x), max(x), count)
+    return points, fitFn(points)
+
 def getGeneTitle(run, index):
     return getGeneTitles(run, index, index + 1)[index]
 
@@ -303,11 +309,6 @@ def getSum(values, predicate = lambda value: True):
         if predicate(value):
             total += value
     return total
-
-def getTrend(x, y):
-    fit = numpy.polyfit(x, y, 1)
-    fitFn = numpy.poly1d(fit)
-    return [[min(x), max(x)], [fitFn(min(x)), fitFn(max(x))]]
 
 def getWeightMax(run):
     return float(getWorldfileParameter(run, "MaxSynapseWeight"))
