@@ -20,7 +20,6 @@ matplotlib.rcParams["text.latex.preamble"] = [
     r"\usepackage{newtxtext}",
     r"\usepackage{newtxmath}"
 ]
-
 colormaps = {
     "gray": matplotlib.colors.LinearSegmentedColormap.from_list("gray", ("0", "1")),
     "gray_r": matplotlib.colors.LinearSegmentedColormap.from_list("gray_r", ("1", "0")),
