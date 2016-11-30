@@ -2,20 +2,20 @@ import infodynamics.measures.continuous.*;
 import infodynamics.measures.continuous.kraskov.*;
 import infodynamics.utils.*;
 
-public class TransferEntropyCalculator {
+public class ConditionalTransferEntropyCalculatorMultiVariate {
     private int sourceEmbedding;
     private int targetEmbedding;
     private int conditionalEmbedding;
     private ConditionalMutualInfoCalculatorMultiVariate calculator;
     
-    public TransferEntropyCalculator(int sourceEmbedding, int targetEmbedding, int conditionalEmbedding) {
+    public ConditionalTransferEntropyCalculatorMultiVariate(int sourceEmbedding, int targetEmbedding, int conditionalEmbedding) {
         this.sourceEmbedding = sourceEmbedding;
         this.targetEmbedding = targetEmbedding;
         this.conditionalEmbedding = conditionalEmbedding;
         calculator = new ConditionalMutualInfoCalculatorMultiVariateKraskov1();
     }
     
-    public TransferEntropyCalculator(int sourceEmbedding, int targetEmbedding) {
+    public ConditionalTransferEntropyCalculatorMultiVariate(int sourceEmbedding, int targetEmbedding) {
         this(sourceEmbedding, targetEmbedding, 0);
     }
     

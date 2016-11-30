@@ -3,14 +3,14 @@ public class InfoDynamics {
     private static int sourceEmbedding;
     private static int targetEmbedding;
     private static int conditionalEmbedding;
-    private static TransferEntropyCalculator calculator;
+    private static ConditionalTransferEntropyCalculatorMultiVariate calculator;
     
     public static void main(String[] args) throws Exception {
         parseArgs(args);
         System.out.printf("# l_HISTORY = %d%n", sourceEmbedding);
         System.out.printf("# k_HISTORY = %d%n", targetEmbedding);
         System.out.printf("# COND_EMBED_LENGTHS = %d%n", conditionalEmbedding);
-        calculator = new TransferEntropyCalculator(sourceEmbedding, targetEmbedding, conditionalEmbedding);
+        calculator = new ConditionalTransferEntropyCalculatorMultiVariate(sourceEmbedding, targetEmbedding, conditionalEmbedding);
         Utility.setProperties(calculator, System.out);
         try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(System.in)) {
             reader.printArguments(System.out);
