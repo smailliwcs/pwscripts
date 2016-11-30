@@ -41,8 +41,8 @@ public class CompleteTransferEntropy {
         for (TimeSeries timeSeries : ensemble.getTimeSeries()) {
             double[] source = timeSeries.get(synapse.getPreNeuronIndex());
             double[] target = timeSeries.get(synapse.getPostNeuronIndex());
-            double[][] conditionals = timeSeries.get(conditionalNeuronIndices);
-            calculator.addObservations(source, target, conditionals);
+            double[][] conditional = timeSeries.get(conditionalNeuronIndices);
+            calculator.addObservations(source, target, conditional);
         }
         calculator.finaliseAddObservations();
         return calculator.computeAverageLocalOfObservations();
