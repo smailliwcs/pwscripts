@@ -16,7 +16,7 @@ runs = list(plotlib.getRuns(args.runs))
 for run in runs:
     births = plotlib.getBirths(run)
     values = {}
-    path = os.path.join(run, "plots", "data", "info-modification-{0}.txt".format(args.stage))
+    path = os.path.join(run, "plots", "data", "info-storage-te-{0}.txt".format(args.stage))
     with open(path) as f:
         for line in f:
             if line.startswith("#"):
@@ -27,7 +27,7 @@ for run in runs:
     binned = plotlib.binData(zipped[0], zipped[1], args.bin_width)
     axes.plot(binned[0], binned[1], alpha = 1.0 / len(runs))
 axes.set_xlabel("Timestep")
-axes.set_ylabel("Information modification")
+axes.set_ylabel("Information storage")
 axes.set_ylim(bottom = max(0, axes.get_ylim()[0]))
 figure.tight_layout()
-figure.savefig("info-modification-{0}.pdf".format(args.stage))
+figure.savefig("info-storage-te-{0}.pdf".format(args.stage))
