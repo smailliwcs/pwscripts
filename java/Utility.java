@@ -27,7 +27,7 @@ public class Utility {
         Properties properties = new Properties();
         try (InputStream in = Utility.class.getResourceAsStream(resourceName)) {
             if (in == null) {
-                return null;
+                return properties;
             }
             properties.load(in);
         }
@@ -45,9 +45,6 @@ public class Utility {
     }
     
     public static void printProperties(Properties properties, PrintStream out) {
-        if (properties == null) {
-            return;
-        }
         for (String key : properties.stringPropertyNames()) {
             out.printf("# %s = %s%n", key, properties.getProperty(key));
         }

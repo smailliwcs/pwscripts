@@ -7,9 +7,6 @@ public class InfoDynamics {
     
     public static void main(String[] args) throws Exception {
         parseArgs(args);
-        System.out.printf("# l_HISTORY = %d%n", sourceEmbedding);
-        System.out.printf("# k_HISTORY = %d%n", targetEmbedding);
-        System.out.printf("# COND_EMBED_LENGTHS = %d%n", conditionalEmbedding);
         calculator = new ConditionalTransferEntropyCalculatorMultiVariate(sourceEmbedding, targetEmbedding, conditionalEmbedding);
         Utility.setProperties(calculator, System.out);
         try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(System.in)) {
@@ -33,15 +30,18 @@ public class InfoDynamics {
         if (sourceEmbedding < 1) {
             throw new IllegalArgumentException();
         }
+        System.out.printf("# l_HISTORY = %d%n", sourceEmbedding);
         targetEmbedding = Integer.parseInt(args[2]);
         if (targetEmbedding < 0) {
             throw new IllegalArgumentException();
         }
+        System.out.printf("# k_HISTORY = %d%n", targetEmbedding);
         if (args.length >= 4) {
             conditionalEmbedding = Integer.parseInt(args[3]);
             if (conditionalEmbedding < 0) {
                 throw new IllegalArgumentException();
             }
+            System.out.printf("# COND_EMBED_LENGTHS = %d%n", conditionalEmbedding);
         }
     }
     

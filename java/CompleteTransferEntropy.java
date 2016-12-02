@@ -10,6 +10,7 @@ public class CompleteTransferEntropy {
     public static void main(String[] args) throws Exception {
         calculator = new ConditionalTransferEntropyCalculatorKraskov();
         properties = Utility.setProperties(calculator, System.out);
+        parseArgs(args);
         try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(System.in)) {
             reader.printArguments(System.out);
             while (true) {
@@ -31,6 +32,18 @@ public class CompleteTransferEntropy {
                 }
             }
         }
+    }
+    
+    private static void parseArgs(String[] args) throws Exception  {
+        if (args.length != 3) {
+            throw new IllegalArgumentException();
+        }
+        calculator.setProperty(calculator.L_PROP_NAME, args[0]);
+        System.out.printf("# %s = %s%n", calculator.L_PROP_NAME, args[0]);
+        calculator.setProperty(calculator.K_PROP_NAME, args[1]);
+        System.out.printf("# %s = %s%n", calculator.K_PROP_NAME, args[1]);
+        properties.setProperty(calculator.COND_EMBED_LENGTHS_PROP_NAME, args[2]);
+        System.out.printf("# %s = %s%n", calculator.COND_EMBED_LENGTHS_PROP_NAME, args[2]);
     }
     
     private static double calculate(TimeSeriesEnsemble ensemble, Synapse synapse) throws Exception {

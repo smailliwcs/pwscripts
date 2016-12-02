@@ -7,6 +7,7 @@ public class ApparentTransferEntropy {
     public static void main(String[] args) throws Exception {
         calculator = new TransferEntropyCalculatorKraskov();
         Utility.setProperties(calculator, System.out);
+        parseArgs(args);
         try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(System.in)) {
             reader.printArguments(System.out);
             while (true) {
@@ -28,6 +29,16 @@ public class ApparentTransferEntropy {
                 }
             }
         }
+    }
+    
+    private static void parseArgs(String[] args) throws Exception  {
+        if (args.length != 2) {
+            throw new IllegalArgumentException();
+        }
+        calculator.setProperty(calculator.L_PROP_NAME, args[0]);
+        System.out.printf("# %s = %s%n", calculator.L_PROP_NAME, args[0]);
+        calculator.setProperty(calculator.K_PROP_NAME, args[1]);
+        System.out.printf("# %s = %s%n", calculator.K_PROP_NAME, args[1]);
     }
     
     private static double calculate(TimeSeriesEnsemble ensemble, Synapse synapse) throws Exception {

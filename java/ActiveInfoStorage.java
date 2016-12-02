@@ -7,6 +7,7 @@ public class ActiveInfoStorage {
     public static void main(String[] args) throws Exception {
         calculator = new ActiveInfoStorageCalculatorKraskov();
         Utility.setProperties(calculator, System.out);
+        parseArgs(args);
         try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(System.in)) {
             reader.printArguments(System.out);
             while (true) {
@@ -19,6 +20,14 @@ public class ActiveInfoStorage {
                 }
             }
         }
+    }
+    
+    private static void parseArgs(String[] args) throws Exception {
+        if (args.length != 1) {
+            throw new IllegalArgumentException();
+        }
+        calculator.setProperty(calculator.K_PROP_NAME, args[0]);
+        System.out.printf("# %s = %s%n", calculator.K_PROP_NAME, args[0]);
     }
     
     private static double calculate(TimeSeriesEnsemble ensemble, int neuronIndex) throws Exception {
