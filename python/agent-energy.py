@@ -33,6 +33,8 @@ for run in runs:
                 sys.stderr.write("{0}\n".format(agent))
             path = os.path.join(run, "energy", args.metric, "agent_{0}.txt".format(agent))
             data = plotlib.getDataColumns(path, "AgentEnergy{0}".format(args.metric.capitalize()))
+            if lifeSpans[agent] == 0:
+                continue
             values[agent] = sum(data["Energy"]) / lifeSpans[agent]
         plotlib.writeAgentData(run, fileName, values)
     zipped = plotlib.zipAgentData(births, values)
