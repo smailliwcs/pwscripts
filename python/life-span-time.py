@@ -20,4 +20,4 @@ for run in runs:
 axes.set_xlabel("Timestep")
 axes.set_ylabel("Life span")
 figure.tight_layout()
-figure.savefig("life-span.pdf")
+figure.savefig("life-span-time.pdf")
