@@ -31,7 +31,7 @@ for run in runs:
     births = plotlib.getBirths(run)
     mutualInfoValues = {}
     integrationValues = {}
-    path = os.path.join(run, "plots", "data", "complexity-{0}.txt".format(args.stage))
+    path = os.path.join(run, "plots", "data", "complexity-jidt-{0}.txt".format(args.stage))
     with open(path) as f:
         for line in f:
             if line.startswith("#"):
@@ -55,4 +55,4 @@ for run in runs:
 axes.set_xlabel("Timestep")
 axes.set_ylabel(getLabel(args.norm))
 figure.tight_layout()
-figure.savefig("complexity-{0}-{1}.pdf".format(getMetric(args.norm), args.stage))
+figure.savefig("complexity-jidt-{0}-{1}.pdf".format(getMetric(args.norm), args.stage))

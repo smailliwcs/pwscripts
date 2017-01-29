@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+if [[ $# -ne 1 ]]; then
+    echo "Usage: $(basename "$0") RUN"
+    exit 1
+fi
+run=$1
+shift
+for file in $run/brain/function/*; do
+    ./bin/CalcComplexity brainfunction --bare "$file" P
+done
