@@ -19,7 +19,9 @@ for run in runs:
     with open(path) as f:
         for line in f:
             agent, value = line.split()
-            values[int(agent)] = float(value)
+            value = float(value)
+            if value != 0:
+                values[int(agent)] = value
     zipped = plotlib.zipAgentData(births, values)
     binned = plotlib.binData(zipped[0], zipped[1], args.bin_width)
     axes.plot(binned[0], binned[1], alpha = 1.0 / len(runs))
