@@ -12,11 +12,11 @@ def parseArgs():
 def getPopulations(run):
     path = os.path.join(run, "population.txt")
     populationData = plotlib.getDataColumns(path, "Population")["Population"]
-    lifeSpanData = plotlib.getLifeSpanData(run, plotlib.isNotTruncatedLifeSpan)
+    lifespanData = plotlib.getLifespanData(run, plotlib.isNotTruncatedLifespan)
     populations = {}
-    for agent in lifeSpanData:
-        birth = lifeSpanData[agent]["BirthStep"]
-        death = lifeSpanData[agent]["DeathStep"]
+    for agent in lifespanData:
+        birth = lifespanData[agent]["BirthStep"]
+        death = lifespanData[agent]["DeathStep"]
         populations[agent] = plotlib.getMean(populationData[birth + 1:death + 1])
     return populations
 
@@ -24,8 +24,8 @@ args = parseArgs()
 figure = plotlib.getFigure()
 axes = figure.gca()
 populations = getPopulations(args.run)
-lifeSpans = plotlib.getLifeSpans(args.run, plotlib.isNotTruncatedLifeSpan)
-zipped = plotlib.zipAgentData(populations, lifeSpans)
+lifespans = plotlib.getLifespans(args.run, plotlib.isNotTruncatedLifespan)
+zipped = plotlib.zipAgentData(populations, lifespans)
 image = axes.hist2d(zipped[0], zipped[1], args.bins, cmap = plotlib.colormaps["gray_partial_r"], norm = matplotlib.colors.LogNorm())[3]
 fit = plotlib.getFit(zipped[0], zipped[1])
 axes.plot(fit[0], fit[1], linewidth = 2, color = "1")

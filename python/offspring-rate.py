@@ -13,11 +13,11 @@ axes = figure.gca()
 runs = list(plotlib.getRuns(args.runs))
 for run in runs:
     births = plotlib.getBirths(run)
-    lifeSpans = plotlib.getLifeSpans(run)
+    lifespans = plotlib.getLifespans(run)
     offspring = plotlib.getOffspring(run)
     values = {}
     for agent in offspring:
-        values[agent] = float(len(offspring[agent])) / lifeSpans[agent]
+        values[agent] = float(len(offspring[agent])) / lifespans[agent]
     zipped = plotlib.zipAgentData(births, values)
     binned = plotlib.binData(zipped[0], zipped[1], args.bin_width)
     axes.plot(binned[0], binned[1], alpha = 1.0 / len(runs))

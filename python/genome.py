@@ -19,7 +19,7 @@ geneMin = getattr(args, "gene-min")
 geneMax = getattr(args, "gene-max")
 if geneMax is None:
     geneMax = geneMin
-births = plotlib.getBirths(args.run, plotlib.isNotSeedLifeSpan)
+births = plotlib.getBirths(args.run, plotlib.isNotSeedLifespan)
 data = {}
 for index in range(geneMin, geneMax + 1):
     data[index] = [[], []]

@@ -108,7 +108,7 @@ def close(figure):
     matplotlib.pyplot.close(figure)
 
 def getBirths(run, predicate = lambda row: True):
-    return getLifeSpanData(run, predicate, "BirthStep")
+    return getLifespanData(run, predicate, "BirthStep")
 
 def getData(path, tableNames = None):
     multiple = tableNames is None or isIterable(tableNames)
@@ -135,7 +135,7 @@ def getDataRows(path, tableName):
         yield row
 
 def getDeaths(run, predicate = lambda row: True):
-    return getLifeSpanData(run, predicate, "DeathStep")
+    return getLifespanData(run, predicate, "DeathStep")
 
 def getEndTimestep(run):
     with open(os.path.join(run, "endStep.txt")) as f:
@@ -220,7 +220,7 @@ def getGraph(run, agent, stage, type, sizeOnly = False):
 def getGraphSize(run, agent, type):
     return getGraph(run, agent, "birth", type, True)
 
-def getLifeSpanData(run, predicate, key = lambda row: row):
+def getLifespanData(run, predicate, key = lambda row: row):
     values = {}
     path = os.path.join(run, "lifespans.txt")
     for row in getDataRows(path, "LifeSpans"):
@@ -233,8 +233,8 @@ def getLifeSpanData(run, predicate, key = lambda row: row):
         values[row["Agent"]] = value
     return values
 
-def getLifeSpans(run, predicate = lambda row: True):
-    return getLifeSpanData(run, predicate, lambda row: row["DeathStep"] - row["BirthStep"])
+def getLifespans(run, predicate = lambda row: True):
+    return getLifespanData(run, predicate, lambda row: row["DeathStep"] - row["BirthStep"])
 
 def getMean(values, predicate = lambda value: True):
     count = 0
@@ -323,11 +323,11 @@ def getWorldfileParameter(run, parameterName):
 def isIterable(obj):
     return hasattr(obj, "__iter__")
 
-def isNotSeedLifeSpan(row):
-    return not isSeedLifeSpan(row)
+def isNotSeedLifespan(row):
+    return not isSeedLifespan(row)
 
-def isNotTruncatedLifeSpan(row):
-    return not isTruncatedLifeSpan(row)
+def isNotTruncatedLifespan(row):
+    return not isTruncatedLifespan(row)
 
 def isReadable(obj):
     return hasattr(obj, "readline")
@@ -335,10 +335,10 @@ def isReadable(obj):
 def isRun(path):
     return os.path.isfile(os.path.join(path, "endStep.txt"))
 
-def isSeedLifeSpan(row):
+def isSeedLifespan(row):
     return row["BirthReason"] == "SIMINIT"
 
-def isTruncatedLifeSpan(row):
+def isTruncatedLifespan(row):
     return row["DeathReason"] == "SIMEND"
 
 def makeDirectory(*args):

@@ -24,7 +24,7 @@ runs = list(plotlib.getRuns(args.runs))
 fileName = "agent-energy-{0}.txt".format(args.metric)
 for run in runs:
     births = plotlib.getBirths(run)
-    lifeSpans = plotlib.getLifeSpans(run)
+    lifespans = plotlib.getLifespans(run)
     values = plotlib.readAgentData(run, fileName)
     if values is None:
         values = {}
@@ -33,9 +33,9 @@ for run in runs:
                 sys.stderr.write("{0}\n".format(agent))
             path = os.path.join(run, "energy", args.metric, "agent_{0}.txt".format(agent))
             data = plotlib.getDataColumns(path, "AgentEnergy{0}".format(args.metric.capitalize()))
-            if lifeSpans[agent] == 0:
+            if lifespans[agent] == 0:
                 continue
-            values[agent] = sum(data["Energy"]) / lifeSpans[agent]
+            values[agent] = sum(data["Energy"]) / lifespans[agent]
         plotlib.writeAgentData(run, fileName, values)
     zipped = plotlib.zipAgentData(births, values)
     binned = plotlib.binData(zipped[0], zipped[1], args.bin_width)
