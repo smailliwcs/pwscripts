@@ -1,11 +1,21 @@
 #!/usr/bin/env bash
 
-if [[ $# -ne 1 ]]; then
-    echo "Usage: $(basename "$0") RUN"
+if [[ $# -lt 1 || $# -gt 2 ]]; then
+    echo "Usage: $(basename "$0") [--hybrid] RUN"
     exit 1
+fi
+if [[ $1 == "--hybrid" ]]; then
+    hybrid=1
+    shift
+else
+    hybrid=0
 fi
 run=$1
 shift
-for file in $run/brain/function/*; do
-    ./bin/CalcComplexity brainfunction --bare "$file" P
-done
+if [[ $hybrid -eq 1 ]]; then
+    python scripts/bf2ts.py "$run" | infodynamics Complexity
+else
+    for file in $run/brain/function/*; do
+        ./bin/CalcComplexity brainfunction --bare "$file" P
+    done
+fi
