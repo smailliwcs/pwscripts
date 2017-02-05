@@ -21,7 +21,7 @@ def getValues(metric):
         for line in f:
             if line.startswith("#"):
                 continue
-            if metric == "pw":
+            if metric in ("pw", "hybrid-ts"):
                 agent, value = line.split()
                 value = float(value)
                 if value != 0:

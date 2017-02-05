@@ -1,21 +1,32 @@
 #!/usr/bin/env bash
 
 if [[ $# -lt 1 || $# -gt 2 ]]; then
-    echo "Usage: $(basename "$0") [--hybrid] RUN"
+    echo "Usage: $(basename "$0") [--hybrid-bf | --hybrid-ts] RUN"
     exit 1
 fi
-if [[ $1 == "--hybrid" ]]; then
-    hybrid=1
+if [[ $1 == "--hybrid-bf" ]]; then
+    hybridBf=1
     shift
 else
-    hybrid=0
+    hybridBf=0
+fi
+if [[ $1 == "--hybrid-ts" ]]; then
+    hybridTs=1
+    shift
+else
+    hybridTs=0
 fi
 run=$1
 shift
-if [[ $hybrid -eq 1 ]]; then
+if [[ $hybridBf -eq 1 ]]; then
     python scripts/bf2ts.py "$run" | infodynamics Complexity
 else
-    for file in $run/brain/function/*; do
+    if [[ $hybridTs -eq 1 ]]; then
+        directory=timeseries
+    else
+        directory=function
+    fi
+    for file in $run/brain/$directory/*; do
         ./bin/CalcComplexity brainfunction --bare "$file" P
     done
 fi
