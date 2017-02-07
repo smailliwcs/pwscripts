@@ -18,7 +18,7 @@ axes = figure.gca()
 runs = list(plotlib.getRuns(args.runs))
 for run in runs:
     endStep = plotlib.getEndTimestep(run)
-    x = numpy.linspace(0, endStep, endStep / args.bin_width + 1)
+    x = numpy.arange(0, endStep + args.bin_width, args.bin_width)
     agents = [None] * len(x)
     for index in range(len(x)):
         agents[index] = []

@@ -34,8 +34,8 @@ for agent in births:
             data[index][1].append(int(line))
 endStep = plotlib.getEndTimestep(args.run)
 bins = [
-    numpy.linspace(0, endStep, endStep / args.bin_width + 1),
-    numpy.linspace(0, 256, 65)
+    numpy.arange(0, endStep + args.bin_width, args.bin_width),
+    numpy.arange(0, 257, 4)
 ]
 titles = plotlib.getGeneTitles(args.run, geneMin, geneMax + 1)
 with plotlib.getPdf("genome.pdf") as pdf:
