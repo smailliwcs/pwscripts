@@ -324,7 +324,7 @@ def getWorldfileParameter(run, parameterName):
     with open(path) as f:
         for line in f:
             chunks = line.strip().split()
-            if chunks[0] == parameterName:
+            if len(chunks) >= 2 and chunks[0] == parameterName:
                 return chunks[1]
 
 def isIterable(obj):
