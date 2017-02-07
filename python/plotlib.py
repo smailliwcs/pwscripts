@@ -40,6 +40,13 @@ class Graph:
         for neuron in range(size):
             self.weights[neuron] = [None] * size
     
+    def hasWeights(self):
+        for preNeuron in range(self.size):
+            for postNeuron in range(self.size):
+                if self.weights[preNeuron][postNeuron] is not None:
+                    return True
+        return False
+    
     def getTypeCount(self, type):
         count = 0
         for _type in self.types:
