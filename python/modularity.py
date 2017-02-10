@@ -138,7 +138,7 @@ for run in runs:
                 sys.stderr.write("{0}\n".format(agent))
             if agent in values:
                 continue
-            graph = plotlib.getGraph(run, agent, args.stage, args.graph)
+            graph = plotlib.Graph.read(run, agent, args.stage, args.graph)
             if graph is None or not graph.hasWeights():
                 continue
             values[agent] = getModularity(graph.weights)

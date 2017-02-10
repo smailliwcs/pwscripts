@@ -33,6 +33,64 @@ dashes = (4, 1)
 class Graph:
     header = re.compile(r"^synapses (?P<agent>\d+) maxweight=(?P<weightMax>[^ ]+) numsynapses=(?P<synapses>\d+) numneurons=(?P<neurons>\d+) numinputneurons=(?P<inputs>\d+) numoutputneurons=(?P<outputs>\d+)$")
     
+    @staticmethod
+    def read(run, agent, stage, type, sizeOnly = False):
+        path = os.path.join(run, "brain", "synapses", "synapses_{0}_{1}.txt.gz".format(agent, stage))
+        if not os.path.isfile(path):
+            return None
+        with gzip.open(path) as f:
+            match = Graph.header.match(f.readline())
+            weightMax = float(match.group("weightMax"))
+            neuronCount = int(match.group("neurons"))
+            inputCount = int(match.group("inputs"))
+            outputCount = int(match.group("outputs"))
+            if type == "input":
+                neurons = range(inputCount)
+            elif type == "output":
+                neurons = range(inputCount, inputCount + outputCount)
+            elif type == "internal":
+                neurons = range(inputCount + outputCount, neuronCount)
+            elif type == "processing":
+                neurons = range(inputCount, neuronCount)
+            elif type == "all":
+                neurons = range(neuronCount)
+            else:
+                raise ValueError("unrecognized type '{0}'".format(type))
+            size = len(neurons)
+            if sizeOnly:
+                return size
+            graph = Graph(size)
+            for index in range(size):
+                neuron = neurons[index]
+                if neuron < inputCount:
+                    graph.types[index] = "input"
+                elif neuron < inputCount + outputCount:
+                    graph.types[index] = "output"
+                else:
+                    graph.types[index] = "internal"
+            while True:
+                line = f.readline()
+                if line == "":
+                    break
+                chunks = line.split()
+                preNeuron = int(chunks[0])
+                postNeuron = int(chunks[1])
+                assert preNeuron != postNeuron, "self-loop in agent {0}".format(agent)
+                if preNeuron not in neurons or postNeuron not in neurons:
+                    continue
+                preIndex = neurons.index(preNeuron)
+                postIndex = neurons.index(postNeuron)
+                weight = float(chunks[2]) / weightMax
+                if graph.weights[preIndex][postIndex] is None:
+                    graph.weights[preIndex][postIndex] = weight
+                else:
+                    graph.weights[preIndex][postIndex] += weight
+        return graph
+    
+    @staticmethod
+    def readSize(run, agent, type):
+        return Graph.read(run, agent, "birth", type, True)
+    
     def __init__(self, size):
         self.size = size
         self.types = [None] * size
@@ -170,62 +228,6 @@ def getGeneTitles(run, start = 0, stop = float("inf")):
     for line, index in readLines(path, start, stop):
         titles[index] = line.split(" :: ")[0]
     return titles
-
-def getGraph(run, agent, stage, type, sizeOnly = False):
-    path = os.path.join(run, "brain", "synapses", "synapses_{0}_{1}.txt.gz".format(agent, stage))
-    if not os.path.isfile(path):
-        return None
-    with gzip.open(path) as f:
-        match = Graph.header.match(f.readline())
-        weightMax = float(match.group("weightMax"))
-        neuronCount = int(match.group("neurons"))
-        inputCount = int(match.group("inputs"))
-        outputCount = int(match.group("outputs"))
-        if type == "input":
-            neurons = range(inputCount)
-        elif type == "output":
-            neurons = range(inputCount, inputCount + outputCount)
-        elif type == "internal":
-            neurons = range(inputCount + outputCount, neuronCount)
-        elif type == "processing":
-            neurons = range(inputCount, neuronCount)
-        elif type == "all":
-            neurons = range(neuronCount)
-        else:
-            raise ValueError("unrecognized type '{0}'".format(type))
-        size = len(neurons)
-        if sizeOnly:
-            return size
-        graph = Graph(size)
-        for index in range(size):
-            neuron = neurons[index]
-            if neuron < inputCount:
-                graph.types[index] = "input"
-            elif neuron < inputCount + outputCount:
-                graph.types[index] = "output"
-            else:
-                graph.types[index] = "internal"
-        while True:
-            line = f.readline()
-            if line == "":
-                break
-            chunks = line.split()
-            preNeuron = int(chunks[0])
-            postNeuron = int(chunks[1])
-            assert preNeuron != postNeuron, "self-loop in agent {0}".format(agent)
-            if preNeuron not in neurons or postNeuron not in neurons:
-                continue
-            preIndex = neurons.index(preNeuron)
-            postIndex = neurons.index(postNeuron)
-            weight = float(chunks[2]) / weightMax
-            if graph.weights[preIndex][postIndex] is None:
-                graph.weights[preIndex][postIndex] = weight
-            else:
-                graph.weights[preIndex][postIndex] += weight
-    return graph
-
-def getGraphSize(run, agent, type):
-    return getGraph(run, agent, "birth", type, True)
 
 def getLifespanData(run, predicate, key = lambda row: row):
     values = {}

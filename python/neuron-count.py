@@ -29,7 +29,7 @@ for run in runs:
         for agent in births:
             if agent % 1000 == 0:
                 sys.stderr.write("{0}\n".format(agent))
-            values[agent] = plotlib.getGraphSize(run, agent, args.graph)
+            values[agent] = plotlib.Graph.readSize(run, agent, args.graph)
         plotlib.writeAgentData(run, fileName, values)
     zipped = plotlib.zipAgentData(births, values)
     binned = plotlib.binData(zipped[0], zipped[1], args.bin_width)

@@ -43,7 +43,7 @@ for run in runs:
         for agent in births:
             if agent % 1000 == 0:
                 sys.stderr.write("{0}\n".format(agent))
-            graph = plotlib.getGraph(run, agent, args.stage, args.graph)
+            graph = plotlib.Graph.read(run, agent, args.stage, args.graph)
             if graph is None:
                 continue
             strengths = [0] * graph.size
