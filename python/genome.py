@@ -11,7 +11,7 @@ def parseArgs():
     parser.add_argument("run", metavar = "RUN", help = "run directory")
     parser.add_argument("gene-min", metavar = "GENE_MIN", type = int, help = "minimum gene index")
     parser.add_argument("gene-max", metavar = "GENE_MAX", type = int, nargs = "?", help = "maximum gene index")
-    parser.add_argument("--bin-width", metavar = "BIN_WIDTH", type = int, default = 250, help = "bin width")
+    parser.add_argument("--bins", metavar = "BINS", type = int, default = 100, help = "bin count")
     return parser.parse_args()
 
 args = parseArgs()
@@ -33,18 +33,14 @@ for agent in births:
             data[index][0].append(birth)
             data[index][1].append(int(line))
 endStep = plotlib.getEndTimestep(args.run)
-bins = [
-    numpy.arange(0, endStep + args.bin_width, args.bin_width),
-    numpy.arange(0, 257, 4)
-]
 titles = plotlib.getGeneTitles(args.run, geneMin, geneMax + 1)
 with plotlib.getPdf("genome.pdf") as pdf:
     for index in range(geneMin, geneMax + 1):
         sys.stderr.write("{0}\n".format(index))
         figure = plotlib.getFigure()
         axes = figure.gca()
-        image = axes.hist2d(data[index][0], data[index][1], bins, cmap = plotlib.colormaps["gray_partial_r"], norm = matplotlib.colors.LogNorm())[3]
-        binned = plotlib.binData(data[index][0], data[index][1], args.bin_width)
+        image = axes.hist2d(data[index][0], data[index][1], (args.bins, 64), ((0, endStep), (0, 256)), cmap = plotlib.colormaps["gray_partial_r"], norm = matplotlib.colors.LogNorm())[3]
+        binned = plotlib.binData(data[index][0], data[index][1], float(endStep) / args.bins)
         axes.plot(binned[0], binned[1], linewidth = 2, color = "1")
         axes.plot(binned[0], binned[1], linewidth = 1, color = "0")
         axes.set_xlabel("Timestep")
