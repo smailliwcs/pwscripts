@@ -327,6 +327,9 @@ def getWorldfileParameter(run, parameterName):
             if len(chunks) >= 2 and chunks[0] == parameterName:
                 return chunks[1]
 
+def hist2d(axes, *args, **kwargs):
+    return axes.hist2d(*args, cmap = colormaps["gray_partial_r"], norm = matplotlib.colors.LogNorm(), **kwargs)[3]
+
 def isIterable(obj):
     return hasattr(obj, "__iter__")
 

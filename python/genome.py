@@ -39,7 +39,7 @@ with plotlib.getPdf("genome.pdf") as pdf:
         sys.stderr.write("{0}\n".format(index))
         figure = plotlib.getFigure()
         axes = figure.gca()
-        image = axes.hist2d(data[index][0], data[index][1], (args.bins, 64), ((0, endStep), (0, 256)), cmap = plotlib.colormaps["gray_partial_r"], norm = matplotlib.colors.LogNorm())[3]
+        image = plotlib.hist2d(axes, data[index][0], data[index][1], (args.bins, 64), ((0, endStep), (0, 256)))
         binned = plotlib.binData(data[index][0], data[index][1], float(endStep) / args.bins)
         axes.plot(binned[0], binned[1], linewidth = 2, color = "1")
         axes.plot(binned[0], binned[1], linewidth = 1, color = "0")

@@ -1,5 +1,4 @@
 import argparse
-import matplotlib
 import os
 import plotlib
 
@@ -26,7 +25,7 @@ axes = figure.gca()
 populations = getPopulations(args.run)
 lifespans = plotlib.getLifespans(args.run, plotlib.isNotTruncatedLifespan)
 zipped = plotlib.zipAgentData(populations, lifespans)
-image = axes.hist2d(zipped[0], zipped[1], args.bins, cmap = plotlib.colormaps["gray_partial_r"], norm = matplotlib.colors.LogNorm())[3]
+image = plotlib.hist2d(axes, zipped[0], zipped[1], args.bins)
 fit = plotlib.getFit(zipped[0], zipped[1])
 axes.plot(fit[0], fit[1], linewidth = 2, color = "1")
 axes.plot(fit[0], fit[1], linewidth = 1, color = "0")
