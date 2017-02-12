@@ -1,32 +1,55 @@
 #!/usr/bin/env bash
 
-if [[ $# -lt 1 || $# -gt 2 ]]; then
-    echo "Usage: $(basename "$0") [--hybrid-bf | --hybrid-ts] RUN"
+usage="Usage: $(basename "$0") [--hybrid-jidt | --hybrid-pw] [STEPS] RUN"
+if [[ $# -lt 1 || $# -gt 3 ]]; then
+    echo "$usage"
     exit 1
 fi
-if [[ $1 == "--hybrid-bf" ]]; then
-    hybridBf=1
+if [[ $1 == "--hybrid-jidt" ]]; then
+    hybridJidt=1
     shift
 else
-    hybridBf=0
+    hybridJidt=0
 fi
-if [[ $1 == "--hybrid-ts" ]]; then
-    hybridTs=1
+if [[ $1 == "--hybrid-pw" ]]; then
+    hybridPw=1
     shift
 else
-    hybridTs=0
+    hybridPw=0
+fi
+if [[ $# -gt 1 ]]; then
+    steps=$1
+    shift
+    if [[ $steps -le 0 ]]; then
+        echo "Number of timesteps must be greater than zero."
+        exit 1
+    fi
+else
+    steps=0
 fi
 run=$1
 shift
-if [[ $hybridBf -eq 1 ]]; then
-    python scripts/bf2ts.py "$run" | infodynamics Complexity
-else
-    if [[ $hybridTs -eq 1 ]]; then
-        directory=timeseries
+if [[ $# -gt 0 ]]; then
+    echo "$usage"
+    exit 1
+fi
+if [[ $hybridJidt -eq 1 ]]; then
+    if [[ $steps -gt 0 ]]; then
+        ./scripts/bf2ts.py --steps $steps "$run" | infodynamics Complexity
     else
-        directory=function
+        ./scripts/bf2ts.py --max-steps 500 "$run" | infodynamics Complexity
+    fi
+else
+    if [[ $hybridPw -eq 1 ]]; then
+        directory="timeseries"
+    else
+        directory="function"
     fi
     for file in $run/brain/$directory/*; do
-        ./bin/CalcComplexity brainfunction --bare "$file" P
+        if [[ $steps -gt 0 ]]; then
+            ./bin/CalcComplexity brainfunction --bare --tile "$file" $steps P
+        else
+            ./bin/CalcComplexity brainfunction --bare "$file" P
+        fi
     done
 fi
