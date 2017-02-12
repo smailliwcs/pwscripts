@@ -3,7 +3,7 @@ import java.util.*;
 import java.util.regex.*;
 
 public class TimeSeriesEnsembleReader implements AutoCloseable {
-    private static final Pattern argument = Pattern.compile("[a-z0-9_]+ = .+", Pattern.CASE_INSENSITIVE);
+    private static final Pattern argument = Pattern.compile("[a-z0-9_-]+ = .+", Pattern.CASE_INSENSITIVE);
     private static final Pattern agent = Pattern.compile("# AGENT (\\d+)");
     private static final Pattern dimensions = Pattern.compile("# DIMENSIONS (\\d+) (\\d+) (\\d+)");
     
