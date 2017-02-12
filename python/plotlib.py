@@ -3,6 +3,7 @@ import gzip
 import math
 import matplotlib
 import matplotlib.backends.backend_pdf
+import matplotlib.patheffects
 import matplotlib.pyplot
 import numpy
 import os
@@ -162,6 +163,13 @@ class LogFormatter(matplotlib.ticker.Formatter):
     def format(self, tick):
         return format(tick, self.formatSpec)
 
+def annotate(axes, s, ha = "right", va = "top"):
+    margin = 0.05
+    x = { "left": margin, "center": 0.5, "right": 1 - margin }[ha]
+    y = { "top": 1 - margin, "center": 0.5, "baseline": margin }[va]
+    text = axes.text(x, y, s, transform = axes.transAxes, ha = ha, va = va)
+    text.set_path_effects([matplotlib.patheffects.withStroke(linewidth = 1, foreground = "1")])
+
 def binData(x, y, width, statistic = "mean"):
     xMax = max(x)
     bins = [0] + list(numpy.arange(1, xMax, width)) + [xMax]
@@ -210,11 +218,11 @@ def getFigure(width = 4, height = 3, fontSize = 8):
     matplotlib.rcParams["font.size"] = fontSize
     return matplotlib.pyplot.figure(figsize = (width, height))
 
-def getFit(x, y, degree = 1, count = 100):
-    fit = numpy.polyfit(x, y, degree)
-    fitFn = numpy.poly1d(fit)
-    points = numpy.linspace(min(x), max(x), count)
-    return points, fitFn(points)
+def getFit(x, y):
+    m, b, r = scipy.stats.linregress(x, y)[:3]
+    xFit = [min(x), max(x)]
+    yFit = map(lambda x: m * x + b, xFit)
+    return xFit, yFit, r
 
 def getGeneTitle(run, index):
     return getGeneTitles(run, index, index + 1)[index]
