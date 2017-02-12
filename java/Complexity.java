@@ -3,10 +3,12 @@ import infodynamics.measures.continuous.kraskov.*;
 import java.util.*;
 
 public class Complexity {
+    private static boolean complexityOnly;
     private static MutualInfoCalculatorMultiVariate mutualInfoCalculator;
     private static MultiInfoCalculator integrationCalculator;
     
     public static void main(String[] args) throws Exception {
+        parseArgs(args);
         mutualInfoCalculator = new MutualInfoCalculatorMultiVariateKraskov1();
         integrationCalculator = new MultiInfoCalculatorKraskov1();
         Utility.setProperties(mutualInfoCalculator, System.out);
@@ -18,25 +20,47 @@ public class Complexity {
                 if (ensemble == null) {
                     break;
                 }
+                double complexity = 0.0;
                 int[] processingNeuronIndices = ensemble.getProcessingNeuronIndices();
                 for (int neuronIndex : processingNeuronIndices) {
                     int[] otherNeuronIndices = getOtherNeuronIndices(processingNeuronIndices, neuronIndex);
                     double mutualInfo = calculateMutualInfo(ensemble, new int[] { neuronIndex }, otherNeuronIndices);
-                    System.out.printf("%d %d %g%n", ensemble.getAgentIndex(), neuronIndex, mutualInfo);
+                    if (complexityOnly) {
+                        complexity += mutualInfo;
+                    } else {
+                        System.out.printf("%d %d %g%n", ensemble.getAgentIndex(), neuronIndex, mutualInfo);
+                    }
                 }
                 double integration = calculateIntegration(ensemble, processingNeuronIndices);
-                System.out.printf("%d - %g%n", ensemble.getAgentIndex(), integration);
+                if (complexityOnly) {
+                    complexity -= integration;
+                    System.out.printf("%d %g%n", ensemble.getAgentIndex(), complexity);
+                } else {
+                    System.out.printf("%d - %g%n", ensemble.getAgentIndex(), integration);
+                }
             }
         }
     }
     
-    private static double calculateMutualInfo(TimeSeriesEnsemble ensemble, int[] sourceNeuronIndices, int[] targetNeuronIndices) throws Exception {
-        mutualInfoCalculator.initialise(sourceNeuronIndices.length, targetNeuronIndices.length);
+    private static void parseArgs(String[] args) {
+        if (args.length == 1) {
+            if (args[0].equals("--complexity-only")) {
+                complexityOnly = true;
+            } else {
+                throw new IllegalArgumentException();
+            }
+        } else if (args.length > 1) {
+            throw new IllegalArgumentException();
+        }
+    }
+    
+    private static double calculateMutualInfo(TimeSeriesEnsemble ensemble, int[] neuronIndices1, int[] neuronIndices2) throws Exception {
+        mutualInfoCalculator.initialise(neuronIndices1.length, neuronIndices2.length);
         mutualInfoCalculator.startAddObservations();
         for (TimeSeries timeSeries : ensemble.getTimeSeries()) {
-            double[][] source = timeSeries.get(sourceNeuronIndices);
-            double[][] target = timeSeries.get(targetNeuronIndices);
-            mutualInfoCalculator.addObservations(source, target);
+            double[][] data1 = timeSeries.get(neuronIndices1);
+            double[][] data2 = timeSeries.get(neuronIndices2);
+            mutualInfoCalculator.addObservations(data1, data2);
         }
         mutualInfoCalculator.finaliseAddObservations();
         return mutualInfoCalculator.computeAverageLocalOfObservations();
