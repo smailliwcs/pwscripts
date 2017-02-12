@@ -20,23 +20,28 @@ public class Complexity {
                 if (ensemble == null) {
                     break;
                 }
-                double complexity = 0.0;
-                int[] processingNeuronIndices = ensemble.getProcessingNeuronIndices();
-                for (int neuronIndex : processingNeuronIndices) {
-                    int[] otherNeuronIndices = getOtherNeuronIndices(processingNeuronIndices, neuronIndex);
-                    double mutualInfo = calculateMutualInfo(ensemble, new int[] { neuronIndex }, otherNeuronIndices);
-                    if (complexityOnly) {
-                        complexity += mutualInfo;
-                    } else {
-                        System.out.printf("%d %d %g%n", ensemble.getAgentIndex(), neuronIndex, mutualInfo);
+                try
+                {
+                    double complexity = 0.0;
+                    int[] processingNeuronIndices = ensemble.getProcessingNeuronIndices();
+                    for (int neuronIndex : processingNeuronIndices) {
+                        int[] otherNeuronIndices = getOtherNeuronIndices(processingNeuronIndices, neuronIndex);
+                        double mutualInfo = calculateMutualInfo(ensemble, new int[] { neuronIndex }, otherNeuronIndices);
+                        if (complexityOnly) {
+                            complexity += mutualInfo;
+                        } else {
+                            System.out.printf("%d %d %g%n", ensemble.getAgentIndex(), neuronIndex, mutualInfo);
+                        }
                     }
-                }
-                double integration = calculateIntegration(ensemble, processingNeuronIndices);
-                if (complexityOnly) {
-                    complexity -= integration;
-                    System.out.printf("%d %g%n", ensemble.getAgentIndex(), complexity);
-                } else {
-                    System.out.printf("%d - %g%n", ensemble.getAgentIndex(), integration);
+                    double integration = calculateIntegration(ensemble, processingNeuronIndices);
+                    if (complexityOnly) {
+                        complexity -= integration;
+                        System.out.printf("%d %g%n", ensemble.getAgentIndex(), complexity);
+                    } else {
+                        System.out.printf("%d - %g%n", ensemble.getAgentIndex(), integration);
+                    }
+                } catch (Exception ex) {
+                    System.err.printf("%d: %s%n", ensemble.getAgentIndex(), ex.getMessage());
                 }
             }
         }
