@@ -1,4 +1,5 @@
 import argparse
+import math
 import os
 import plotlib
 
@@ -35,7 +36,7 @@ def getValues(run, metric):
                     agent, value = line.split()
                     value = float(value)
                     if value != 0:
-                        values[int(agent)] = value
+                        values[int(agent)] = value / math.log(math.e, 2)
                 elif metric.find("jidt") >= 0:
                     agent, neuron, value = line.split()
                     agent = int(agent)
