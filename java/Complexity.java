@@ -59,13 +59,13 @@ public class Complexity {
         }
     }
     
-    private static double calculateMutualInfo(TimeSeriesEnsemble ensemble, int[] neuronIndices1, int[] neuronIndices2) throws Exception {
-        mutualInfoCalculator.initialise(neuronIndices1.length, neuronIndices2.length);
+    private static double calculateMutualInfo(TimeSeriesEnsemble ensemble, int[] sourceNeuronIndices, int[] targetNeuronIndices) throws Exception {
+        mutualInfoCalculator.initialise(sourceNeuronIndices.length, targetNeuronIndices.length);
         mutualInfoCalculator.startAddObservations();
         for (TimeSeries timeSeries : ensemble.getTimeSeries()) {
-            double[][] data1 = timeSeries.get(neuronIndices1);
-            double[][] data2 = timeSeries.get(neuronIndices2);
-            mutualInfoCalculator.addObservations(data1, data2);
+            double[][] source = timeSeries.get(sourceNeuronIndices);
+            double[][] target = timeSeries.get(targetNeuronIndices);
+            mutualInfoCalculator.addObservations(source, target);
         }
         mutualInfoCalculator.finaliseAddObservations();
         return mutualInfoCalculator.computeAverageLocalOfObservations();
