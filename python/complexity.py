@@ -44,8 +44,6 @@ def getValues(run, metric):
                     if neuron == "-":
                         value *= -1
                     values[agent] = values.get(agent, 0) + value
-                else:
-                    raise ValueError("unrecognized metric '{0}'".format(metric))
         return values
 
 args = parseArgs()
