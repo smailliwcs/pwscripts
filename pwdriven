@@ -43,7 +43,7 @@ for index in $(seq 0 $((count - 1))); do
         fi
     done
     if [[ $count -gt 1 ]]; then
-        mv run "runs/$key/run_$index"
+        mv run "runs/$key/run-$index"
     else
         mv run "runs/$key"
     fi
