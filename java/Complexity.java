@@ -1,18 +1,8 @@
-import infodynamics.measures.continuous.*;
-import infodynamics.measures.continuous.kraskov.*;
+import infodynamics.utils.*;
 import java.util.*;
 
 public class Complexity {
-    private static boolean complexityOnly;
-    private static MutualInfoCalculatorMultiVariate mutualInfoCalculator;
-    private static MultiInfoCalculator integrationCalculator;
-    
     public static void main(String[] args) throws Exception {
-        parseArgs(args);
-        mutualInfoCalculator = new MutualInfoCalculatorMultiVariateKraskov1();
-        integrationCalculator = new MultiInfoCalculatorKraskov1();
-        Utility.setProperties(mutualInfoCalculator, System.out);
-        Utility.setProperties(integrationCalculator, System.out);
         try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(System.in)) {
             reader.printArguments(System.out);
             while (true) {
@@ -20,75 +10,49 @@ public class Complexity {
                 if (ensemble == null) {
                     break;
                 }
-                try
-                {
-                    double complexity = 0.0;
-                    int[] processingNeuronIndices = ensemble.getProcessingNeuronIndices();
-                    for (int neuronIndex : processingNeuronIndices) {
-                        int[] otherNeuronIndices = getOtherNeuronIndices(processingNeuronIndices, neuronIndex);
-                        double mutualInfo = calculateMutualInfo(ensemble, new int[] { neuronIndex }, otherNeuronIndices);
-                        if (complexityOnly) {
-                            complexity += mutualInfo;
-                        } else {
-                            System.out.printf("%d %d %g%n", ensemble.getAgentIndex(), neuronIndex, mutualInfo);
+                double noise = 1e-6;
+                do {
+                    try {
+                        int[] processingNeuronIndices = ensemble.getProcessingNeuronIndices();
+                        double[][] data = ensemble.getCombinedTimeSeries().get(processingNeuronIndices, noise, true);
+                        double[][] covariance = MatrixUtils.covarianceMatrix(data);
+                        double determinant = MatrixUtils.determinantSymmPosDefMatrix(covariance);
+                        double complexity = (processingNeuronIndices.length - 1) * getIntegration(covariance, determinant);
+                        for (int index = 0; index < processingNeuronIndices.length; index++) {
+                            int[] otherIndices = getOtherIndices(processingNeuronIndices.length, index);
+                            double[][] subcovariance = MatrixUtils.selectRowsAndColumns(covariance, otherIndices, otherIndices);
+                            double subdeterminant = MatrixUtils.determinantSymmPosDefMatrix(subcovariance);
+                            complexity -= getIntegration(subcovariance, subdeterminant);
                         }
-                    }
-                    double integration = calculateIntegration(ensemble, processingNeuronIndices);
-                    if (complexityOnly) {
-                        complexity -= integration;
+                        complexity /= processingNeuronIndices.length;
                         System.out.printf("%d %g%n", ensemble.getAgentIndex(), complexity);
-                    } else {
-                        System.out.printf("%d - %g%n", ensemble.getAgentIndex(), integration);
+                        break;
+                    } catch (Exception ex) {
+                        System.err.printf("%d: %s%n", ensemble.getAgentIndex(), ex.getMessage());
+                        System.err.println("Increasing noise...");
+                        noise *= 10.0;
                     }
-                } catch (Exception ex) {
-                    System.err.printf("%d: %s%n", ensemble.getAgentIndex(), ex.getMessage());
-                }
+                } while (noise < 1.0 - 1e-6);
             }
         }
     }
     
-    private static void parseArgs(String[] args) {
-        if (args.length == 1) {
-            if (args[0].equals("--complexity-only")) {
-                complexityOnly = true;
-            } else {
-                throw new IllegalArgumentException();
-            }
-        } else if (args.length > 1) {
-            throw new IllegalArgumentException();
+    private static double getIntegration(double[][] covariance, double determinant) throws Exception {
+        double varianceLogSum = 0.0;
+        for (int index = 0; index < covariance.length; index++) {
+            varianceLogSum += Math.log(covariance[index][index]);
         }
+        return 0.5 * (varianceLogSum - Math.log(determinant));
     }
     
-    private static double calculateMutualInfo(TimeSeriesEnsemble ensemble, int[] sourceNeuronIndices, int[] targetNeuronIndices) throws Exception {
-        mutualInfoCalculator.initialise(sourceNeuronIndices.length, targetNeuronIndices.length);
-        mutualInfoCalculator.startAddObservations();
-        for (TimeSeries timeSeries : ensemble.getTimeSeries()) {
-            double[][] source = timeSeries.get(sourceNeuronIndices);
-            double[][] target = timeSeries.get(targetNeuronIndices);
-            mutualInfoCalculator.addObservations(source, target);
-        }
-        mutualInfoCalculator.finaliseAddObservations();
-        return mutualInfoCalculator.computeAverageLocalOfObservations();
-    }
-    
-    private static double calculateIntegration(TimeSeriesEnsemble ensemble, int[] neuronIndices) throws Exception {
-        integrationCalculator.initialise(neuronIndices.length);
-        integrationCalculator.startAddObservations();
-        for (TimeSeries timeSeries : ensemble.getTimeSeries()) {
-            integrationCalculator.addObservations(timeSeries.get(neuronIndices));
-        }
-        integrationCalculator.finaliseAddObservations();
-        return integrationCalculator.computeAverageLocalOfObservations();
-    }
-    
-    private static int[] getOtherNeuronIndices(int[] neuronIndices, int neuronIndex) {
-        Collection<Integer> otherNeuronIndices = new LinkedList<Integer>();
-        for (int otherNeuronIndex : neuronIndices) {
-            if (otherNeuronIndex == neuronIndex) {
+    private static int[] getOtherIndices(int count, int index) {
+        Collection<Integer> otherIndices = new LinkedList<Integer>();
+        for (int otherIndex = 0; otherIndex < count; otherIndex++) {
+            if (otherIndex == index) {
                 continue;
             }
-            otherNeuronIndices.add(otherNeuronIndex);
+            otherIndices.add(otherIndex);
         }
-        return Utility.toPrimitive(otherNeuronIndices);
+        return Utility.toPrimitive(otherIndices);
     }
 }
