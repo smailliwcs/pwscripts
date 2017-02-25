@@ -17,7 +17,8 @@ public class Complexity {
                         double[][] data = ensemble.getCombinedTimeSeries().get(processingNeuronIndices, noise, true);
                         double[][] covariance = MatrixUtils.covarianceMatrix(data);
                         double determinant = MatrixUtils.determinantSymmPosDefMatrix(covariance);
-                        double complexity = (processingNeuronIndices.length - 1) * getIntegration(covariance, determinant);
+                        double integration = getIntegration(covariance, determinant);
+                        double complexity = (processingNeuronIndices.length - 1) * integration;
                         for (int index = 0; index < processingNeuronIndices.length; index++) {
                             int[] otherIndices = getOtherIndices(processingNeuronIndices.length, index);
                             double[][] subcovariance = MatrixUtils.selectRowsAndColumns(covariance, otherIndices, otherIndices);
@@ -25,7 +26,8 @@ public class Complexity {
                             complexity -= getIntegration(subcovariance, subdeterminant);
                         }
                         complexity /= processingNeuronIndices.length;
-                        System.out.printf("%d %g%n", ensemble.getAgentIndex(), complexity);
+                        System.out.printf("%d I %g%n", ensemble.getAgentIndex(), integration);
+                        System.out.printf("%d C %g%n", ensemble.getAgentIndex(), complexity);
                         break;
                     } catch (Exception ex) {
                         System.err.printf("%d: %s%n", ensemble.getAgentIndex(), ex.getMessage());

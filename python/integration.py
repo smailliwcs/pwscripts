@@ -21,8 +21,8 @@ for run in runs:
         for line in f:
             if line.startswith("#"):
                 continue
-            agent, neuron, value = line.split()
-            if neuron == "-":
+            agent, flag, value = line.split()
+            if flag == "I":
                 values[int(agent)] = float(value)
     zipped = plotlib.zipAgentData(births, values)
     binned = plotlib.binData(zipped[0], zipped[1], args.bin_width)

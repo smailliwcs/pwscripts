@@ -38,12 +38,9 @@ def getValues(run, metric):
                     if value != 0:
                         values[int(agent)] = value / math.log(math.e, 2)
                 elif metric.find("jidt") >= 0:
-                    agent, neuron, value = line.split()
-                    agent = int(agent)
-                    value = float(value)
-                    if neuron == "-":
-                        value *= -1
-                    values[agent] = values.get(agent, 0) + value
+                    agent, flag, value = line.split()
+                    if flag == "C":
+                        values[int(agent)] = float(value)
         return values
 
 args = parseArgs()
