@@ -1,89 +1,72 @@
 import java.util.*;
 
-public class TimeSeries implements Iterable<double[]> {
+public class TimeSeries extends ArrayList<double[]> {
     private static Random random;
-    
-    private int dimension;
-    private Collection<double[]> data;
     
     static {
         random = new Random();
     }
     
-    public TimeSeries(int dimension) {
+    private int dimension;
+    
+    public TimeSeries(int dimension, int capacity) {
+        super(capacity);
         this.dimension = dimension;
-        data = new LinkedList<double[]>();
     }
     
-    public Iterator<double[]> iterator() {
-        return data.iterator();
+    public TimeSeries(int dimension) {
+        this(dimension, 100);
     }
     
-    public double[] get(int index, double noise, boolean gaussianize) {
-        Double[] noisyData = new Double[data.size()];
-        int time = 0;
-        for (double[] datum : data) {
-            noisyData[time] = datum[index] + noise * random.nextGaussian();
-            time++;
+    public double[] getColumn(int index, Double noise, boolean gaussianize) {
+        double[] column = new double[size()];
+        for (int time = 0; time < size(); time++) {
+            column[time] = get(time)[index];
         }
-        double[] results = new double[data.size()];
-        if (gaussianize) {
-            double[] gaussianData = new double[data.size()];
-            for (time = 0; time < data.size(); time++) {
-                gaussianData[time] = random.nextGaussian();
+        if (noise != null) {
+            for (int time = 0; time < size(); time++) {
+                column[time] += noise * random.nextGaussian();
             }
-            Arrays.sort(gaussianData);
-            ArrayIndexComparator comparator = new ArrayIndexComparator(noisyData);
+        }
+        if (gaussianize) {
+            double[] gaussians = new double[size()];
+            for (int time = 0; time < size(); time++) {
+                gaussians[time] = random.nextGaussian();
+            }
+            Arrays.sort(gaussians);
+            IndexComparator comparator = new IndexComparator(column);
             Integer[] sortedTimes = comparator.getIndices();
             Arrays.sort(sortedTimes, comparator);
-            time = 0;
-            for (int sortedTime : sortedTimes) {
-                results[sortedTime] = gaussianData[time];
-                time++;
-            }
-        } else {
-            for (time = 0; time < data.size(); time++) {
-                results[time] = noisyData[time];
+            for (int time = 0; time < size(); time++) {
+                column[sortedTimes[time]] = gaussians[time];
             }
         }
-        return results;
+        return column;
     }
     
-    public double[] get(int index, double noise) {
-        return get(index, noise, false);
+    public double[] getColumn(int index) {
+        return getColumn(index, null, false);
     }
     
-    public double[] get(int index) {
-        return get(index, 0.0, false);
-    }
-    
-    public double[][] get(int[] indices, double noise, boolean gaussianize) {
-        if (indices.length == 0) {
-            return null;
-        }
-        double[][] results = new double[data.size()][indices.length];
+    public double[][] getColumns(int[] indices, Double noise, boolean gaussianize) {
+        double[][] columns = new double[size()][indices.length];
         for (int index = 0; index < indices.length; index++) {
-            int time = 0;
-            for (double value : get(indices[index], noise, gaussianize)) {
-                results[time][index] = value;
-                time++;
+            double[] column = getColumn(indices[index], noise, gaussianize);
+            for (int time = 0; time < size(); time++) {
+                columns[time][index] = column[time];
             }
         }
-        return results;
+        return columns;
     }
     
-    public double[][] get(int[] indices, double noise) {
-        return get(indices, noise, false);
+    public double[][] getColumns(int[] indices) {
+        return getColumns(indices, null, false);
     }
     
-    public double[][] get(int[] indices) {
-        return get(indices, 0.0, false);
-    }
-    
-    public void add(double[] datum) {
-        if (datum.length != dimension) {
-            throw new IllegalArgumentException(String.format("Number of values %d does not match dimension %d.", datum.length, dimension));
+    public boolean add(double[] row) {
+        if (row.length != dimension) {
+            throw new IllegalArgumentException(String.format("Row length %d does not match dimension %d.", row.length, dimension));
         }
-        data.add(datum);
+        return super.add(row);
     }
 }

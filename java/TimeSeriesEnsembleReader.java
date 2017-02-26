@@ -3,9 +3,13 @@ import java.util.*;
 import java.util.regex.*;
 
 public class TimeSeriesEnsembleReader implements AutoCloseable {
-    private static final Pattern argument = Pattern.compile("[a-z0-9_-]+ = .+", Pattern.CASE_INSENSITIVE);
-    private static final Pattern agent = Pattern.compile("# AGENT (\\d+)");
-    private static final Pattern dimensions = Pattern.compile("# DIMENSIONS (\\d+) (\\d+) (\\d+)");
+    private static final Pattern ARGUMENT = Pattern.compile("[a-zA-Z0-9_\\-]+ = .+");
+    private static final Pattern AGENT = Pattern.compile("# AGENT (?<agentIndex>\\d+)");
+    private static final Pattern DIMENSIONS = Pattern.compile("# DIMENSIONS (?<neuronCount>\\d+) (?<inputNeuronCount>\\d+) (?<outputNeuronCount>\\d+)");
+    
+    private static String getExceptionMessage(String line) {
+        return String.format("Unexpected line '%s'.", line);
+    }
     
     private BufferedReader reader;
     
@@ -13,7 +17,7 @@ public class TimeSeriesEnsembleReader implements AutoCloseable {
         reader = new BufferedReader(new InputStreamReader(in));
     }
     
-    public void printArguments(PrintStream out) throws IOException {
+    public void readArguments(PrintStream out) throws IOException {
         {
             String line = reader.readLine();
             if (!line.equals("# BEGIN ARGUMENTS")) {
@@ -25,7 +29,7 @@ public class TimeSeriesEnsembleReader implements AutoCloseable {
             if (line.equals("# END ARGUMENTS")) {
                 break;
             }
-            Matcher matcher = argument.matcher(line);
+            Matcher matcher = ARGUMENT.matcher(line);
             if (!matcher.matches()) {
                 throw new IOException(getExceptionMessage(line));
             }
@@ -43,13 +47,9 @@ public class TimeSeriesEnsembleReader implements AutoCloseable {
             if (timeSeries == null) {
                 break;
             }
-            ensemble.addTimeSeries(timeSeries);
+            ensemble.add(timeSeries);
         }
         return ensemble;
-    }
-    
-    private String getExceptionMessage(String line) {
-        return String.format("Unexpected line '%s'.", line);
     }
     
     private TimeSeriesEnsemble readHeader() throws IOException {
@@ -59,48 +59,26 @@ public class TimeSeriesEnsembleReader implements AutoCloseable {
             if (line == null) {
                 return null;
             }
-            Matcher matcher = agent.matcher(line);
+            Matcher matcher = AGENT.matcher(line);
             if (!matcher.matches()) {
                 throw new IOException(getExceptionMessage(line));
             }
-            agentIndex = Integer.parseInt(matcher.group(1));
+            agentIndex = Integer.parseInt(matcher.group("agentIndex"));
         }
         int neuronCount;
         int inputNeuronCount;
         int outputNeuronCount;
         {
             String line = reader.readLine();
-            Matcher matcher = dimensions.matcher(line);
+            Matcher matcher = DIMENSIONS.matcher(line);
             if (!matcher.matches()) {
                 throw new IOException(getExceptionMessage(line));
             }
-            neuronCount = Integer.parseInt(matcher.group(1));
-            inputNeuronCount = Integer.parseInt(matcher.group(2));
-            outputNeuronCount = Integer.parseInt(matcher.group(3));
+            neuronCount = Integer.parseInt(matcher.group("neuronCount"));
+            inputNeuronCount = Integer.parseInt(matcher.group("inputNeuronCount"));
+            outputNeuronCount = Integer.parseInt(matcher.group("outputNeuronCount"));
         }
-        TimeSeriesEnsemble ensemble = new TimeSeriesEnsemble(agentIndex, neuronCount, inputNeuronCount, outputNeuronCount);
-        {
-            {
-                String line = reader.readLine();
-                if (!line.equals("# BEGIN SYNAPSES")) {
-                    throw new IOException(getExceptionMessage(line));
-                }
-            }
-            while (true) {
-                String line = reader.readLine();
-                if (line.equals("# END SYNAPSES")) {
-                    break;
-                }
-                try (Scanner scanner = new Scanner(line)) {
-                    int preNeuronIndex = scanner.nextInt();
-                    while (scanner.hasNext()) {
-                        int postNeuronIndex = scanner.nextInt();
-                        ensemble.addSynapse(new Synapse(preNeuronIndex, postNeuronIndex));
-                    }
-                }
-            }
-        }
-        return ensemble;
+        return new TimeSeriesEnsemble(agentIndex, neuronCount, inputNeuronCount, outputNeuronCount);
     }
     
     private TimeSeries readTimeSeries(int dimension) throws IOException {
@@ -122,16 +100,16 @@ public class TimeSeriesEnsembleReader implements AutoCloseable {
             if (line.equals("# END TIME SERIES")) {
                 return timeSeries;
             }
-            double[] values = new double[dimension];
+            double[] row = new double[dimension];
             try (Scanner scanner = new Scanner(line)) {
                 for (int index = 0; index < dimension; index++) {
-                    values[index] = scanner.nextDouble();
+                    row[index] = scanner.nextDouble();
                 }
                 if (scanner.hasNext()) {
                     throw new IOException(getExceptionMessage(line));
                 }
             }
-            timeSeries.add(values);
+            timeSeries.add(row);
         }
     }
     

@@ -8,8 +8,12 @@ public class Consistency {
     private static EntropyCalculatorDiscrete calculator;
     
     public static void main(String[] args) throws Exception {
-        parseArgs(args);
-        Collection<Iterator<Integer>> genomes = new LinkedList<Iterator<Integer>>();
+        if (!tryParseArgs(args)) {
+            System.err.printf("Usage: %s BASE%n", Consistency.class.getSimpleName());
+            return;
+        }
+        System.out.printf("# base = %d%n", base);
+        List<List<Integer>> genomes = new LinkedList<List<Integer>>();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
             while (true) {
                 String path = reader.readLine();
@@ -22,44 +26,45 @@ public class Consistency {
         if (genomes.size() == 0) {
             return;
         }
-        Collection<Integer> values = new LinkedList<Integer>();
         calculator = new EntropyCalculatorDiscrete(256 >> base);
-        while (genomes.iterator().next().hasNext()) {
-            values.clear();
-            for (Iterator<Integer> genome : genomes) {
-                values.add(genome.next() >> base);
+        int[] genes = new int[genomes.size()];
+        int geneCount = genomes.get(0).size();
+        for (int geneIndex = 0; geneIndex < geneCount; geneIndex++) {
+            for (int genomeIndex = 0; genomeIndex < genomes.size(); genomeIndex++) {
+                genes[genomeIndex] = genomes.get(genomeIndex).get(geneIndex);
             }
-            System.out.println(calculate(Utility.toPrimitive(values)));
+            System.out.println(calculate(genes));
         }
     }
     
-    private static void parseArgs(String[] args) {
-        if (args.length != 1) {
-            throw new IllegalArgumentException();
-        }
-        base = Integer.parseInt(args[0]);
-        if (base < 0 || base > 7) {
-            throw new IllegalArgumentException();
+    private static boolean tryParseArgs(String[] args) {
+        try {
+            assert args.length == 1;
+            base = Integer.parseInt(args[0]);
+            assert base >= 0 && base <= 7;
+            return true;
+        } catch (Exception ex) {
+            return false;
         }
     }
     
-    private static Iterator<Integer> readGenome(String path) throws Exception {
-        Collection<Integer> genome = new LinkedList<Integer>();
+    private static List<Integer> readGenome(String path) throws Exception {
+        List<Integer> genome = new ArrayList<Integer>();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(path))))) {
             while (true) {
                 String line = reader.readLine();
                 if (line == null) {
                     break;
                 }
-                genome.add(Integer.parseInt(line));
+                genome.add(Integer.valueOf(line));
             }
         }
-        return genome.iterator();
+        return genome;
     }
     
-    private static double calculate(int[] values) {
+    private static double calculate(int[] genes) {
         calculator.initialise();
-        calculator.addObservations(values);
+        calculator.addObservations(genes);
         return 1.0 - calculator.computeAverageLocalOfObservations() / (8 - base);
     }
 }

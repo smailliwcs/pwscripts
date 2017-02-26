@@ -17,7 +17,7 @@ runs = list(plotlib.getRuns(args.runs))
 for run in runs:
     births = plotlib.getBirths(run)
     values = {}
-    path = os.path.join(run, "plots", "data", "info-{0}-custom-{1}.txt".format(args.metric, args.stage))
+    path = os.path.join(run, "plots", "data", "info-{0}-{1}.txt".format(args.metric, args.stage))
     with open(path) as f:
         for line in f:
             if line.startswith("#"):
@@ -31,4 +31,4 @@ axes.set_xlabel("Timestep")
 axes.set_ylabel("Information {0}".format(args.metric))
 axes.set_ylim(bottom = max(0, axes.get_ylim()[0]))
 figure.tight_layout()
-figure.savefig("info-{0}-custom-{1}.pdf".format(args.metric, args.stage))
+figure.savefig("info-{0}-{1}.pdf".format(args.metric, args.stage))

@@ -36,6 +36,8 @@ for run in runs:
         paths = [os.path.join(run, "genome", "agents", "genome_{0}.txt.gz".format(agent)) for agent in agents[index]]
         values = []
         for line in process.communicate(os.linesep.join(paths))[0].splitlines():
+            if line.startswith("#"):
+                continue
             values.append(float(line))
         y[index] = plotlib.getMean(values)
     axes.plot(x, y, alpha = 1.0 / len(runs))

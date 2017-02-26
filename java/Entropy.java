@@ -6,22 +6,22 @@ public class Entropy {
     
     public static void main(String[] args) throws Exception {
         calculator = new EntropyCalculatorMultiVariateKozachenko();
-        Utility.setProperties(calculator, System.out);
         try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(System.in)) {
-            reader.printArguments(System.out);
+            reader.readArguments(System.out);
             while (true) {
                 TimeSeriesEnsemble ensemble = reader.read();
                 if (ensemble == null) {
                     break;
                 }
-                System.out.printf("%d %g%n", ensemble.getAgentIndex(), calculate(ensemble, ensemble.getProcessingNeuronIndices()));
+                System.out.printf("%d %g%n", ensemble.getAgentIndex(), calculate(ensemble));
             }
         }
     }
     
-    private static double calculate(TimeSeriesEnsemble ensemble, int[] neuronIndices) throws Exception {
+    private static double calculate(TimeSeriesEnsemble ensemble) throws Exception {
+        int[] neuronIndices = ensemble.getProcessingNeuronIndices();
         calculator.initialise(neuronIndices.length);
-        calculator.setObservations(ensemble.getCombinedTimeSeries().get(neuronIndices));
+        calculator.setObservations(ensemble.combine().getColumns(neuronIndices));
         return calculator.computeAverageLocalOfObservations();
     }
 }
