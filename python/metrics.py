@@ -336,7 +336,7 @@ class Gene(AgentMetric):
         return label.replace("_", "\\_")
     
     def calculate(self):
-        for agent in utility.iterateNonInitialAgents(self.run):
+        for agent in utility.iterateAgents(self.run):
             path = os.path.join(self.run, "genome", "agents", "genome_{0}.txt.gz".format(agent))
             with gzip.open(path) as f:
                 for index in xrange(self.index):
