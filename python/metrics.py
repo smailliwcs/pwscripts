@@ -483,13 +483,6 @@ class MeanTimestep(LifespanMetric):
     def getValue(self, row):
         return (row["BirthStep"] + row["DeathStep"]) / 2
 
-class MaximalLyapunovExponent(StagedAgentMetric):
-    def getKey(self):
-        return "lyapunov-{0}".format(self.stage)
-    
-    def getLabel(self):
-        return "Maximal Lyapunov exponent"
-
 class Modularity(AgentMetric):
     def addArgs(self, parser):
         self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getAll()))
@@ -568,12 +561,12 @@ class OffspringRate(AgentMetric):
                 continue
             yield agent, float(counts[agent]) / lifespan
 
-class OnsetOfCriticality(StagedAgentMetric):
+class PhaseSpaceExpansion(StagedAgentMetric):
     def getKey(self):
-        return "onset-{0}".format(self.stage)
+        return "expansion-{0}".format(self.stage)
     
     def getLabel(self):
-        return "Onset of criticality"
+        return "Phase space expansion"
 
 class Population(TimeMetric):
     integral = True
