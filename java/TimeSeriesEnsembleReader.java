@@ -3,9 +3,9 @@ import java.util.*;
 import java.util.regex.*;
 
 public class TimeSeriesEnsembleReader implements AutoCloseable {
-    private static final Pattern ARGUMENT = Pattern.compile("[a-zA-Z0-9_\\-]+ = .+");
-    private static final Pattern AGENT = Pattern.compile("# AGENT (?<agentIndex>\\d+)");
-    private static final Pattern DIMENSIONS = Pattern.compile("# DIMENSIONS (?<neuronCount>\\d+) (?<inputNeuronCount>\\d+) (?<outputNeuronCount>\\d+)");
+    private static final Pattern ARGUMENT = Pattern.compile("^[a-zA-Z0-9_]+ = .+$");
+    private static final Pattern AGENT = Pattern.compile("^# AGENT (?<agentIndex>\\d+$)");
+    private static final Pattern DIMENSIONS = Pattern.compile("^# DIMENSIONS (?<neuronCount>\\d+) (?<inputNeuronCount>\\d+) (?<outputNeuronCount>\\d+)$");
     
     private static String getExceptionMessage(String line) {
         return String.format("Unexpected line '%s'.", line);
