@@ -8,6 +8,7 @@ import numpy
 import scipy.stats
 import statsmodels.nonparametric.smoothers_lowess
 import sys
+import textwrap
 import utility
 
 class Hist2dNormalize(matplotlib.colors.LogNorm):
@@ -24,12 +25,14 @@ class Plot(object):
     
     def __init__(self):
         self.metrics = []
+        metricNames = map(lambda metric: metric.__name__, metrics_mod.iterateMetrics())
+        metricNames.sort()
         for arg in sys.argv[1:]:
-            if hasattr(metrics_mod, arg):
-                attr = getattr(metrics_mod, arg)
-                if isinstance(attr, type) and issubclass(attr, metrics_mod.Metric):
-                    self.metrics.append(attr())
-        parser = argparse.ArgumentParser(add_help = False)
+            if arg in metricNames:
+                self.metrics.append(getattr(metrics_mod, arg)())
+        wrapper = textwrap.TextWrapper(subsequent_indent = "  ")
+        epilog = wrapper.fill("available metrics: {0}".format(", ".join(metricNames)))
+        parser = argparse.ArgumentParser(add_help = False, epilog = epilog, formatter_class = argparse.RawDescriptionHelpFormatter)
         parser.add_argument("run", metavar = "RUN")
         parser.add_argument("--twinx", action = "store_true")
         parser.add_argument("--xmin", metavar = "XMIN", type = float)
@@ -41,7 +44,7 @@ class Plot(object):
         if len(self.metrics) < 2:
             parser.add_argument("xmetric", metavar = "XMETRIC")
             parser.add_argument("ymetrics", metavar = "YMETRIC", nargs = "+")
-            parser.print_usage()
+            parser.print_help()
             sys.exit(1)
         for metric in self.metrics:
             parser.add_argument("metrics", metavar = type(metric).__name__, action = "append")

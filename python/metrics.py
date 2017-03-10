@@ -730,3 +730,8 @@ class Weight(WeightMetric):
                 count += 1
             if count > 0:
                 yield agent, valueSum / count
+
+def iterateMetrics():
+    for attrName, attr in globals().iteritems():
+        if isinstance(attr, type) and issubclass(attr, Metric) and not attrName.endswith("Metric"):
+            yield attr
