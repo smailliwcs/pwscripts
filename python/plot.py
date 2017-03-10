@@ -11,12 +11,12 @@ import sys
 import textwrap
 import utility
 
-class Hist2dNormalize(matplotlib.colors.LogNorm):
+class Hist2dNormalize(matplotlib.colors.Normalize):
     def __init__(self, vmin = None, vmax = None, clip = False):
         super(Hist2dNormalize, self).__init__(vmin = vmin, vmax = vmax, clip = clip)
 
     def __call__(self, value, clip = None):
-        return 0.9 * super(Hist2dNormalize, self).__call__(value, clip = clip) + 0.1
+        return 0.3 + 0.7 * super(Hist2dNormalize, self).__call__(value, clip = clip)
 
 class Plot(object):
     class Type(utility.Enum):
@@ -68,14 +68,14 @@ class Plot(object):
         else:
             self.type = Plot.Type.REGRESSION
 
-def getDefaultColor(cmapName):
-    return matplotlib.cm.get_cmap(cmapName)(0.8)
+cmapName = "YlGnBu"
+cmap = matplotlib.cm.get_cmap(cmapName)
 
 def configure():
     matplotlib.rcParams["axes.color_cycle"] = [
-        getDefaultColor("Blues"),
-        getDefaultColor("Greens"),
-        getDefaultColor("Reds")
+        cmap(1.0),
+        cmap(0.6),
+        cmap(0.3)
     ]
     matplotlib.rcParams["axes.grid"] = True
     matplotlib.rcParams["figure.figsize"] = (4.0, 3.0)
@@ -84,7 +84,7 @@ def configure():
     matplotlib.rcParams["font.size"] = 8.0
     matplotlib.rcParams["grid.alpha"] = 0.2
     matplotlib.rcParams["grid.linestyle"] = "-"
-    matplotlib.rcParams["image.cmap"] = "Blues"
+    matplotlib.rcParams["image.cmap"] = cmapName
     matplotlib.rcParams["legend.fontsize"] = 6.0
     matplotlib.rcParams["legend.framealpha"] = 0.5
     matplotlib.rcParams["savefig.dpi"] = 300
@@ -183,7 +183,7 @@ for plotIndex in xrange(len(plot.yMetrics)):
         yBins = yMetric.getBins()
         if yBins is None:
             yBins = getBins(zipped[1])
-        axes.hist2d(zipped[0], zipped[1], bins = [xBins, yBins], norm = Hist2dNormalize())
+        axes.hist2d(zipped[0], zipped[1], bins = [xBins, yBins], cmin = 1, norm = Hist2dNormalize())
     if plot.type == Plot.Type.LOWESS:
         frac = 1001 * len(zipped[0]) / float(utility.getFinalTimestep(plot.args.run)) ** 2
         data = statsmodels.nonparametric.smoothers_lowess.lowess(zipped[1], zipped[0], frac = frac)
@@ -197,9 +197,9 @@ for plotIndex in xrange(len(plot.yMetrics)):
         assert False
     color = colors[plotIndex % len(colors)]
     if len(plot.yMetrics) == 1 and isinstance(yMetric, metrics_mod.TimeMetric):
-        axes.plot(zipped[0], zipped[1], color = color, alpha = 0.2)
+        axes.plot(zipped[0], zipped[1], color = cmap(0.3))
     line = axes.plot(smoothed[0], smoothed[1], color = color)[0]
-    line.set_path_effects([matplotlib.patheffects.withStroke(linewidth = 3.0, foreground = "1.0", alpha = 0.8)])
+    line.set_path_effects([matplotlib.patheffects.withStroke(linewidth = 2.0, foreground = "1.0")])
     lines.append(line)
     labels.append(yMetric.getLabel())
     if plot.type == Plot.Type.REGRESSION:
