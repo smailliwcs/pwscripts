@@ -1,6 +1,6 @@
 <project default="compile">
     <target name="compile">
-        <javac srcdir="." classpath="infodynamics.jar" includeAntRuntime="false"/>
+        <javac srcdir="." classpath="infodynamics.jar" debug="true" includeAntRuntime="false"/>
     </target>
     <target name="clean">
         <delete>

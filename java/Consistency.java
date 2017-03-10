@@ -43,7 +43,7 @@ public class Consistency {
             base = Integer.parseInt(args[0]);
             assert base >= 0 && base <= 7;
             return true;
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             return false;
         }
     }

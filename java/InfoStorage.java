@@ -31,7 +31,7 @@ public class InfoStorage {
             embedding = Integer.parseInt(args[0]);
             assert embedding > 0;
             return true;
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             return false;
         }
     }

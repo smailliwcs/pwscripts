@@ -35,7 +35,7 @@ public class InfoTransfer {
             targetEmbedding = Integer.parseInt(args[1]);
             assert targetEmbedding > 0;
             return true;
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             return false;
         }
     }

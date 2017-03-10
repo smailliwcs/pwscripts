@@ -39,7 +39,7 @@ public class InfoModification {
             conditionalEmbedding = Integer.parseInt(args[2]);
             assert conditionalEmbedding > 0;
             return true;
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             return false;
         }
     }

@@ -7,4 +7,4 @@ fi
 metric=$1
 shift
 path=$(dirname $(readlink -f "$0"))
-java -cp "$path/java/infodynamics.jar:$path/java" "$metric" "$@"
+java -cp "$path/java/infodynamics.jar:$path/java" -ea "$metric" "$@"
