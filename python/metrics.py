@@ -57,7 +57,7 @@ class Metric(object):
         return self.getFileName(".txt")
     
     def getDataPath(self):
-        return os.path.join(self.run, "plots", "data", self.getDataFileName())
+        return os.path.join(self.run, "data", self.getDataFileName())
     
     def readLines(self):
         with open(self.getDataPath()) as f:
