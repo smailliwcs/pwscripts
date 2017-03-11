@@ -164,3 +164,82 @@ class Modularity(object):
     
     def __init__(self):
         raise NotImplementedError
+
+if __name__ == "__main__":
+    import argparse
+    import numpy
+    
+    def get_W_lattice(N, k):
+        W = [None] * N
+        for i in xrange(N):
+            W[i] = [0] * N
+            for j in xrange(i + 1, i + k + 1):
+                W[i][j % N] = 1
+        return W
+    
+    def get_W_modular(N, k):
+        W = [None] * N
+        for i in xrange(N):
+            W[i] = [0] * N
+            C = i / k
+            for j in xrange(k * C, k * (C + 1)):
+                if j != i:
+                    W[i][j] = 1
+        for i in xrange(0, N, k):
+            W[i][(i + k) % N] = 1
+        return W
+    
+    def rewire(W, p):
+        for i in xrange(len(W)):
+            for j in xrange(len(W)):
+                if W[i][j] == 0 or random.random() > p:
+                    continue
+                choices = [j_new for j_new in xrange(len(W)) if j_new != i and W[i][j_new] == 0]
+                W[i][j] = 0
+                W[i][random.choice(choices)] = 1
+    
+    def get_W_local(W, i):
+        neighbors = []
+        for j in xrange(len(W)):
+            if W[i][j] == 1 or W[j][i] == 1:
+                neighbors.append(j)
+        W_local = [None] * len(neighbors)
+        for i_local in xrange(len(neighbors)):
+            W_local[i_local] = [0] * len(neighbors)
+            for j_local in xrange(len(neighbors)):
+                W_local[i_local][j_local] = W[neighbors[i_local]][neighbors[j_local]]
+        return W_local
+    
+    def get_E_local(W):
+        values = []
+        for i in xrange(len(W)):
+            D = Distance.calculate(get_W_local(W, i))
+            values.append(Efficiency.calculate(D))
+        if len(values) == 0:
+            return 0.0
+        else:
+            return sum(values) / len(values)
+    
+    def get_E_global(W):
+        D = Distance.calculate(W)
+        return Efficiency.calculate(D)
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument("metric", metavar = "METRIC", choices = ("Efficiency", "Modularity"))
+    parser.add_argument("--N", metavar = "N", type = int, default = 100)
+    parser.add_argument("--k", metavar = "K", type = int, default = 4)
+    parser.add_argument("--samples", metavar = "SAMPLES", type = int, default = 1000)
+    args = parser.parse_args()
+    assert args.k < args.N
+    if args.metric == "Efficiency":
+        for p in numpy.logspace(-3, 0, args.samples):
+            W = get_W_lattice(args.N, args.k)
+            rewire(W, p)
+            print p, get_E_local(W), get_E_global(W)
+    elif args.metric == "Modularity":
+        for p in numpy.linspace(0, 1, args.samples):
+            W = get_W_modular(args.N, args.k)
+            rewire(W, p)
+            print p, Modularity.calculate(W)
+    else:
+        assert False
