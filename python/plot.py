@@ -78,7 +78,7 @@ def configure():
         cmap(0.3)
     ]
     matplotlib.rcParams["axes.grid"] = True
-    matplotlib.rcParams["figure.figsize"] = (4.0, 3.0)
+    matplotlib.rcParams["figure.figsize"] = (3.5, 3.0)
     matplotlib.rcParams["font.family"] = "serif"
     matplotlib.rcParams["font.serif"] = ["Times"]
     matplotlib.rcParams["font.size"] = 8.0
