@@ -284,6 +284,21 @@ class Entropy(StagedAgentMetric):
     def getLabel(self):
         return "Entropy"
 
+class FoodDistance(TimeMetric):
+    def getKey(self):
+        return "food-distance"
+    
+    def getLabel(self):
+        return "Food distance"
+    
+    def read(self):
+        distanceMax = math.sqrt(2) * float(utility.getWorldfileParameter(self.run, "WorldSize"))
+        values = {}
+        path = os.path.join(self.run, "food", "distance.txt")
+        for row in utility.getDataTable(path, "FoodDistance").rows():
+            values[row["Timestep"]] = row["Distance"] / distanceMax
+        return values
+    
 class FoodEnergy(TimeMetric):
     def getKey(self):
         return "food-energy"
@@ -293,7 +308,7 @@ class FoodEnergy(TimeMetric):
     
     def read(self):
         values = {}
-        path = os.path.join(self.run, "energy", "food.txt")
+        path = os.path.join(self.run, "food", "energy.txt")
         for row in utility.getDataTable(path, "FoodEnergy").rows():
             values[row["Timestep"]] = row["Energy"]
         return values
