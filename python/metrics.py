@@ -56,19 +56,20 @@ class Metric(object):
     def getDataFileName(self):
         return self.getFileName(".txt")
     
-    def getDataPath(self):
-        return os.path.join(self.run, "data", self.getDataFileName())
+    def getDataPath(self, passive = False):
+        pathBase = os.path.join(self.run, "passive") if passive else self.run
+        return os.path.join(pathBase, "data", self.getDataFileName())
     
-    def readLines(self):
-        with open(self.getDataPath()) as f:
+    def readLines(self, passive = False):
+        with open(self.getDataPath(passive)) as f:
             for line in f:
                 if line.startswith("#"):
                     continue
                 yield line
     
-    def read(self):
+    def read(self, passive = False):
         values = {}
-        for line in self.readLines():
+        for line in self.readLines(passive):
             key, value = line.split()
             key = int(key)
             if self.integral:
@@ -78,14 +79,14 @@ class Metric(object):
             values[key] = value
         return values
     
-    def write(self, values):
-        path = self.getDataPath()
+    def write(self, values, passive = False):
+        path = self.getDataPath(passive)
         utility.makeDirectories(os.path.dirname(path))
         with open(path, "w") as f:
             for x, y in values.iteritems():
                 f.write("{0} {1}\n".format(x, y))
     
-    def calculate(self):
+    def calculate(self, passive = False):
         raise NotImplementedError
     
     def getPoints(self, values):
@@ -141,7 +142,8 @@ class AgentEnergy(AgentMetric):
         else:
             return "Energy {0}".format(self.type)
     
-    def calculate(self):
+    def calculate(self, passive = False):
+        assert not passive
         lifespans = self.lifespanMetric.read()
         for agent in utility.iterateAgents(self.run):
             lifespan = lifespans[agent]
@@ -176,9 +178,9 @@ class Complexity(AgentMetric):
     def getLabel(self):
         return "Complexity ({0})".format(self.type)
     
-    def read(self):
+    def read(self, passive = False):
         values = {}
-        for line in self.readLines():
+        for line in self.readLines(passive):
             if self.polyworld:
                 agent, value = line.split()
                 value = float(value)
@@ -224,9 +226,9 @@ class Density(AgentMetric):
         else:
             return "{0} density".format(self.graphType.capitalize())
     
-    def calculate(self):
+    def calculate(self, passive = False):
         for agent in utility.iterateAgents(self.run):
-            graph = graph_mod.Graph.read(self.run, agent, Stage.INCEPT, self.graphType)
+            graph = graph_mod.Graph.read(self.run, agent, Stage.INCEPT, self.graphType, passive)
             if self.graphType == graph_mod.Graph.Type.ALL:
                 countMax = graph.size * (graph.size - graph.getTypeCount(graph_mod.Graph.Type.INPUT) - 1)
             else:
@@ -258,9 +260,9 @@ class Efficiency(AgentMetric):
         else:
             return "{0} {1} efficiency".format(self.graphType.capitalize(), self.type)
     
-    def calculate(self):
+    def calculate(self, passive = False):
         for agent in utility.iterateAgents(self.run):
-            graph = graph_mod.Graph.read(self.run, agent, self.stage, self.graphType)
+            graph = graph_mod.Graph.read(self.run, agent, self.stage, self.graphType, passive)
             if graph is None or graph.size == 0:
                 continue
             if self.type == Efficiency.Type.LOCAL:
@@ -291,7 +293,8 @@ class FoodDistance(TimeMetric):
     def getLabel(self):
         return "Food distance"
     
-    def read(self):
+    def read(self, passive = False):
+        assert not passive
         distanceMax = math.sqrt(2) * float(utility.getWorldfileParameter(self.run, "WorldSize"))
         values = {}
         path = os.path.join(self.run, "food", "distance.txt")
@@ -306,7 +309,8 @@ class FoodEnergy(TimeMetric):
     def getLabel(self):
         return "Food energy"
     
-    def read(self):
+    def read(self, passive = False):
+        assert not passive
         values = {}
         path = os.path.join(self.run, "food", "energy.txt")
         for row in utility.getDataTable(path, "FoodEnergy").rows():
@@ -350,9 +354,10 @@ class Gene(AgentMetric):
             label = f.readline().split()[1]
         return label.replace("_", "\\_")
     
-    def calculate(self):
+    def calculate(self, passive = False):
         for agent in utility.iterateAgents(self.run):
-            path = os.path.join(self.run, "genome", "agents", "genome_{0}.txt.gz".format(agent))
+            pathBase = os.path.join(self.run, "passive") if passive else self.run
+            path = os.path.join(pathBase, "genome", "agents", "genome_{0}.txt.gz".format(agent))
             with gzip.open(path) as f:
                 for index in xrange(self.index):
                     f.readline()
@@ -396,9 +401,9 @@ class Integration(AgentMetric):
     def getLabel():
         return "Integration ({0})".format(self.type)
     
-    def read(self):
+    def read(self, passive = False):
         values = {}
-        for line in self.readLines():
+        for line in self.readLines(passive):
             agent, flag, value = line.split()
             if flag == "I":
                 values[int(agent)] = float(value)
@@ -411,9 +416,10 @@ class LearningRate(AgentMetric):
     def getLabel(self):
         return "Learning rate"
     
-    def calculate(self):
+    def calculate(self, passive = False):
         for agent in utility.iterateAgents(self.run):
-            path = os.path.join(self.run, "brain", "synapses", "synapses_{0}_{1}.txt.gz".format(agent, Stage.INCEPT))
+            pathBase = os.path.join(self.run, "passive") if passive else self.run
+            path = os.path.join(pathBase, "brain", "synapses", "synapses_{0}_{1}.txt.gz".format(agent, Stage.INCEPT))
             with gzip.open(path) as f:
                 f.readline()
                 valueSum = 0.0
@@ -435,7 +441,8 @@ class LifespanMetric(AgentMetric):
     def getValue(self, row):
         raise NotImplementedError
     
-    def read(self):
+    def read(self, passive = False):
+        assert not passive
         values = {}
         path = os.path.join(self.run, "lifespans.txt")
         for row in utility.getDataTable(path, "LifeSpans").rows():
@@ -516,9 +523,9 @@ class Modularity(AgentMetric):
         else:
             return "{0} modularity".format(self.graphType.capitalize())
     
-    def calculate(self):
+    def calculate(self, passive = False):
         for agent in utility.iterateAgents(self.run):
-            graph = graph_mod.Graph.read(self.run, agent, self.stage, self.graphType)
+            graph = graph_mod.Graph.read(self.run, agent, self.stage, self.graphType, passive)
             if graph is None or graph.size == 0:
                 continue
             yield agent, algorithms.Modularity.calculate(graph.weights)
@@ -541,9 +548,9 @@ class NeuronCount(AgentMetric):
         else:
             return "{0} neuron count".format(self.graphType.capitalize())
     
-    def calculate(self):
+    def calculate(self, passive = False):
         for agent in utility.iterateAgents(self.run):
-            graph = graph_mod.Graph.read(self.run, agent, Stage.INCEPT, self.graphType)
+            graph = graph_mod.Graph.read(self.run, agent, Stage.INCEPT, self.graphType, passive)
             if graph is None:
                 continue
             yield agent, graph.size
@@ -563,7 +570,8 @@ class OffspringRate(AgentMetric):
     def getLabel(self):
         return "Offspring rate"
     
-    def calculate(self):
+    def calculate(self, passive = False):
+        assert not passive
         counts = collections.defaultdict(int)
         for timestep, events in utility.iterateEvents(self.run):
             for event in events:
@@ -592,7 +600,8 @@ class Population(TimeMetric):
     def getLabel(self):
         return "Population"
     
-    def read(self):
+    def read(self, passive = False):
+        assert not passive
         values = {}
         values[0] = utility.getInitialAgentCount(self.run)
         path = os.path.join(self.run, "population.txt")
@@ -634,9 +643,9 @@ class SmallWorldness(AgentMetric):
         else:
             return "{0} small-worldness".format(self.graphType.capitalize())
     
-    def read(self):
-        localEfficiencies = self.localEfficiencyMetric.read()
-        globalEfficiencies = self.globalEfficiencyMetric.read()
+    def read(self, passive = False):
+        localEfficiencies = self.localEfficiencyMetric.read(passive)
+        globalEfficiencies = self.globalEfficiencyMetric.read(passive)
         values = {}
         for agent in utility.iterateAgents(self.run):
             if agent in localEfficiencies and agent in globalEfficiencies:
@@ -652,7 +661,7 @@ class Timestep(TimeMetric):
     def getLabel(self):
         return "Timestep"
     
-    def read(self):
+    def read(self, passive = False):
         values = {}
         values[0] = 0
         for timestep in utility.iterateTimesteps(self.run):
@@ -692,9 +701,9 @@ class WeightMetric(AgentMetric):
             assert False
         return None
     
-    def iterateGraphs(self):
+    def iterateGraphs(self, passive = False):
         for agent in utility.iterateAgents(self.run):
-            graph = graph_mod.Graph.read(self.run, agent, self.stage, self.graphType)
+            graph = graph_mod.Graph.read(self.run, agent, self.stage, self.graphType, passive)
             if graph is None:
                 continue
             yield agent, graph
@@ -716,8 +725,8 @@ class Strength(WeightMetric):
         else:
             return "{0} strength ({1})".format(self.graphType.capitalize(), self.weightType)
     
-    def calculate(self):
-        for agent, graph in self.iterateGraphs():
+    def calculate(self, passive = False):
+        for agent, graph in self.iterateGraphs(passive):
             if graph.size == 0:
                 continue
             values = [0.0] * graph.size
@@ -736,8 +745,8 @@ class Weight(WeightMetric):
         else:
             return "{0} synaptic weight ({1})".format(self.graphType.capitalize(), self.weightType)
     
-    def calculate(self):
-        for agent, graph in self.iterateGraphs():
+    def calculate(self, passive = False):
+        for agent, graph in self.iterateGraphs(passive):
             valueSum = 0.0
             count = 0
             for preNode, postNode, weight in self.iterateSynapses(graph):

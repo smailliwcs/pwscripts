@@ -27,13 +27,14 @@ public class Consistency {
     private static final Pattern INIT_AGENT_COUNT = Pattern.compile("InitAgents\\s+(?<initAgentCount>\\d+)");
     
     private static String run;
+    private static boolean passive;
     private static int groupSize;
     private static EntropyCalculatorDiscrete calculator;
     private static int geneCount;
     
     public static void main(String[] args) throws Exception {
         if (!tryParseArgs(args)) {
-            System.err.printf("Usage: %s RUN GROUP_SIZE%n", Consistency.class.getSimpleName());
+            System.err.printf("Usage: %s RUN PASSIVE GROUP_SIZE%n", Consistency.class.getSimpleName());
             return;
         }
         System.out.printf("# groupSize = %d%n", groupSize);
@@ -73,10 +74,11 @@ public class Consistency {
     
     private static boolean tryParseArgs(String[] args) {
         try {
-            assert args.length == 2;
+            assert args.length == 3;
             run = args[0];
             assert hasValidRun();
-            groupSize = Integer.parseInt(args[1]);
+            passive = Boolean.parseBoolean(args[1]);
+            groupSize = Integer.parseInt(args[2]);
             assert groupSize >= 0 && groupSize <= 7;
             return true;
         } catch (Throwable ex) {
@@ -138,7 +140,8 @@ public class Consistency {
     }
     
     private static List<Integer> readGenome(int agentIndex) throws Exception {
-        Path path = Paths.get(run, "genome", "agents", String.format("genome_%d.txt.gz", agentIndex));
+        String pathBase = passive ? Paths.get(run, "passive").toString() : run;
+        Path path = Paths.get(pathBase, "genome", "agents", String.format("genome_%d.txt.gz", agentIndex));
         File file = new File(path.toString());
         List<Integer> genome = new ArrayList<Integer>();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(file))))) {

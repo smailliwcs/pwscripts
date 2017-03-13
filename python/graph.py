@@ -20,8 +20,9 @@ class Graph(object):
     header = re.compile(r"^synapses (?P<agent>\d+) maxweight=(?P<weightMax>[^ ]+) numsynapses=\d+ numneurons=(?P<size>\d+) numinputneurons=(?P<inputSize>\d+) numoutputneurons=(?P<outputSize>\d+)$")
     
     @staticmethod
-    def read(run, agent, stage, type):
-        path = os.path.join(run, "brain", "synapses", "synapses_{0}_{1}.txt.gz".format(agent, stage))
+    def read(run, agent, stage, type, passive = False):
+        pathBase = os.path.join(run, "passive") if passive else run
+        path = os.path.join(pathBase, "brain", "synapses", "synapses_{0}_{1}.txt.gz".format(agent, stage))
         if not os.path.isfile(path):
             return None
         with gzip.open(path) as f:
