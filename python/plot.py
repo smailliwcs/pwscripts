@@ -137,10 +137,14 @@ def zipValues(xValues, yValues):
             zipped[1].append(yValue)
     return zipped
 
-def getBins(data, count):
+def getBins(data, count, symmetric = False):
+    dataMin = min(data)
+    dataMax = max(data)
+    if symmetric:
+        dataAbsMax = max(abs(dataMin), abs(dataMax))
+        dataMin = -dataAbsMax
+        dataMax = dataAbsMax
     if all(map(lambda datum: isinstance(datum, int), data)):
-        dataMin = min(data)
-        dataMax = max(data)
         dataRange = dataMax - dataMin
         if count > dataRange:
             return range(dataMin, dataMax + 1)
@@ -153,7 +157,7 @@ def getBins(data, count):
             binMax = dataMax + 0.5 * binFuzz
             return numpy.linspace(binMin, binMax, count + 1)
     else:
-        return numpy.linspace(min(data), max(data), count + 1)
+        return numpy.linspace(dataMin, dataMax, count + 1)
 
 configure()
 plot = Plot()
@@ -214,7 +218,7 @@ for plotIndex in xrange(len(plot.yMetrics)):
         kwargs = {"norm": Hist2dNormalize()}
         axes.hist2d(zipped[0], zipped[1], bins = [xBins, yBins], **kwargs)
         if plot.args.dvp:
-            yBiasBins = getBins(zippedBiases[1], 33)
+            yBiasBins = getBins(zippedBiases[1], 33, True)
             axes2.hist2d(zippedBiases[0], zippedBiases[1], bins = [xBins, yBiasBins], **kwargs)
     if plot.type == Plot.Type.LOWESS:
         frac = 1001 * len(zipped[0]) / float(utility.getFinalTimestep(plot.args.run)) ** 2
