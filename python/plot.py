@@ -231,7 +231,7 @@ for plotIndex in xrange(len(plot.yMetrics)):
     else:
         assert False
     color = colors[plotIndex % len(colors)]
-    if len(plot.yMetrics) == 1 and isinstance(yMetric, metrics_mod.TimeMetric):
+    if type(plot.xMetric) is metrics_mod.Timestep and len(plot.yMetrics) == 1 and isinstance(yMetric, metrics_mod.TimeMetric):
         kwargs = {"color": cmap(0.3)}
         axes.plot(zipped[0], zipped[1], **kwargs)
         if plot.args.dvp:
