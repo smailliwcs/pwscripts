@@ -13,12 +13,12 @@ import sys
 import textwrap
 import utility
 
-class Hist2dNormalize(matplotlib.colors.Normalize):
+class Hist2dNormalize(matplotlib.colors.LogNorm):
     def __init__(self, vmin = None, vmax = None, clip = False):
         super(Hist2dNormalize, self).__init__(vmin = vmin, vmax = vmax, clip = clip)
 
     def __call__(self, value, clip = None):
-        return 0.3 + 0.7 * super(Hist2dNormalize, self).__call__(value, clip = clip)
+        return 0.1 + 0.9 * super(Hist2dNormalize, self).__call__(value, clip = clip)
 
 class Plot(object):
     class Type(utility.Enum):
@@ -211,7 +211,7 @@ for plotIndex in xrange(len(plot.yMetrics)):
         yBins = yMetric.getBins()
         if yBins is None:
             yBins = getBins(zipped[1], 100)
-        kwargs = {"cmin": 1, "norm": Hist2dNormalize()}
+        kwargs = {"norm": Hist2dNormalize()}
         axes.hist2d(zipped[0], zipped[1], bins = [xBins, yBins], **kwargs)
         if plot.args.dvp:
             yBiasBins = getBins(zippedBiases[1], 33)
