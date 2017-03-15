@@ -298,11 +298,10 @@ class FoodDistance(TimeMetric):
     
     def read(self, passive = False):
         assert not passive
-        distanceMax = math.sqrt(2) * float(utility.getWorldfileParameter(self.run, "WorldSize"))
         values = {}
         path = os.path.join(self.run, "food", "distance.txt")
         for row in utility.getDataTable(path, "FoodDistance").rows():
-            values[row["Timestep"]] = row["Distance"] / distanceMax
+            values[row["Timestep"]] = row["Distance"]
         return values
     
 class FoodEnergy(TimeMetric):
