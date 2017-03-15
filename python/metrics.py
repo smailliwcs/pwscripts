@@ -141,7 +141,7 @@ class AgentEnergy(AgentMetric):
         if self.type == AgentEnergy.Type.TOTAL:
             return "Agent energy"
         else:
-            return "Energy {0}".format(self.type)
+            return "Agent energy {0}".format(self.type)
     
     def calculate(self, passive = False):
         assert not passive
