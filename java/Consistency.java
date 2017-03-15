@@ -34,7 +34,7 @@ public class Consistency {
     
     public static void main(String[] args) throws Exception {
         if (!tryParseArgs(args)) {
-            System.err.printf("Usage: %s RUN PASSIVE GROUP_SIZE%n", Consistency.class.getSimpleName());
+            System.err.printf("Usage: %s [--passive] RUN GROUP_SIZE%n", Consistency.class.getSimpleName());
             return;
         }
         System.out.printf("# groupSize = %d%n", groupSize);
@@ -74,11 +74,15 @@ public class Consistency {
     
     private static boolean tryParseArgs(String[] args) {
         try {
-            assert args.length == 3;
-            run = args[0];
+            assert args.length >= 2 && args.length <= 3;
+            int index = 0;
+            if (args[index].equals("--passive")) {
+                passive = true;
+                index++;
+            }
+            run = args[index++];
             assert hasValidRun();
-            passive = Boolean.parseBoolean(args[1]);
-            groupSize = Integer.parseInt(args[2]);
+            groupSize = Integer.parseInt(args[index++]);
             assert groupSize >= 0 && groupSize <= 7;
             return true;
         } catch (Throwable ex) {
