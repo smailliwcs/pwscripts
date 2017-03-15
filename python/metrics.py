@@ -561,6 +561,7 @@ class OffspringRate(AgentMetric):
     def __init__(self):
         super(OffspringRate, self).__init__()
         self.lifespanMetric = Lifespan()
+        self.lifespanMetric.initial = False
     
     def initialize(self, run, args = None):
         super(OffspringRate, self).initialize(run, args)
