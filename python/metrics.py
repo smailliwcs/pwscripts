@@ -122,6 +122,7 @@ class AgentEnergy(AgentMetric):
     def __init__(self):
         super(AgentEnergy, self).__init__()
         self.lifespanMetric = Lifespan()
+        self.lifespanMetric.truncated = False
     
     def addArgs(self, parser):
         self.addArg(parser, "type", metavar = "TYPE", choices = tuple(AgentEnergy.Type.getAll()))
@@ -146,6 +147,8 @@ class AgentEnergy(AgentMetric):
         assert not passive
         lifespans = self.lifespanMetric.read()
         for agent in utility.iterateAgents(self.run):
+            if agent not in lifespans:
+                continue
             lifespan = lifespans[agent]
             if lifespans == 0:
                 yield agent, 0.0
