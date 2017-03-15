@@ -150,7 +150,7 @@ class AgentEnergy(AgentMetric):
             if agent not in lifespans:
                 continue
             lifespan = lifespans[agent]
-            if lifespans == 0:
+            if lifespan == 0:
                 yield agent, 0.0
             else:
                 path = os.path.join(self.run, "energy", self.type, "agent_{0}.txt".format(agent))
