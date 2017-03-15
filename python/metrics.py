@@ -340,6 +340,11 @@ class Gene(AgentMetric):
         return "gene-{0}".format(self.index)
     
     def getLabel(self):
+        path = os.path.join(self.run, "genome", "meta", "geneindex.txt")
+        with open(path) as f:
+            for index in xrange(self.index):
+                f.readline()
+            title = f.readline().split()[1]
         path = os.path.join(self.run, "genome", "meta", "genetitle.txt")
         with open(path) as f:
             found = True
@@ -348,13 +353,8 @@ class Gene(AgentMetric):
                     found = False
                     break
             if found:
-                label = f.readline().split(" :: ")[0]
-        path = os.path.join(self.run, "genome", "meta", "geneindex.txt")
-        with open(path) as f:
-            for index in xrange(self.index):
-                f.readline()
-            label = f.readline().split()[1]
-        return label.replace("_", "\\_")
+                title = f.readline().split(" :: ")[0]
+        return "{0} gene".format(title.replace("_", "\\_"))
     
     def calculate(self, passive = False):
         for agent in utility.iterateAgents(self.run):
