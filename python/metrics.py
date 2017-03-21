@@ -94,7 +94,7 @@ class Metric(object):
 
 class AgentMetric(Metric):
     def getSeries(self, values):
-        timestepMetric = MeanTimestep()
+        timestepMetric = BirthTimestep()
         timestepMetric.initialize(self.run)
         series = collections.defaultdict(list)
         for agent, timestep in timestepMetric.read().iteritems():
