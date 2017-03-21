@@ -612,6 +612,39 @@ class Population(TimeMetric):
             values[row["T"]] = row["Population"]
         return values
 
+class ProgenyRate(AgentMetric):
+    def __init__(self):
+        super(ProgenyRate, self).__init__()
+        self.birthTimestepMetric = BirthTimestep()
+    
+    def initialize(self, run, args = None):
+        super(ProgenyRate, self).initialize(run, args)
+        self.birthTimestepMetric.initialize(run)
+    
+    def getKey(self):
+        return "progeny-rate"
+    
+    def getLabel(self):
+        return "Progeny rate"
+    
+    def calculate(self, passive = False):
+        assert not passive
+        descendants = collections.defaultdict(set)
+        for timestep, events in utility.iterateEvents(self.run):
+            for event in events:
+                if event.type != utility.Event.Type.BIRTH:
+                    continue
+                for ancestor in descendants:
+                    if event.parent1 in descendants[ancestor] or event.parent2 in descendants[ancestor]:
+                        descendants[ancestor].add(event.agent)
+                descendants[event.parent1].add(event.agent)
+                descendants[event.parent2].add(event.agent)
+        finalTimestep = utility.getFinalTimestep(self.run)
+        for agent, birthTimestep in self.birthTimestepMetric.read().iteritems():
+            if birthTimestep == finalTimestep:
+                continue
+            yield agent, float(len(descendants[agent])) / (finalTimestep - birthTimestep)
+
 class SmallWorldness(AgentMetric):
     def __init__(self):
         super(SmallWorldness, self).__init__()
