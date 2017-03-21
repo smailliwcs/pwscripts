@@ -81,8 +81,8 @@ cmap = matplotlib.cm.get_cmap(cmapName)
 def configure():
     matplotlib.rcParams["axes.color_cycle"] = [
         cmap(1.0),
-        cmap(0.6),
-        cmap(0.3)
+        cmap(0.5),
+        cmap(0.25)
     ]
     matplotlib.rcParams["axes.grid"] = True
     matplotlib.rcParams["figure.figsize"] = (3.5, 3.0)
@@ -235,7 +235,7 @@ for plotIndex in xrange(len(plot.yMetrics)):
         assert False
     color = colors[plotIndex % len(colors)]
     if type(plot.xMetric) is metrics_mod.Timestep and len(plot.yMetrics) == 1 and isinstance(yMetric, metrics_mod.TimeMetric):
-        kwargs = {"color": cmap(0.3)}
+        kwargs = {"color": cmap(0.25)}
         axes.plot(zipped[0], zipped[1], **kwargs)
         if plot.args.bias:
             axes2.plot(zippedBiases[0], zippedBiases[1], **kwargs)
