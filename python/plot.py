@@ -36,7 +36,7 @@ class Plot(object):
         epilog = wrapper.fill("available metrics: {0}".format(", ".join(metricNames)))
         parser = argparse.ArgumentParser(add_help = False, epilog = epilog, formatter_class = argparse.RawDescriptionHelpFormatter)
         parser.add_argument("run", metavar = "RUN")
-        parser.add_argument("--dvp", action = "store_true")
+        parser.add_argument("--bias", action = "store_true")
         parser.add_argument("--twinx", action = "store_true")
         parser.add_argument("--xmin", metavar = "XMIN", type = float)
         parser.add_argument("--xmax", metavar = "XMAX", type = float)
@@ -56,9 +56,10 @@ class Plot(object):
         assert utility.isRun(self.args.run)
         self.xMetric = self.metrics[0]
         self.yMetrics = self.metrics[1:]
-        if self.args.dvp:
+        if self.args.bias:
             assert type(self.xMetric) is metrics_mod.Timestep
             assert len(self.yMetrics) == 1
+            assert isinstance(self.yMetrics[0], metrics_mod.AgentMetric)
         if len(self.yMetrics) > 1:
             assert type(self.xMetric) is metrics_mod.Timestep
         if isinstance(self.xMetric, metrics_mod.AgentMetric):
@@ -162,7 +163,7 @@ def getBins(data, count, symmetric = False):
 configure()
 plot = Plot()
 figure = matplotlib.pyplot.figure()
-if plot.args.dvp:
+if plot.args.bias:
     size = figure.get_size_inches()
     size[1] = math.ceil(8 * float(size[1]) / 3) / 2
     figure.set_size_inches(size)
@@ -189,24 +190,22 @@ for plotIndex in xrange(len(plot.yMetrics)):
         axes = axes2
     yMetric = plot.yMetrics[plotIndex]
     yMetric.initialize(plot.args.run, plot.args)
-    if plot.args.dvp:
-        drivenValues = getValues(yMetric, False)
+    yValues = getValues(yMetric)
+    if plot.args.bias:
+        drivenValues = yValues
         passiveValues = getValues(yMetric, True)
-        yValues = drivenValues
         yBiases = {}
         yStdev = numpy.std(yValues.values())
         for key, drivenValue in drivenValues.iteritems():
             if key not in passiveValues:
                 continue
             yBiases[key] = (drivenValue - passiveValues[key]) / yStdev
-    else:
-        yValues = getValues(yMetric)
     if isinstance(plot.xMetric, metrics_mod.TimeMetric):
         yValues = yMetric.getSeries(yValues)
-        if plot.args.dvp:
+        if plot.args.bias:
             yBiases = yMetric.getSeries(yBiases)
     zipped = zipValues(xValues, yValues)
-    if plot.args.dvp:
+    if plot.args.bias:
         zippedBiases = zipValues(xValues, yBiases)
     if plot.histogram:
         xBins = plot.xMetric.getBins()
@@ -217,14 +216,14 @@ for plotIndex in xrange(len(plot.yMetrics)):
             yBins = getBins(zipped[1], 100)
         kwargs = {"norm": Hist2dNormalize()}
         axes.hist2d(zipped[0], zipped[1], bins = [xBins, yBins], **kwargs)
-        if plot.args.dvp:
+        if plot.args.bias:
             yBiasBins = getBins(zippedBiases[1], 33, True)
             axes2.hist2d(zippedBiases[0], zippedBiases[1], bins = [xBins, yBiasBins], **kwargs)
     if plot.type == Plot.Type.LOWESS:
         frac = 1001 * len(zipped[0]) / float(utility.getFinalTimestep(plot.args.run)) ** 2
         data = statsmodels.nonparametric.smoothers_lowess.lowess(zipped[1], zipped[0], frac = frac)
         smoothed = [data[:, 0], data[:, 1]]
-        if plot.args.dvp:
+        if plot.args.bias:
             biasData = statsmodels.nonparametric.smoothers_lowess.lowess(zippedBiases[1], zippedBiases[0], frac = frac)
             smoothedBiases = [biasData[:, 0], biasData[:, 1]]
     elif plot.type == Plot.Type.REGRESSION:
@@ -238,14 +237,14 @@ for plotIndex in xrange(len(plot.yMetrics)):
     if type(plot.xMetric) is metrics_mod.Timestep and len(plot.yMetrics) == 1 and isinstance(yMetric, metrics_mod.TimeMetric):
         kwargs = {"color": cmap(0.3)}
         axes.plot(zipped[0], zipped[1], **kwargs)
-        if plot.args.dvp:
+        if plot.args.bias:
             axes2.plot(zippedBiases[0], zippedBiases[1], **kwargs)
     kwargs = {"color": color}
     line = axes.plot(smoothed[0], smoothed[1], color = color)[0]
     pathEffects = [matplotlib.patheffects.withStroke(linewidth = 2.0, foreground = "1.0")]
     line.set_path_effects(pathEffects)
     lines.append(line)
-    if plot.args.dvp:
+    if plot.args.bias:
         biasLine = axes2.plot(smoothedBiases[0], smoothedBiases[1], **kwargs)[0]
         biasLine.set_path_effects(pathEffects)
     labels.append(yMetric.getLabel())
@@ -257,7 +256,7 @@ axes1.set_xlim(plot.args.xmin, plot.args.xmax)
 axes2.set_xlim(plot.args.xmin, plot.args.xmax)
 axes1.set_ylim(plot.args.y1min, plot.args.y1max)
 axes2.set_ylim(plot.args.y2min, plot.args.y2max)
-if plot.args.dvp:
+if plot.args.bias:
     axes1.tick_params(labelbottom = False)
     axes2.set_xlabel(plot.xMetric.getLabel())
     axes2.set_ylabel("Selection bias")
@@ -270,8 +269,8 @@ if len(plot.yMetrics) == 2 and plot.args.twinx:
     axes2.set_ylabel(plot.yMetrics[1].getLabel())
 if len(plot.yMetrics) > 1:
     axes2.legend(lines, labels)
-if plot.args.dvp:
-    fileName = "{0}-dvp".format(plot.yMetrics[0].getKey())
+if plot.args.bias:
+    fileName = "{0}-bias".format(plot.yMetrics[0].getKey())
 else:
     yMetricsKey = "+".join(map(lambda yMetric: yMetric.getKey(), plot.yMetrics))
     fileName = "{0}-vs-{1}".format(yMetricsKey, plot.xMetric.getKey())
