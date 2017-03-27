@@ -629,21 +629,25 @@ class ProgenyRate(AgentMetric):
     
     def calculate(self, passive = False):
         assert not passive
-        descendants = collections.defaultdict(set)
+        children = collections.defaultdict(list)
         for timestep, events in utility.iterateEvents(self.run):
             for event in events:
                 if event.type != utility.Event.Type.BIRTH:
                     continue
-                for ancestor in descendants:
-                    if event.parent1 in descendants[ancestor] or event.parent2 in descendants[ancestor]:
-                        descendants[ancestor].add(event.agent)
-                descendants[event.parent1].add(event.agent)
-                descendants[event.parent2].add(event.agent)
+                children[event.parent1].append(event.agent)
+                children[event.parent2].append(event.agent)
         finalTimestep = utility.getFinalTimestep(self.run)
         for agent, birthTimestep in self.birthTimestepMetric.read().iteritems():
-            if birthTimestep == finalTimestep:
-                continue
-            yield agent, float(len(descendants[agent])) / (finalTimestep - birthTimestep)
+            unexpanded = set(children[agent])
+            expanded = set()
+            while len(unexpanded) != 0:
+                for descendant in list(unexpanded):
+                    unexpanded.remove(descendant)
+                    if descendant in expanded:
+                        continue
+                    unexpanded.update(children[descendant])
+                    expanded.add(descendant)
+            yield agent, float(len(expanded)) / (finalTimestep - birthTimestep)
 
 class SmallWorldness(AgentMetric):
     def __init__(self):
