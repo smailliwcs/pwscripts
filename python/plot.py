@@ -241,7 +241,9 @@ for plotIndex in xrange(len(plot.yMetrics)):
             axes2.plot(zippedBiases[0], zippedBiases[1], **kwargs)
     kwargs = {"color": color}
     line = axes.plot(smoothed[0], smoothed[1], **kwargs)[0]
-    pathEffects = [matplotlib.patheffects.withStroke(linewidth = 2.0, foreground = "1.0")]
+    pathEffects = []
+    if plot.histogram:
+        pathEffects.append(matplotlib.patheffects.withStroke(linewidth = 2.0, foreground = "1.0"))
     line.set_path_effects(pathEffects)
     lines.append(line)
     if plot.args.bias:
