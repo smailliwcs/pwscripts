@@ -305,11 +305,15 @@ class FoodDistance(TimeMetric):
         return values
     
 class FoodEnergy(TimeMetric):
+    @classmethod
+    def customizeAxis(cls, axis):
+        axis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda tick, position: format(tick / 1e3, "g")))
+    
     def getKey(self):
         return "food-energy"
     
     def getLabel(self):
-        return "Food energy"
+        return r"Food energy ($\times 10^3$)"
     
     def read(self, passive = False):
         assert not passive
