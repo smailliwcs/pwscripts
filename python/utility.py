@@ -98,6 +98,20 @@ def iteratePopulations(run):
                 assert False
         yield timestep, agents
 
+def iterateRuns(path):
+    if isRun(path):
+        yield path
+    else:
+        for subpath in iterateSubdirectories(path):
+            if isRun(subpath):
+                yield subpath
+
+def iterateSubdirectories(path):
+    for name in os.listdir(path):
+        subpath = os.path.join(path, name)
+        if os.path.isdir(subpath):
+            yield subpath
+
 def iterateTimesteps(run):
     return xrange(1, getFinalTimestep(run) + 1)
 
