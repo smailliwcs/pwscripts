@@ -3,6 +3,11 @@ import os
 import re
 import utility
 
+class NodeType(utility.Enum):
+    INPUT = "input"
+    OUTPUT = "output"
+    INTERNAL = "internal"
+
 class Graph(object):
     class Type(utility.Enum):
         INPUT = "input"
@@ -12,33 +17,43 @@ class Graph(object):
         ALL = "all"
         
         @staticmethod
-        def getNonInput():
-            for type in Graph.Type.getAll():
+        def getNonInputValues():
+            for type in Graph.Type.getValues():
                 if type != Graph.Type.INPUT:
                     yield type
     
-    header = re.compile(r"^synapses (?P<agent>\d+) maxweight=(?P<weightMax>[^ ]+) numsynapses=\d+ numneurons=(?P<size>\d+) numinputneurons=(?P<inputSize>\d+) numoutputneurons=(?P<outputSize>\d+)$")
+    headerPattern = re.compile(
+        r"^synapses " +
+        r"(?P<agent>\d+) " +
+        r"maxweight=(?P<maxweight>[^ ]+) " +
+        r"numsynapses=\d+ " +
+        r"numneurons=(?P<numneurons>\d+) " +
+        r"numinputneurons=(?P<numinputneurons>\d+) " +
+        r"numoutputneurons=(?P<numoutputneurons>\d+)$")
     
     @staticmethod
     def read(run, agent, stage, type, passive = False):
-        pathBase = os.path.join(run, "passive") if passive else run
+        if passive:
+            pathBase = os.path.join(run, "passive")
+        else:
+            pathBase = run
         path = os.path.join(pathBase, "brain", "synapses", "synapses_{0}_{1}.txt.gz".format(agent, stage))
         if not os.path.isfile(path):
             return None
         with gzip.open(path) as f:
-            match = Graph.header.match(f.readline())
-            weightMax = float(match.group("weightMax"))
-            size = int(match.group("size"))
-            inputSize = int(match.group("inputSize"))
-            outputSize = int(match.group("outputSize"))
+            headerMatch = Graph.headerPattern.match(f.readline())
+            weightMax = float(headerMatch.group("maxweight"))
+            size = int(headerMatch.group("numneurons"))
+            inputCount = int(headerMatch.group("numinputneurons"))
+            outputCount = int(headerMatch.group("numoutputneurons"))
             if type == Graph.Type.INPUT:
-                nodes = range(inputSize)
+                nodes = range(inputCount)
             elif type == Graph.Type.OUTPUT:
-                nodes = range(inputSize, inputSize + outputSize)
+                nodes = range(inputCount, inputCount + outputCount)
             elif type == Graph.Type.INTERNAL:
-                nodes = range(inputSize + outputSize, size)
+                nodes = range(inputCount + outputCount, size)
             elif type == Graph.Type.PROCESSING:
-                nodes = range(inputSize, size)
+                nodes = range(inputCount, size)
             elif type == Graph.Type.ALL:
                 nodes = range(size)
             else:
@@ -46,52 +61,41 @@ class Graph(object):
             graph = Graph(len(nodes))
             for index in xrange(graph.size):
                 node = nodes[index]
-                if node < inputSize:
-                    graph.types[index] = Graph.Type.INPUT
-                elif node < inputSize + outputSize:
-                    graph.types[index] = Graph.Type.OUTPUT
+                if node < inputCount:
+                    nodeType = NodeType.INPUT
+                elif node < inputCount + outputCount:
+                    nodeType = NodeType.OUTPUT
                 else:
-                    graph.types[index] = Graph.Type.INTERNAL
-            while True:
-                line = f.readline()
-                if line == "":
-                    break
+                    nodeType = NodeType.INTERNAL
+                graph.nodeTypes[index] = nodeType
+            for line in f:
                 chunks = line.split()
-                preNode = int(chunks[0])
-                postNode = int(chunks[1])
-                assert preNode != postNode
-                if preNode not in nodes or postNode not in nodes:
+                nodeOut = int(chunks[0])
+                nodeIn = int(chunks[1])
+                assert nodeOut != nodeIn
+                if nodeOut not in nodes or nodeIn not in nodes:
                     continue
-                preIndex = nodes.index(preNode)
-                postIndex = nodes.index(postNode)
+                indexOut = nodes.index(nodeOut)
+                indexIn = nodes.index(nodeIn)
                 weight = float(chunks[2]) / weightMax
-                if graph.weights[preIndex][postIndex] is None:
-                    graph.weights[preIndex][postIndex] = weight
+                if graph.weights[indexOut][indexIn] is None:
+                    graph.weights[indexOut][indexIn] = weight
                 else:
-                    graph.weights[preIndex][postIndex] += weight
+                    graph.weights[indexOut][indexIn] += weight
         return graph
     
     def __init__(self, size):
         self.size = size
-        self.types = [None] * size
+        self.nodeTypes = [None] * size
         self.weights = [None] * size
         for node in xrange(size):
             self.weights[node] = [None] * size
     
-    def getTypeCount(self, type):
-        count = 0
-        for nodeType in self.types:
-            if nodeType == type:
-                count += 1
-            elif type == Graph.Type.PROCESSING and nodeType in (Graph.Type.OUTPUT, Graph.Type.INTERNAL):
-                count += 1
-        return count
-    
     def getLinkCount(self):
         count = 0
-        for preNode in xrange(self.size):
-            for postNode in xrange(self.size):
-                if self.weights[preNode][postNode] is not None:
+        for nodeOut in xrange(self.size):
+            for nodeIn in xrange(self.size):
+                if self.weights[nodeOut][nodeIn] is not None:
                     count += 1
         return count
     
@@ -100,21 +104,23 @@ class Graph(object):
         graph = Graph(size)
         for index in xrange(size):
             node = nodes[index]
-            graph.types[index] = self.types[node]
-        for preIndex in xrange(size):
-            preNode = nodes[preIndex]
-            for postIndex in xrange(size):
-                postNode = nodes[postIndex]
-                graph.weights[preIndex][postIndex] = self.weights[preNode][postNode]
+            graph.nodeTypes[index] = self.nodeTypes[node]
+        for indexOut in xrange(size):
+            nodeOut = nodes[indexOut]
+            for indexIn in xrange(size):
+                nodeIn = nodes[indexIn]
+                graph.weights[indexOut][indexIn] = self.weights[nodeOut][nodeIn]
         return graph
     
     def getNeighborhood(self, node, include):
         nodes = []
-        if include:
-            nodes.append(node)
         for neighbor in xrange(self.size):
+            isNeighbor = False
             if neighbor == node:
-                continue
-            if self.weights[neighbor][node] is not None or self.weights[node][neighbor] is not None:
+                if include:
+                    isNeighbor = True
+            elif self.weights[neighbor][node] is not None or self.weights[node][neighbor] is not None:
+                isNeighbor = True
+            if isNeighbor:
                 nodes.append(neighbor)
         return self.getSubgraph(nodes)

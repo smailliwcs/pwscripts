@@ -17,14 +17,12 @@ class Distance(object):
                 W_ij = W[i][j]
                 if W_ij is not None and W_ij != 0.0:
                     L[i][j] = 1.0 / abs(W_ij)
-        D = {}
+        D = [None] * N
         for i in xrange(N):
-            D[i] = {}
+            D[i] = [Distance.inf] * N
             for j in xrange(N):
                 if j == i:
                     D[i][j] = 0.0
-                else:
-                    D[i][j] = Distance.inf
             Q = set(xrange(N))
             while len(Q) > 0:
                 j = min(Q, key = lambda j: D[i][j])
@@ -93,8 +91,7 @@ class Modularity(object):
             dQ_i = 0.0
             for j in xrange(self.N):
                 if self.C[j] == C_i and j != i:
-                    dQ_i += sign * self.get_Q_ij(i, j)
-                    dQ_i += sign * self.get_Q_ij(j, i)
+                    dQ_i += sign * (self.get_Q_ij(i, j) + self.get_Q_ij(j, i))
             return dQ_i
         
         def get_Q(self):
@@ -121,16 +118,16 @@ class Modularity(object):
             return W
     
     @staticmethod
-    def clean(W_orig):
-        N = len(W_orig)
-        W = [None] * N
+    def clean(W):
+        N = len(W)
+        W_clean = [None] * N
         for i in xrange(N):
-            W[i] = [0.0] * N
+            W_clean[i] = [0.0] * N
             for j in xrange(N):
-                W_orig_ij = W_orig[i][j]
-                if W_orig_ij is not None:
-                    W[i][j] = abs(W_orig_ij)
-        return W
+                W_ij = W[i][j]
+                if W_ij is not None:
+                    W_clean[i][j] = abs(W_ij)
+        return W_clean
     
     @staticmethod
     def calculate(W):
@@ -173,20 +170,28 @@ if __name__ == "__main__":
         W = [None] * N
         for i in xrange(N):
             W[i] = [0] * N
+        for i in xrange(N):
             for j in xrange(i + 1, i + k + 1):
                 W[i][j % N] = 1
+                W[j % N][i] = 1
         return W
     
     def get_W_modular(N, k):
         W = [None] * N
         for i in xrange(N):
             W[i] = [0] * N
+        for i in xrange(N):
             C = i / k
             for j in xrange(k * C, k * (C + 1)):
-                if j != i:
+                if j < N and j != i:
                     W[i][j] = 1
+                    W[j][i] = 1
         for i in xrange(0, N, k):
-            W[i][(i + k) % N] = 1
+            j = i + k
+            if j >= N:
+                j = 0
+            W[i][j] = 1
+            W[j][i] = 1
         return W
     
     def rewire(W, p):
@@ -226,17 +231,19 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser()
     parser.add_argument("metric", metavar = "METRIC", choices = ("Efficiency", "Modularity"))
-    parser.add_argument("--N", metavar = "N", type = int, default = 100)
-    parser.add_argument("--k", metavar = "K", type = int, default = 4)
-    parser.add_argument("--samples", metavar = "SAMPLES", type = int, default = 1000)
+    parser.add_argument("--N", metavar = "N", type = int, default = 500)
+    parser.add_argument("--k", metavar = "K", type = int, default = 5)
+    parser.add_argument("--samples", metavar = "SAMPLES", type = int, default = 10)
     args = parser.parse_args()
     assert args.k < args.N
     if args.metric == "Efficiency":
+        print "# p E_local E_global"
         for p in numpy.logspace(-3, 0, args.samples):
             W = get_W_lattice(args.N, args.k)
             rewire(W, p)
             print p, get_E_local(W), get_E_global(W)
     elif args.metric == "Modularity":
+        print "# p Q"
         for p in numpy.linspace(0, 1, args.samples):
             W = get_W_modular(args.N, args.k)
             rewire(W, p)
