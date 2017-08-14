@@ -23,17 +23,18 @@ class Hist2dNormalize(matplotlib.colors.LogNorm):
         return self.offset + (1.0 - self.offset) * super(Hist2dNormalize, self).__call__(value, clip = clip)
 
 class Plot(object):
-    class Type(utility.Enum):
-        LOWESS = "lowess"
-        REGRESSION = "regression"
-    
     @staticmethod
     def parseArgs(metrics):
         wrapper = textwrap.TextWrapper(subsequent_indent = "  ")
         epilog = wrapper.fill("available metrics: {0}".format(", ".join(sorted(metrics_mod.metrics.iterkeys()))))
         parser = argparse.ArgumentParser(add_help = False, epilog = epilog, formatter_class = argparse.RawDescriptionHelpFormatter)
         parser.add_argument("runs", metavar = "RUNS")
+        group = parser.add_mutually_exclusive_group(required = True)
+        group.add_argument("--lowess", action = "store_true")
+        group.add_argument("--regress", action = "store_true")
         parser.add_argument("--bias", action = "store_true")
+        parser.add_argument("--hist2d", action = "store_true")
+        parser.add_argument("--raw", action = "store_true")
         parser.add_argument("--twinx", action = "store_true")
         parser.add_argument("--xmin", metavar = "XMIN", type = float)
         parser.add_argument("--xmax", metavar = "XMAX", type = float)
@@ -61,37 +62,21 @@ class Plot(object):
         assert len(self.runs) > 0
         self.xMetric = self.metrics[0]
         self.yMetrics = self.metrics[1:]
-        if len(self.runs) > 1:
-            assert isinstance(self.xMetric, metrics_mod.Timestep)
         if self.args.bias:
-            assert len(self.yMetrics) == 1
             assert isinstance(self.xMetric, metrics_mod.Timestep)
-            assert isinstance(self.yMetrics[0], metrics_mod.AgentMetric)
+        if self.args.raw:
+            assert isinstance(self.xMetric, metrics_mod.Timestep)
+            assert all(map(lambda yMetric: isinstance(yMetric, metrics_mod.TimeMetric), self.yMetrics))
         if self.args.twinx:
             assert len(self.yMetrics) > 1
-        if len(self.yMetrics) > 1:
-            assert isinstance(self.xMetric, metrics_mod.Timestep)
-        if isinstance(self.xMetric, metrics_mod.AgentMetric):
-            assert isinstance(self.yMetrics[0], metrics_mod.AgentMetric)
-        self.raw = (
-            len(self.runs) == 1 and
-            len(self.yMetrics) == 1 and
-            isinstance(self.xMetric, metrics_mod.Timestep) and
-            isinstance(self.yMetrics[0], metrics_mod.TimeMetric)
-        )
-        if len(self.runs) == 1 and len(self.yMetrics) == 1:
-            self.histogram = not isinstance(self.xMetric, metrics_mod.Timestep) or isinstance(self.yMetrics[0], metrics_mod.AgentMetric)
-        else:
-            self.histogram = False
-        if isinstance(self.xMetric, metrics_mod.Timestep):
-            self.type = Plot.Type.LOWESS
-        else:
-            self.type = Plot.Type.REGRESSION
 
 CMAP_NAME = "YlGnBu"
 CMAP = matplotlib.cm.get_cmap(CMAP_NAME)
 BIN_COUNT_RAW = 100
 BIN_COUNT_BIAS = 33
+MULTI_RUN_ALPHA = 0.2
+HIST2D_ALPHA = 0.8
+RAW_ALPHA = 0.2
 
 def configure():
     matplotlib.rcParams["axes.color_cycle"] = [
@@ -145,14 +130,14 @@ def zipData(xValues, yValues):
     return result
 
 def smoothData(zipped, multiRun = False):
-    if plot.type == Plot.Type.LOWESS:
+    if plot.args.lowess:
         frac = min(1.0, 1000.0 / len(zipped[0]))
         if multiRun:
             frac *= len(plot.runs)
         delta = 0.001 * (max(zipped[0]) - min(zipped[0]))
         result = statsmodels.nonparametric.smoothers_lowess.lowess(zipped[1], zipped[0], frac = frac, delta = delta)
         return [result[:, 0], result[:, 1]], None
-    elif plot.type == Plot.Type.REGRESSION:
+    elif plot.args.regress:
         slope, intercept, correlation = scipy.stats.linregress(zipped[0], zipped[1])[:3]
         xRange = [min(zipped[0]), max(zipped[0])]
         yRange = map(lambda x: slope * x + intercept, xRange)
@@ -213,6 +198,10 @@ plot.xMetric.formatAxis(axes1.xaxis)
 colors = matplotlib.rcParams["axes.color_cycle"]
 lines = []
 labels = []
+if len(plot.runs) > 1:
+    alpha = MULTI_RUN_ALPHA
+else:
+    alpha = 1.0
 
 # Iterate y-metrics
 for plotIndex in xrange(len(plot.yMetrics)):
@@ -260,68 +249,62 @@ for plotIndex in xrange(len(plot.yMetrics)):
             zippedBias = zipData(xValues, yBiases)
             zippedsBias[runIndex] = zippedBias
         
-        # Smooth data
-        smoothRaw, correlation = smoothData(zippedRaw)
-        if plot.args.bias:
-            smoothBias = smoothData(zippedBias)[0]
-        
-        # Plot histogram
-        if plot.histogram:
-            xBins = xMetric.getBins()
-            if xBins is None:
-                xBins = getBins(zippedRaw[0], BIN_COUNT_RAW)
-            yBinsRaw = yMetric.getBins()
-            if yBinsRaw is None:
-                yBinsRaw = getBins(zippedRaw[1], BIN_COUNT_RAW)
-            kwargs = {"norm": Hist2dNormalize()}
-            axes.hist2d(zippedRaw[0], zippedRaw[1], bins = (xBins, yBinsRaw), **kwargs)
-            if plot.args.bias:
-                yBinsBias = getBins(zippedBias[1], BIN_COUNT_BIAS, True)
-                axes2.hist2d(zippedBias[0], zippedBias[1], bins = (xBins, yBinsBias), **kwargs)
-        
         # Plot raw data
-        if plot.raw:
-            kwargs = {"color": CMAP(0.25)}
+        if plot.args.raw:
+            kwargs = {"color": color, "alpha": RAW_ALPHA * alpha}
             axes.plot(zippedRaw[0], zippedRaw[1], **kwargs)
             if plot.args.bias:
                 axes2.plot(zippedBias[0], zippedBias[1], **kwargs)
         
         # Plot smooth data
-        kwargs = {"color": color}
-        if len(plot.runs) > 1:
-            kwargs["alpha"] = 0.1
-        lineRaw = axes.plot(smoothRaw[0], smoothRaw[1], **kwargs)[0]
-        effects = []
-        if plot.histogram:
-            effects.append(matplotlib.patheffects.withStroke(linewidth = 2.0, foreground = "1.0"))
-        lineRaw.set_path_effects(effects)
-        if len(plot.runs) == 1:
-            lines.append(lineRaw)
-            labels.append(yMetric.getLabel())
-        if plot.args.bias:
-            lineBias = axes2.plot(smoothBias[0], smoothBias[1], **kwargs)[0]
-            lineBias.set_path_effects(effects)
-        
-        # Report r-squared
-        if plot.type == Plot.Type.REGRESSION:
-            axes.legend([lineRaw], ["$r^2 = {0:.3f}$".format(correlation ** 2)])
+        if len(plot.runs) > 1 and plot.args.lowess:
+            smoothRaw = smoothData(zippedRaw)[0]
+            if plot.args.bias:
+                smoothBias = smoothData(zippedBias)[0]
+            kwargs = {"color": color, "alpha": alpha}
+            lineRaw = axes.plot(smoothRaw[0], smoothRaw[1], **kwargs)[0]
+            if plot.args.bias:
+                lineBias = axes2.plot(smoothBias[0], smoothBias[1], **kwargs)[0]
     
-    # Plot multi-run smooth data
+    # Plot smooth data
     if len(plot.runs) > 1:
         sys.stderr.write("{0}\n".format(plot.args.runs))
-        kwargs = {"color": color}
-        smoothRaw = smoothData(flattenData(zippedsRaw), True)[0]
-        lineRaw = axes.plot(smoothRaw[0], smoothRaw[1], **kwargs)[0]
-        lines.append(lineRaw)
-        labels.append(yMetric.getLabel())
+    zippedRaw = flattenData(zippedsRaw)
+    kwargs = {"color": color}
+    smoothRaw, correlation = smoothData(zippedRaw, len(plot.runs) > 1)
+    lineRaw = axes.plot(smoothRaw[0], smoothRaw[1], **kwargs)[0]
+    lines.append(lineRaw)
+    label = yMetric.getLabel()
+    if plot.args.regress:
+        if len(plot.yMetrics) > 1:
+            label = "{0} ($r^2 = {1:.3f}$)".format(label, correlation ** 2)
+        else:
+            label = "$r^2 = {0:.3f}$".format(correlation ** 2)
+    labels.append(label)
+    if plot.args.bias:
+        zippedBias = flattenData(zippedsBias)
+        smoothBias = smoothData(zippedBias, True)[0]
+        lineBias = axes2.plot(smoothBias[0], smoothBias[1], **kwargs)[0]
+    
+    # Plot histogram
+    if plot.args.hist2d:
+        xBins = xMetric.getBins()
+        if xBins is None:
+            xBins = getBins(zippedRaw[0], BIN_COUNT_RAW)
+        yBinsRaw = yMetric.getBins()
+        if yBinsRaw is None:
+            yBinsRaw = getBins(zippedRaw[1], BIN_COUNT_RAW)
+        kwargs = {"norm": Hist2dNormalize(), "alpha": HIST2D_ALPHA, "zorder": -1}
+        axes.hist2d(zippedRaw[0], zippedRaw[1], bins = (xBins, yBinsRaw), **kwargs)
         if plot.args.bias:
-            smoothBias = smoothData(flattenData(zippedsBias), True)[0]
-            axes2.plot(smoothBias[0], smoothBias[1], **kwargs)
+            yBinsBias = getBins(zippedBias[1], BIN_COUNT_BIAS, True)
+            axes2.hist2d(zippedBias[0], zippedBias[1], bins = (xBins, yBinsBias), **kwargs)
 
 # Post-configure plot
 axes1.set_xlim(plot.args.xmin, plot.args.xmax)
-axes1.set_ylim(plot.args.y1min, plot.args.y1max)
 axes2.set_xlim(plot.args.xmin, plot.args.xmax)
+axes1.set_ylim(plot.args.y1min, plot.args.y1max)
+axes2.set_ylim(plot.args.y2min, plot.args.y2max)
 if plot.args.bias:
     axes1.tick_params(labelbottom = False)
     axes2.set_xlabel(plot.xMetric.getLabel())
@@ -329,12 +312,11 @@ if plot.args.bias:
     axes2.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(nbins = 4))
 else:
     axes1.set_xlabel(plot.xMetric.getLabel())
-    axes2.set_ylim(plot.args.y2min, plot.args.y2max)
 if len(plot.yMetrics) == 1 or plot.args.twinx:
     axes1.set_ylabel(plot.yMetrics[0].getLabel())
 if len(plot.yMetrics) == 2 and plot.args.twinx:
     axes2.set_ylabel(plot.yMetrics[1].getLabel())
-if len(plot.yMetrics) > 1:
+if len(plot.yMetrics) > 1 or plot.args.regress:
     axes2.legend(lines, labels)
 if plot.args.bias:
     fileName = "{0}-bias".format(plot.yMetrics[0].getKey())
