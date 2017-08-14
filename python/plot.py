@@ -233,8 +233,13 @@ for plotIndex in xrange(len(plot.yMetrics)):
         if plot.args.bias:
             driven = yValues
             passive = getData(yMetric, True)
-            stdev = numpy.std(driven.values())
-            yBiases = {key: (value - passive[key]) / stdev for key, value in driven.iteritems() if key in passive}
+            timesteps = yMetric.getTimesteps()
+            if isinstance(yMetric, metrics_mod.TimeMetric):
+                stdev = numpy.std(driven.values())
+                stdevs = {timestep: stdev for timestep in xrange(utility.getFinalTimestep(run) + 1)}
+            else:
+                stdevs = {timestep: numpy.std([driven[agent] for agent in agents]) for timestep, agents in utility.getPopulations(run)}
+            yBiases = {key: (value - passive[key]) / stdevs[timesteps[key]] for key, value in driven.iteritems() if key in passive}
         
         # Convert to time-based
         if isinstance(xMetric, metrics_mod.TimeMetric):

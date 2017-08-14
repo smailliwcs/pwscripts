@@ -95,10 +95,18 @@ class Metric(object):
     def calculate(self, passive = False):
         raise NotImplementedError
     
+    def getTimesteps(self):
+        raise NotImplementedError
+    
     def toTimeBased(self, values):
         raise NotImplementedError
 
 class TimeMetric(Metric):
+    def getTimesteps(self):
+        metric = Timestep()
+        metric.initialize(self.run)
+        return metric.read()
+    
     def toTimeBased(self, values):
         return values
 

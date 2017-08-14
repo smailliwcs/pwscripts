@@ -1,3 +1,4 @@
+import collections
 import datalib
 import os
 import random
@@ -106,3 +107,16 @@ def getInitialAgentCount(run):
 
 def getAgents(run):
     return xrange(1, getAgentCount(run) + 1)
+
+def getPopulations(run):
+    agents = range(1, getInitialAgentCount(run) + 1)
+    events = collections.defaultdict(list)
+    for event in Event.read(run):
+        events[event.timestep].append(event)
+    for timestep in xrange(getFinalTimestep(run) + 1):
+        for event in events[timestep]:
+            if event.type == Event.Type.BIRTH:
+                agents.append(event.agent)
+            elif event.type == Event.Type.DEATH:
+                agents.remove(event.agent)
+        yield timestep, agents
