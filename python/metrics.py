@@ -104,7 +104,7 @@ class TimeMetric(Metric):
 
 class AgentMetric(Metric):
     def getTimesteps(self):
-        metric = BirthTimestep()
+        metric = MeanTimestep()
         metric.initialize(self.run)
         return metric.read()
     
@@ -497,6 +497,10 @@ class DeathTimestep(LifespanMetric):
     
     def getValue(self, row):
         return row["DeathStep"]
+
+class MeanTimestep(LifespanMetric):
+    def getValue(self, row):
+        return (row["BirthStep"] + row["DeathStep"]) / 2
 
 class Lifespan(LifespanMetric):
     def addArgs(self, parser):
