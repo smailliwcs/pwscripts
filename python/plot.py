@@ -186,6 +186,7 @@ if plot.args.bias:
     grid = matplotlib.gridspec.GridSpec(3, 1)
     axes1 = figure.add_subplot(grid[0:-1, :])
     axes2 = figure.add_subplot(grid[-1, :])
+    axes2.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(nbins = 4, symmetric = True))
 else:
     axes1 = figure.gca()
     if plot.args.twinx:
@@ -314,7 +315,6 @@ if plot.args.bias:
     axes1.tick_params(labelbottom = False)
     axes2.set_xlabel(plot.xMetric.getLabel())
     axes2.set_ylabel("Selection bias")
-    axes2.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(nbins = 4))
 else:
     axes1.set_xlabel(plot.xMetric.getLabel())
 if len(plot.yMetrics) == 1 or plot.args.twinx:
