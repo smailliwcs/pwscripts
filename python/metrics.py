@@ -582,7 +582,27 @@ class NeuronCount(AgentMetric):
                 continue
             yield agent, graph.size
 
-class OffspringRate(AgentMetric):
+class OffspringCount(AgentMetric):
+    def getKey(self):
+        return "offspring-count"
+    
+    def getLabel(self):
+        return "Offspring count"
+    
+    def calculateInternal(self):
+        values = collections.defaultdict(int)
+        for event in utility.Event.read(self.run):
+            if event.type != utility.Event.Type.BIRTH:
+                continue
+            values[event.parent1] += 1
+            values[event.parent2] += 1
+        return values
+    
+    def calculate(self, passive = False):
+        assert not passive
+        return self.calculateInternal().iteritems()
+
+class OffspringRate(OffspringCount):
     def getKey(self):
         return "offspring-rate"
     
@@ -597,12 +617,7 @@ class OffspringRate(AgentMetric):
     
     def calculate(self, passive = False):
         assert not passive
-        counts = collections.defaultdict(int)
-        for event in utility.Event.read(self.run):
-            if event.type != utility.Event.Type.BIRTH:
-                continue
-            counts[event.parent1] += 1
-            counts[event.parent2] += 1
+        counts = self.calculateInternal()
         for agent, lifespan in self.getLifespans().iteritems():
             if lifespan == 0:
                 value = 0.0
