@@ -23,11 +23,11 @@ class Enum(object):
     def __init__(self):
         raise NotImplementedError
 
+class EventType(Enum):
+    BIRTH = "BIRTH"
+    DEATH = "DEATH"
+
 class Event(object):
-    class Type(Enum):
-        BIRTH = "BIRTH"
-        DEATH = "DEATH"
-    
     @staticmethod
     def read(run):
         with open(os.path.join(run, "BirthsDeaths.log")) as f:
@@ -39,9 +39,9 @@ class Event(object):
     def __init__(self, line):
         chunks = line.split()
         self.timestep = int(chunks[0])
-        self.type = Event.Type.parse(chunks[1])
+        self.eventType = EventType.parse(chunks[1])
         self.agent = int(chunks[2])
-        if self.type == Event.Type.BIRTH:
+        if self.eventType == EventType.BIRTH:
             self.parent1 = int(chunks[3])
             self.parent2 = int(chunks[4])
 
@@ -115,8 +115,8 @@ def getPopulations(run):
         events[event.timestep].append(event)
     for timestep in xrange(getFinalTimestep(run) + 1):
         for event in events[timestep]:
-            if event.type == Event.Type.BIRTH:
+            if event.eventType == EventType.BIRTH:
                 agents.append(event.agent)
-            elif event.type == Event.Type.DEATH:
+            elif event.eventType == EventType.DEATH:
                 agents.remove(event.agent)
         yield timestep, agents

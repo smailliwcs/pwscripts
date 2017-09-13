@@ -6,7 +6,10 @@ import math
 import matplotlib
 import numpy
 import os
+import sys
 import utility
+
+NAN = float("nan")
 
 class Stage(utility.Enum):
     INCEPT = "incept"
@@ -15,14 +18,6 @@ class Stage(utility.Enum):
 
 class Metric(object):
     integral = False
-    
-    @classmethod
-    def getBins(cls):
-        pass
-    
-    @classmethod
-    def formatAxis(cls, axis):
-        pass
     
     def getName(self):
         return type(self).__name__
@@ -53,17 +48,11 @@ class Metric(object):
     def getLabel(self):
         raise NotImplementedError
     
-    def getFileName(self, extension):
-        return self.getKey() + extension
-    
     def getDataFileName(self):
-        return self.getFileName(".txt")
+        return self.getKey() + ".txt"
     
     def getDataPath(self, passive = False):
-        if passive:
-            pathBase = os.path.join(self.run, "passive")
-        else:
-            pathBase = self.run
+        pathBase = os.path.join(self.run, "passive") if passive else self.run
         return os.path.join(pathBase, "data", self.getDataFileName())
     
     def readLines(self, passive = False):
@@ -77,12 +66,7 @@ class Metric(object):
         values = {}
         for line in self.readLines(passive):
             key, value = line.split()
-            key = int(key)
-            if self.integral:
-                value = int(value)
-            else:
-                value = float(value)
-            values[key] = value
+            values[int(key)] = float(value)
         return values
     
     def write(self, values, passive = False):
@@ -95,42 +79,118 @@ class Metric(object):
     def calculate(self, passive = False):
         raise NotImplementedError
     
-    def getTimesteps(self):
+    def toTimeBased(self, values, mean):
         raise NotImplementedError
     
-    def toTimeBased(self, values):
-        raise NotImplementedError
+    def getBins(self):
+        pass
+    
+    def formatAxis(self, axis):
+        pass
 
-class TimeMetric(Metric):
-    def getTimesteps(self):
-        metric = Timestep()
-        metric.initialize(self.run)
-        return metric.read()
-    
-    def toTimeBased(self, values):
+class TimeBasedMetric(Metric):
+    def toTimeBased(self, values, mean):
         return values
 
-class AgentMetric(Metric):
+class AgentBasedMetric(Metric):
+    def read(self, passive = False):
+        values = dict.fromkeys(utility.getAgents(self.run), NAN)
+        values.update(super(AgentBasedMetric, self).read(passive))
+        return values
+    
     def getTimesteps(self):
         metric = MeanTimestep()
         metric.initialize(self.run)
         return metric.read()
     
-    def toTimeBased(self, values):
-        result = collections.defaultdict(list)
-        for agent, timestep in self.getTimesteps().iteritems():
-            if agent in values:
-                result[timestep].append(values[agent])
-        return result
+    def toTimeBased(self, values, mean):
+        if mean:
+            result = {}
+            for timestep, agents in utility.getPopulations(self.run):
+                result[timestep] = numpy.nanmean(map(lambda agent: values[agent], agents))
+            return result
+        else:
+            result = collections.defaultdict(list)
+            value = values[agent]
+            if value is not NAN:
+                result[timestep].append(value)
+            return result
 
-class StagedAgentMetric(AgentMetric):
+class LifespanMetric(AgentBasedMetric):
+    integral = True
+    
+    def getValue(self, row):
+        raise NotImplementedError
+    
+    def read(self, passive = False):
+        assert not passive
+        values = {}
+        path = os.path.join(self.run, "lifespans.txt")
+        for row in utility.getDataTable(path, "LifeSpans").rows():
+            values[row["Agent"]] = self.getValue(row)
+        return values
+
+class OffspringMetric(AgentBasedMetric):
+    def getCounts(self):
+        values = collections.defaultdict(int)
+        for event in utility.Event.read(self.run):
+            if event.eventType != utility.EventType.BIRTH:
+                continue
+            values[event.parent1] += 1
+            values[event.parent2] += 1
+        return values
+
+class StagedAgentBasedMetric(AgentBasedMetric):
     def addArgs(self, parser):
         self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
     
     def readArgs(self, args):
         self.stage = self.readArg(args, "stage")
 
-class AgentEnergy(AgentMetric):
+class WeightMetric(AgentBasedMetric):
+    class Type(utility.Enum):
+        EXCITATORY = "excitatory"
+        INHIBITORY = "inhibitory"
+        ABSOLUTE = "absolute"
+    
+    def addArgs(self, parser):
+        self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
+        self.addArg(parser, "graph-type", metavar = "GRAPH_TYPE", choices = tuple(graph_mod.GraphType.getNonInputValues()))
+        self.addArg(parser, "weight-type", metavar = "WEIGHT_TYPE", choices = tuple(WeightMetric.Type.getValues()))
+    
+    def readArgs(self, args):
+        self.stage = self.readArg(args, "stage")
+        self.graphType = self.readArg(args, "graph-type")
+        self.weightType = self.readArg(args, "weight-type")
+    
+    def getWeight(self, graph, nodeOut, nodeIn):
+        weight = graph.weights[nodeOut][nodeIn]
+        if weight is None:
+            return None
+        if self.weightType == WeightMetric.Type.EXCITATORY:
+            return weight if weight > 0.0 else None
+        elif self.weightType == WeightMetric.Type.INHIBITORY:
+            return -weight if weight < 0.0 else None
+        elif self.weightType == WeightMetric.Type.ABSOLUTE:
+            return abs(weight) if weight != 0.0 else None
+        else:
+            assert False
+    
+    def getGraphs(self, passive = False):
+        for agent in utility.getAgents(self.run):
+            graph = graph_mod.Graph.read(self.run, agent, self.stage, self.graphType, passive)
+            if graph is None:
+                continue
+            yield agent, graph
+    
+    def getSynapses(self, graph):
+        for nodeOut in xrange(graph.size):
+            for nodeIn in xrange(graph.size):
+                weight = self.getWeight(graph, nodeOut, nodeIn)
+                if weight is not None:
+                    yield nodeOut, nodeIn, weight
+
+class AgentEnergy(AgentBasedMetric):
     class Type(utility.Enum):
         IN = "in"
         OUT = "out"
@@ -147,13 +207,12 @@ class AgentEnergy(AgentMetric):
     
     def getLabel(self):
         if self.type == AgentEnergy.Type.TOTAL:
-            return "Agent energy"
+            return "Total agent energy"
         else:
             return "Agent energy {0}".format(self.type)
     
     def getLifespans(self):
         metric = Lifespan()
-        metric.truncated = False
         metric.initialize(self.run)
         return metric.read()
     
@@ -161,18 +220,26 @@ class AgentEnergy(AgentMetric):
         assert not passive
         lifespans = self.getLifespans()
         for agent in utility.getAgents(self.run):
-            if agent not in lifespans:
-                continue
             lifespan = lifespans[agent]
             if lifespan == 0:
-                value = 0.0
+                value = NAN
             else:
                 path = os.path.join(self.run, "energy", self.type, "agent_{0}.txt".format(agent))
                 table = utility.getDataTable(path, "AgentEnergy{0}".format(self.type.capitalize()))
                 value = sum(map(lambda row: row["Energy"], table.rows())) / lifespan
             yield agent, value
 
-class Complexity(AgentMetric):
+class BirthTimestep(LifespanMetric):
+    def getKey(self):
+        return "birth"
+    
+    def getLabel(self):
+        return "Birth timestep"
+    
+    def getValue(self, row):
+        return row["BirthStep"]
+
+class Complexity(AgentBasedMetric):
     def addArgs(self, parser):
         self.addArg(parser, "type", metavar = "TYPE")
     
@@ -194,22 +261,25 @@ class Complexity(AgentMetric):
         return "Complexity ({0})".format(self.type)
     
     def read(self, passive = False):
-        values = {}
+        values = dict.fromkeys(utility.getAgents(self.run), NAN)
         for line in self.readLines(passive):
             if self.polyworld:
                 agent, value = line.split()
                 value = float(value)
-                if value != 0.0:
-                    values[int(agent)] = value * math.log(2)
+                if value == 0.0:
+                    continue
+                value *= math.log(2.0)
             elif self.jidt:
                 agent, flag, value = line.split()
-                if flag == "C":
-                    values[int(agent)] = float(value)
+                if flag != "C":
+                    continue
+                value = float(value)
             else:
                 assert False
+            values[int(agent)] = value
         return values
 
-class Consistency(TimeMetric):
+class Consistency(TimeBasedMetric):
     def addArgs(self, parser):
         self.addArg(parser, "group-size", metavar = "GROUP_SIZE", type = int, choices = tuple(xrange(8)))
     
@@ -225,9 +295,19 @@ class Consistency(TimeMetric):
         else:
             return "Consistency ({0}-bit groups)".format(self.groupSize)
 
-class Density(AgentMetric):
+class DeathTimestep(LifespanMetric):
+    def getKey(self):
+        return "death"
+    
+    def getLabel(self):
+        return "Death timestep"
+    
+    def getValue(self, row):
+        return row["DeathStep"]
+
+class Density(AgentBasedMetric):
     def addArgs(self, parser):
-        self.addArg(parser, "graph-type", metavar = "GRAPH_TYPE", choices = tuple(graph_mod.Graph.Type.getNonInputValues()))
+        self.addArg(parser, "graph-type", metavar = "GRAPH_TYPE", choices = tuple(graph_mod.GraphType.getNonInputValues()))
     
     def readArgs(self, args):
         self.graphType = self.readArg(args, "graph-type")
@@ -236,25 +316,19 @@ class Density(AgentMetric):
         return "density-{0}".format(self.graphType)
     
     def getLabel(self):
-        if self.graphType == graph_mod.Graph.Type.ALL:
-            return "Density"
-        else:
-            return "{0} density".format(self.graphType.capitalize())
+        return "Density ({0})".format(self.graphType)
     
     def calculate(self, passive = False):
         for agent in utility.getAgents(self.run):
             graph = graph_mod.Graph.read(self.run, agent, Stage.INCEPT, self.graphType, passive)
-            if self.graphType == graph_mod.Graph.Type.ALL:
+            if self.graphType == graph_mod.GraphType.ALL:
                 countMax = graph.size * (graph.size - graph.nodeTypes.count(graph_mod.NodeType.INPUT) - 1)
             else:
                 countMax = graph.size * (graph.size - 1)
-            if countMax == 0:
-                value = 0.0
-            else:
-                value = float(graph.getLinkCount()) / countMax
+            value = float(graph.getLinkCount()) / countMax if countMax > 0 else 0.0
             yield agent, value
 
-class Efficiency(AgentMetric):
+class Efficiency(AgentBasedMetric):
     class Type(utility.Enum):
         LOCAL = "local"
         GLOBAL = "global"
@@ -262,7 +336,7 @@ class Efficiency(AgentMetric):
     def addArgs(self, parser):
         self.addArg(parser, "type", metavar = "TYPE", choices = tuple(Efficiency.Type.getValues()))
         self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
-        self.addArg(parser, "graph-type", metavar = "GRAPH_TYPE", choices = tuple(graph_mod.Graph.Type.getValues()))
+        self.addArg(parser, "graph-type", metavar = "GRAPH_TYPE", choices = tuple(graph_mod.GraphType.getValues()))
     
     def readArgs(self, args):
         self.type = self.readArg(args, "type")
@@ -273,41 +347,34 @@ class Efficiency(AgentMetric):
         return "efficiency-{0}-{1}-{2}".format(self.type, self.stage, self.graphType)
     
     def getLabel(self):
-        if self.graphType == graph_mod.Graph.Type.ALL:
-            return "{0} efficiency".format(self.type.capitalize())
-        else:
-            return "{0} {1} efficiency".format(self.graphType.capitalize(), self.type)
+        return "{0} efficiency ({1})".format(self.type.capitalize(), self.graphType)
     
     def calculate(self, passive = False):
         for agent in utility.getAgents(self.run):
             graph = graph_mod.Graph.read(self.run, agent, self.stage, self.graphType, passive)
             if graph is None:
+                yield agent, NAN
                 continue
             if self.type == Efficiency.Type.LOCAL:
-                if graph.size == 0:
-                    value = 0.0
-                else:
-                    values = []
-                    for node in xrange(graph.size):
-                        neighborhood = graph.getNeighborhood(node, False)
-                        distances = algorithms.Distance.calculate(neighborhood.weights)
-                        values.append(algorithms.Efficiency.calculate(distances))
-                    value = sum(values) / graph.size
+                values = []
+                for node in xrange(graph.size):
+                    neighborhood = graph.getNeighborhood(node, False)
+                    values.append(algorithms.Efficiency.calculate(neighborhood.weights))
+                value = sum(values) / graph.size if graph.size > 0 else 0.0
             elif self.type == Efficiency.Type.GLOBAL:
-                distances = algorithms.Distance.calculate(graph.weights)
-                value = algorithms.Efficiency.calculate(distances)
+                value = algorithms.Efficiency.calculate(graph.weights)
             else:
                 assert False
             yield agent, value
 
-class Entropy(StagedAgentMetric):
+class Entropy(StagedAgentBasedMetric):
     def getKey(self):
         return "entropy-{0}".format(self.stage)
     
     def getLabel(self):
         return "Entropy"
 
-class FoodDistance(AgentMetric):
+class FoodDistance(AgentBasedMetric):
     def getKey(self):
         return "food-distance"
     
@@ -316,7 +383,7 @@ class FoodDistance(AgentMetric):
     
     def read(self, passive = False):
         assert not passive
-        values = {}
+        values = dict.fromkeys(utility.getAgents(self.run), NAN)
         for agent in utility.getAgents(self.run):
             path = os.path.join(self.run, "food", "distance", "agent_{0}.txt".format(agent))
             rows = utility.getDataTable(path, "FoodDistance").rows()
@@ -324,16 +391,12 @@ class FoodDistance(AgentMetric):
                 values[agent] = sum(map(lambda row: row["Distance"], rows)) / len(rows)
         return values
     
-class FoodEnergy(TimeMetric):
-    @classmethod
-    def formatAxis(cls, axis):
-        axis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda tick, position: format(tick / 1e3, "g")))
-    
+class FoodEnergy(TimeBasedMetric):
     def getKey(self):
         return "food-energy"
     
     def getLabel(self):
-        return r"Food energy ($\times 10^3$)"
+        return "Food energy"
     
     def read(self, passive = False):
         assert not passive
@@ -343,16 +406,8 @@ class FoodEnergy(TimeMetric):
             values[row["Timestep"]] = row["Energy"]
         return values
 
-class Gene(AgentMetric):
+class Gene(AgentBasedMetric):
     integral = True
-    
-    @classmethod
-    def getBins(cls):
-        return numpy.linspace(0, 256, 65)
-    
-    @classmethod
-    def formatAxis(cls, axis):
-        axis.set_major_locator(matplotlib.ticker.MultipleLocator(64))
     
     def addArgs(self, parser):
         self.addArg(parser, "index", metavar = "INDEX", type = int)
@@ -381,39 +436,43 @@ class Gene(AgentMetric):
         return "{0} gene".format(title.replace("_", "\\_"))
     
     def calculate(self, passive = False):
-        if passive:
-            pathBase = os.path.join(self.run, "passive")
-        else:
-            pathBase = self.run
+        pathBase = os.path.join(self.run, "passive") if passive else self.run
         for agent in utility.getAgents(self.run):
             path = os.path.join(pathBase, "genome", "agents", "genome_{0}.txt.gz".format(agent))
             with gzip.open(path) as f:
                 for index in xrange(self.index):
                     f.readline()
                 yield agent, int(f.readline())
+    
+    def getBins(self):
+        return numpy.linspace(0, 256, 65)
+    
+    def formatAxis(self, axis):
+        axis.set_view_interval(0, 256)
+        axis.set_major_locator(matplotlib.ticker.MultipleLocator(64))
 
-class InfoModification(StagedAgentMetric):
+class InfoModification(StagedAgentBasedMetric):
     def getKey(self):
         return "info-modification-{0}".format(self.stage)
     
     def getLabel(self):
         return "Information modification"
 
-class InfoTransfer(StagedAgentMetric):
-    def getKey(self):
-        return "info-transfer-{0}".format(self.stage)
-    
-    def getLabel(self):
-        return "Information transfer"
-
-class InfoStorage(StagedAgentMetric):
+class InfoStorage(StagedAgentBasedMetric):
     def getKey(self):
         return "info-storage-{0}".format(self.stage)
     
     def getLabel(self):
         return "Information storage"
 
-class Integration(AgentMetric):
+class InfoTransfer(StagedAgentBasedMetric):
+    def getKey(self):
+        return "info-transfer-{0}".format(self.stage)
+    
+    def getLabel(self):
+        return "Information transfer"
+
+class Integration(AgentBasedMetric):
     def addArgs(self, parser):
         self.addArg(parser, "type", metavar = "TYPE")
     
@@ -431,14 +490,14 @@ class Integration(AgentMetric):
         return "Integration ({0})".format(self.type)
     
     def read(self, passive = False):
-        values = {}
+        values = dict.fromkeys(utility.getAgents(self.run), NAN)
         for line in self.readLines(passive):
             agent, flag, value = line.split()
             if flag == "I":
                 values[int(agent)] = float(value)
         return values
 
-class LearningRate(AgentMetric):
+class LearningRate(AgentBasedMetric):
     def getKey(self):
         return "learning-rate"
     
@@ -446,10 +505,7 @@ class LearningRate(AgentMetric):
         return "Learning rate"
     
     def calculate(self, passive = False):
-        if passive:
-            pathBase = os.path.join(self.run, "passive")
-        else:
-            pathBase = self.run
+        pathBase = os.path.join(self.run, "passive") if passive else self.run
         for agent in utility.getAgents(self.run):
             path = os.path.join(pathBase, "brain", "synapses", "synapses_{0}_{1}.txt.gz".format(agent, Stage.INCEPT))
             with gzip.open(path) as f:
@@ -457,85 +513,27 @@ class LearningRate(AgentMetric):
                 values = []
                 for line in f:
                     values.append(abs(float(line.split()[3])))
-            if len(values) == 0:
-                value = 0.0
-            else:
-                value = sum(values) / len(values)
+            value = sum(values) / len(values) if len(values) > 0 else 0.0
             yield agent, value
 
-class LifespanMetric(AgentMetric):
-    integral = True
-    
-    def __init__(self):
-        super(LifespanMetric, self).__init__()
-        self.initial = True
-        self.truncated = True
-    
-    def getValue(self, row):
-        raise NotImplementedError
-    
-    def read(self, passive = False):
-        assert not passive
-        values = {}
-        path = os.path.join(self.run, "lifespans.txt")
-        for row in utility.getDataTable(path, "LifeSpans").rows():
-            if not self.initial and row["BirthReason"] == "SIMINIT":
-                continue
-            elif not self.truncated and row["DeathReason"] == "SIMEND":
-                continue
-            values[row["Agent"]] = self.getValue(row)
-        return values
-
-class BirthTimestep(LifespanMetric):
+class Lifespan(LifespanMetric):
     def getKey(self):
-        return "birth"
+        return "lifespan"
     
     def getLabel(self):
-        return "Birth timestep"
+        return "Lifespan"
     
     def getValue(self, row):
-        return row["BirthStep"]
-
-class DeathTimestep(LifespanMetric):
-    def getKey(self):
-        return "death"
-    
-    def getLabel(self):
-        return "Death timestep"
-    
-    def getValue(self, row):
-        return row["DeathStep"]
+        return row["DeathStep"] - row["BirthStep"]
 
 class MeanTimestep(LifespanMetric):
     def getValue(self, row):
         return (row["BirthStep"] + row["DeathStep"]) / 2
 
-class Lifespan(LifespanMetric):
-    def addArgs(self, parser):
-        self.addArg(parser, "truncated", metavar = "TRUNCATED", type = int, choices = (0, 1))
-    
-    def readArgs(self, args):
-        self.truncated = bool(self.readArg(args, "truncated"))
-    
-    def getKey(self):
-        if self.truncated:
-            return "lifespan-truncated"
-        else:
-            return "lifespan"
-    
-    def getLabel(self):
-        if self.truncated:
-            return "Lifespan (truncated)"
-        else:
-            return "Lifespan"
-    
-    def getValue(self, row):
-        return row["DeathStep"] - row["BirthStep"]
-
-class Modularity(AgentMetric):
+class Modularity(AgentBasedMetric):
     def addArgs(self, parser):
         self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
-        self.addArg(parser, "graph-type", metavar = "GRAPH_TYPE", choices = tuple(graph_mod.Graph.Type.getValues()))
+        self.addArg(parser, "graph-type", metavar = "GRAPH_TYPE", choices = tuple(graph_mod.GraphType.getValues()))
     
     def readArgs(self, args):
         self.stage = self.readArg(args, "stage")
@@ -545,23 +543,21 @@ class Modularity(AgentMetric):
         return "modularity-{0}-{1}".format(self.stage, self.graphType)
     
     def getLabel(self):
-        if self.graphType == graph_mod.Graph.Type.ALL:
-            return "Modularity"
-        else:
-            return "{0} modularity".format(self.graphType.capitalize())
+        return "Modularity ({0})".format(self.graphType)
     
     def calculate(self, passive = False):
         for agent in utility.getAgents(self.run):
             graph = graph_mod.Graph.read(self.run, agent, self.stage, self.graphType, passive)
             if graph is None:
+                yield agent, NAN
                 continue
             yield agent, algorithms.Modularity.calculate(graph.weights)
 
-class NeuronCount(AgentMetric):
+class NeuronCount(AgentBasedMetric):
     integral = True
     
     def addArgs(self, parser):
-        self.addArg(parser, "graph-type", metavar = "GRAPH_TYPE", choices = tuple(graph_mod.Graph.Type.getValues()))
+        self.addArg(parser, "graph-type", metavar = "GRAPH_TYPE", choices = tuple(graph_mod.GraphType.getValues()))
     
     def readArgs(self, args):
         self.graphType = self.readArg(args, "graph-type")
@@ -570,39 +566,28 @@ class NeuronCount(AgentMetric):
         return "neuron-count-{0}".format(self.graphType)
     
     def getLabel(self):
-        if self.graphType == graph_mod.Graph.Type.ALL:
-            return "Neuron count"
-        else:
-            return "{0} neuron count".format(self.graphType.capitalize())
+        return "Neuron count ({0})".format(self.graphType)
     
     def calculate(self, passive = False):
         for agent in utility.getAgents(self.run):
             graph = graph_mod.Graph.read(self.run, agent, Stage.INCEPT, self.graphType, passive)
             if graph is None:
+                yield agent, NAN
                 continue
             yield agent, graph.size
 
-class OffspringCount(AgentMetric):
+class OffspringCount(OffspringMetric):
     def getKey(self):
         return "offspring-count"
     
     def getLabel(self):
         return "Offspring count"
     
-    def calculateInternal(self):
-        values = collections.defaultdict(int)
-        for event in utility.Event.read(self.run):
-            if event.type != utility.Event.Type.BIRTH:
-                continue
-            values[event.parent1] += 1
-            values[event.parent2] += 1
-        return values
-    
-    def calculate(self, passive = False):
+    def read(self, passive = False):
         assert not passive
-        return self.calculateInternal().iteritems()
+        return self.getCounts()
 
-class OffspringRate(OffspringCount):
+class OffspringRate(OffspringMetric):
     def getKey(self):
         return "offspring-rate"
     
@@ -611,28 +596,25 @@ class OffspringRate(OffspringCount):
     
     def getLifespans(self):
         metric = Lifespan()
-        metric.initial = False
         metric.initialize(self.run)
         return metric.read()
     
-    def calculate(self, passive = False):
+    def read(self, passive = False):
         assert not passive
-        counts = self.calculateInternal()
+        values = {}
+        counts = self.getCounts()
         for agent, lifespan in self.getLifespans().iteritems():
-            if lifespan == 0:
-                value = 0.0
-            else:
-                value = float(counts[agent]) / lifespan
-            yield agent, value
+            values[agent] = float(counts[agent]) / lifespan if lifespan > 0 else 0.0
+        return values
 
-class PhaseSpaceExpansion(StagedAgentMetric):
+class PhaseSpaceExpansion(StagedAgentBasedMetric):
     def getKey(self):
         return "expansion-{0}".format(self.stage)
     
     def getLabel(self):
         return "Phase space expansion"
 
-class Population(TimeMetric):
+class Population(TimeBasedMetric):
     integral = True
     
     def getKey(self):
@@ -650,7 +632,7 @@ class Population(TimeMetric):
             values[row["T"]] = row["Population"]
         return values
 
-class ProgenyRate(AgentMetric):
+class ProgenyRate(AgentBasedMetric):
     def getKey(self):
         return "progeny-rate"
     
@@ -666,27 +648,29 @@ class ProgenyRate(AgentMetric):
         assert not passive
         children = collections.defaultdict(list)
         for event in utility.Event.read(self.run):
-            if event.type != utility.Event.Type.BIRTH:
+            if event.eventType != utility.EventType.BIRTH:
                 continue
             children[event.parent1].append(event.agent)
             children[event.parent2].append(event.agent)
         end = utility.getFinalTimestep(self.run)
-        for agent, birth in self.getBirths().iteritems():
-            if birth == end:
-                continue
-            unexpanded = set(children[agent])
-            expanded = set()
-            while len(unexpanded) > 0:
-                descendant = unexpanded.pop()
-                if descendant not in expanded:
-                    unexpanded.update(children[descendant])
-                    expanded.add(descendant)
-            yield agent, float(len(expanded)) / (end - birth)
+        for agent, start in self.getBirths().iteritems():
+            if start == end:
+                value = 0.0
+            else:
+                unexpanded = set(children[agent])
+                expanded = set()
+                while len(unexpanded) > 0:
+                    descendant = unexpanded.pop()
+                    if descendant not in expanded:
+                        unexpanded.update(children[descendant])
+                        expanded.add(descendant)
+                value = float(len(expanded)) / (end - start)
+            yield agent, value
 
-class SmallWorldness(AgentMetric):
+class SmallWorldness(AgentBasedMetric):
     def addArgs(self, parser):
         self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
-        self.addArg(parser, "graph-type", metavar = "GRAPH_TYPE", choices = tuple(graph_mod.Graph.Type.getValues()))
+        self.addArg(parser, "graph-type", metavar = "GRAPH_TYPE", choices = tuple(graph_mod.GraphType.getValues()))
     
     def readArgs(self, args):
         self.stage = self.readArg(args, "stage")
@@ -696,31 +680,31 @@ class SmallWorldness(AgentMetric):
         return "small-worldness-{0}-{1}".format(self.stage, self.graphType)
     
     def getLabel(self):
-        if self.graphType == graph_mod.Graph.Type.ALL:
-            return "Small-worldness"
-        else:
-            return "{0} small-worldness".format(self.graphType.capitalize())
+        return "Small-worldness ({0})".format(self.graphType)
     
-    def getEfficiencies(self, type, passive = False):
+    def getEfficiencies(self, efficiencyType, passive = False):
         metric = Efficiency()
-        metric.type = type
+        metric.type = efficiencyType
         metric.stage = self.stage
         metric.graphType = self.graphType
         metric.initialize(self.run)
         return metric.read(passive)
     
     def read(self, passive = False):
-        efficienciesLocal = self.getEfficiencies(Efficiency.Type.LOCAL, passive)
-        efficienciesGlobal = self.getEfficiencies(Efficiency.Type.GLOBAL, passive)
         values = {}
+        localValues = self.getEfficiencies(Efficiency.Type.LOCAL, passive)
+        globalValues = self.getEfficiencies(Efficiency.Type.GLOBAL, passive)
         for agent in utility.getAgents(self.run):
-            efficiencyLocal = efficienciesLocal.get(agent)
-            efficiencyGlobal = efficienciesGlobal.get(agent)
-            if efficiencyLocal is not None and efficiencyGlobal is not None:
-                values[agent] = efficiencyLocal * efficiencyGlobal
+            localValue = localValues.get(agent)
+            globalValue = globalValues.get(agent)
+            if localValue is None or globalValue is None:
+                value = NAN
+            else:
+                value = localValue * globalValue
+            values[agent] = value
         return values
 
-class Timestep(TimeMetric):
+class Timestep(TimeBasedMetric):
     integral = True
     
     def getKey(self):
@@ -730,75 +714,25 @@ class Timestep(TimeMetric):
         return "Timestep"
     
     def read(self, passive = False):
-        return {timestep: timestep for timestep in xrange(0, utility.getFinalTimestep(self.run) + 1)}
-
-class WeightMetric(AgentMetric):
-    class Type(utility.Enum):
-        EXCITATORY = "excitatory"
-        INHIBITORY = "inhibitory"
-        ABSOLUTE = "absolute"
-    
-    def addArgs(self, parser):
-        self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
-        self.addArg(parser, "graph-type", metavar = "GRAPH_TYPE", choices = tuple(graph_mod.Graph.Type.getNonInputValues()))
-        self.addArg(parser, "weight-type", metavar = "WEIGHT_TYPE", choices = tuple(WeightMetric.Type.getValues()))
-    
-    def readArgs(self, args):
-        self.stage = self.readArg(args, "stage")
-        self.graphType = self.readArg(args, "graph-type")
-        self.weightType = self.readArg(args, "weight-type")
-    
-    def getWeight(self, graph, nodeOut, nodeIn):
-        weight = graph.weights[nodeOut][nodeIn]
-        if weight is None:
-            return None
-        if self.weightType == WeightMetric.Type.EXCITATORY:
-            if weight > 0.0:
-                return weight
-        elif self.weightType == WeightMetric.Type.INHIBITORY:
-            if weight < 0.0:
-                return -weight
-        elif self.weightType == WeightMetric.Type.ABSOLUTE:
-            if weight != 0.0:
-                return abs(weight)
-        else:
-            assert False
-        return None
-    
-    def getGraphs(self, passive = False):
-        for agent in utility.getAgents(self.run):
-            graph = graph_mod.Graph.read(self.run, agent, self.stage, self.graphType, passive)
-            if graph is None:
-                continue
-            yield agent, graph
-    
-    def getSynapses(self, graph):
-        for nodeOut in xrange(graph.size):
-            for nodeIn in xrange(graph.size):
-                weight = self.getWeight(graph, nodeOut, nodeIn)
-                if weight is not None:
-                    yield nodeOut, nodeIn, weight
+        values = {}
+        for timestep in xrange(0, utility.getFinalTimestep(self.run) + 1):
+            values[timestep] = timestep
+        return values
 
 class Strength(WeightMetric):
     def getKey(self):
         return "strength-{0}-{1}-{2}".format(self.stage, self.graphType, self.weightType)
     
     def getLabel(self):
-        if self.graphType == graph_mod.Graph.Type.ALL:
-            return "Strength ({0})".format(self.weightType)
-        else:
-            return "{0} strength ({1})".format(self.graphType.capitalize(), self.weightType)
+        return "Strength ({0}, {1})".format(self.graphType, self.weightType)
     
     def calculate(self, passive = False):
         for agent, graph in self.getGraphs(passive):
-            if graph.size == 0:
-                value = 0.0
-            else:
-                values = [0.0] * graph.size
-                for nodeOut, nodeIn, weight in self.getSynapses(graph):
-                    values[nodeOut] += weight
-                    values[nodeIn] += weight
-                value = sum(values) / graph.size
+            values = [0.0] * graph.size
+            for nodeOut, nodeIn, weight in self.getSynapses(graph):
+                values[nodeOut] += weight
+                values[nodeIn] += weight
+            value = sum(values) / graph.size if graph.size > 0 else 0.0
             yield agent, value
 
 class Weight(WeightMetric):
@@ -806,20 +740,14 @@ class Weight(WeightMetric):
         return "weight-{0}-{1}-{2}".format(self.stage, self.graphType, self.weightType)
     
     def getLabel(self):
-        if self.graphType == graph_mod.Graph.Type.ALL:
-            return "Synaptic weight ({0})".format(self.weightType)
-        else:
-            return "{0} synaptic weight ({1})".format(self.graphType.capitalize(), self.weightType)
+        return "Weight ({0}, {1})".format(self.graphType, self.weightType)
     
     def calculate(self, passive = False):
         for agent, graph in self.getGraphs(passive):
             values = []
             for nodeOut, nodeIn, weight in self.getSynapses(graph):
                 values.append(weight)
-            if len(values) == 0:
-                value = 0.0
-            else:
-                value = sum(values) / len(values)
+            value = sum(values) / len(values) if len(values) > 0 else 0.0
             yield agent, value
 
 def getMetrics():

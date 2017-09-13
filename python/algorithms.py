@@ -3,7 +3,7 @@ import utility
 
 # https://en.wikipedia.org/wiki/Dijkstra's_algorithm
 class Distance(object):
-    inf = float("inf")
+    INF = float("inf")
     
     @staticmethod
     def calculate(W):
@@ -19,10 +19,8 @@ class Distance(object):
                     L[i][j] = 1.0 / abs(W_ij)
         D = [None] * N
         for i in xrange(N):
-            D[i] = [Distance.inf] * N
-            for j in xrange(N):
-                if j == i:
-                    D[i][j] = 0.0
+            D[i] = [Distance.INF] * N
+            D[i][i] = 0.0
             Q = set(xrange(N))
             while len(Q) > 0:
                 j = min(Q, key = lambda j: D[i][j])
@@ -36,12 +34,14 @@ class Distance(object):
     def __init__(self):
         raise NotImplementedError
 
+# https://arxiv.org/abs/cond-mat/0101396
 class Efficiency(object):
     @staticmethod
-    def calculate(D):
-        N = len(D)
+    def calculate(W):
+        N = len(W)
         if N <= 1:
             return 0.0
+        D = Distance.calculate(W)
         sum_D_inv = 0.0
         for i in xrange(N):
             for j in xrange(N):
@@ -55,7 +55,7 @@ class Efficiency(object):
 
 # https://arxiv.org/abs/0803.0476
 class Modularity(object):
-    dQ_min = 1e-6
+    DQ_MIN = 1e-6
     
     class State(object):
         def __init__(self, W):
@@ -154,7 +154,7 @@ class Modularity(object):
                 if done:
                     break
             Q = state.get_Q()
-            if Q - Q_prev < Modularity.dQ_min:
+            if Q - Q_prev < Modularity.DQ_MIN:
                 return Q_prev
             state = Modularity.State(state.group())
             Q_prev = Q
@@ -164,22 +164,22 @@ class Modularity(object):
 
 if __name__ == "__main__":
     import argparse
+    import graph as graph_mod
     import numpy
+    import sys
     
-    def get_W_lattice(N, k):
-        W = [None] * N
-        for i in xrange(N):
-            W[i] = [0] * N
+    def get_G_lattice(N, k):
+        G = graph_mod.Graph(N)
+        W = G.weights
         for i in xrange(N):
             for j in xrange(i + 1, i + k + 1):
                 W[i][j % N] = 1
                 W[j % N][i] = 1
-        return W
+        return G
     
-    def get_W_modular(N, k):
-        W = [None] * N
-        for i in xrange(N):
-            W[i] = [0] * N
+    def get_G_modular(N, k):
+        G = graph_mod.Graph(N)
+        W = G.weights
         for i in xrange(N):
             C = i / k
             for j in xrange(k * C, k * (C + 1)):
@@ -192,42 +192,27 @@ if __name__ == "__main__":
                 j = 0
             W[i][j] = 1
             W[j][i] = 1
-        return W
+        return G
     
-    def rewire(W, p):
-        for i in xrange(len(W)):
-            for j in xrange(len(W)):
-                if W[i][j] == 0 or random.random() > p:
+    def rewire(G, p):
+        W = G.weights
+        for i in xrange(G.size):
+            for j in xrange(G.size):
+                if W[i][j] is None or random.random() >= p:
                     continue
-                choices = [j_new for j_new in xrange(len(W)) if j_new != i and W[i][j_new] == 0]
-                W[i][j] = 0
+                choices = [j_new for j_new in xrange(G.size) if j_new != i and W[i][j_new] is None]
+                W[i][j] = None
                 W[i][random.choice(choices)] = 1
     
-    def get_W_local(W, i):
-        neighbors = []
-        for j in xrange(len(W)):
-            if W[i][j] == 1 or W[j][i] == 1:
-                neighbors.append(j)
-        W_local = [None] * len(neighbors)
-        for i_local in xrange(len(neighbors)):
-            W_local[i_local] = [0] * len(neighbors)
-            for j_local in xrange(len(neighbors)):
-                W_local[i_local][j_local] = W[neighbors[i_local]][neighbors[j_local]]
-        return W_local
-    
-    def get_E_local(W):
+    def get_E_local(G):
         values = []
-        for i in xrange(len(W)):
-            D = Distance.calculate(get_W_local(W, i))
-            values.append(Efficiency.calculate(D))
-        if len(values) == 0:
-            return 0.0
-        else:
-            return sum(values) / len(values)
+        for i in xrange(G.size):
+            G_i = G.getNeighborhood(i, False)
+            values.append(Efficiency.calculate(G_i.weights))
+        return sum(values) / len(values) if len(values) > 0 else 0.0
     
-    def get_E_global(W):
-        D = Distance.calculate(W)
-        return Efficiency.calculate(D)
+    def get_E_global(G):
+        return Efficiency.calculate(G)
     
     parser = argparse.ArgumentParser()
     parser.add_argument("metric", metavar = "METRIC", choices = ("Efficiency", "Modularity"))
@@ -237,16 +222,16 @@ if __name__ == "__main__":
     args = parser.parse_args()
     assert args.k < args.N
     if args.metric == "Efficiency":
-        print "# p E_local E_global"
+        sys.stdout.write("# p E_local E_global\n")
         for p in numpy.logspace(-3, 0, args.samples):
-            W = get_W_lattice(args.N, args.k)
-            rewire(W, p)
-            print p, get_E_local(W), get_E_global(W)
+            G = get_G_lattice(args.N, args.k)
+            rewire(G, p)
+            sys.stdout.write("{0} {1} {2}\n".format(p, get_E_local(G), get_E_global(G)))
     elif args.metric == "Modularity":
-        print "# p Q"
+        sys.stdout.write("# p Q\n")
         for p in numpy.linspace(0, 1, args.samples):
-            W = get_W_modular(args.N, args.k)
-            rewire(W, p)
-            print p, Modularity.calculate(W)
+            G = get_G_modular(args.N, args.k)
+            rewire(G, p)
+            sys.stdout.write("{0} {1}\n".format(p, Modularity.calculate(G.weights)))
     else:
         assert False
