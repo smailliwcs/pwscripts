@@ -16,4 +16,17 @@ if [[ ! -e "$run/endStep.txt" ]]; then
     echo "Run '$run' is not valid."
     exit 1
 fi
-tar -czf $archive "$run/brain/synapses" "$run/genome" "$run/endStep.txt" "$run/gitrevision.txt" "$run/lifespans.txt" "$run/original.wf" "$run/original.wfs"
+tar --ignore-failed-read -czf $archive \
+    "$run/gitrevision.txt" \
+    "$run/original.wfs" \
+    "$run/original.wf" \
+    "$run/converted.wf" \
+    "$run/normalized.wf" \
+    "$run/endStep.txt" \
+    "$run/endReason.txt" \
+    "$run/BirthsDeaths.log" \
+    "$run/lifespans.txt" \
+    "$run/brain/synapses" \
+    "$run/genome" \
+    "$run/passive/brain/synapses" \
+    "$run/passive/genome"
