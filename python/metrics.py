@@ -111,9 +111,10 @@ class AgentBasedMetric(Metric):
             return result
         else:
             result = collections.defaultdict(list)
-            value = values[agent]
-            if value is not NAN:
-                result[timestep].append(value)
+            for agent, timestep in self.getTimesteps().iteritems():
+                value = values[agent]
+                if value is not NAN:
+                    result[timestep].append(value)
             return result
 
 class LifespanMetric(AgentBasedMetric):
