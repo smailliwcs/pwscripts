@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+run() {
+    cp "$1/BirthsDeaths.log" LOCKSTEP-BirthsDeaths.log
+    ./Polyworld --PassiveLockstep True "$1/normalized.wf"
+    mv run "$2"
+    rm LOCKSTEP-BirthsDeaths.log
+}
+
+if [[ $# -ne 2 ]]; then
+    echo "Usage: $(basename "$0") RUNS KEY"
+    exit 1
+fi
+runs=$1
+shift
+key=$1
+shift
+if [[ -e "runs/$key" ]]; then
+    echo "Key '$key' is already in use."
+    exit 1
+fi
+if [[ -e "$runs/BirthsDeaths.log" ]]; then
+    mkdir -p runs
+    run "$runs" "runs/$key"
+else
+    mkdir -p "runs/$key"
+    for log in "$runs"/*/BirthsDeaths.log; do
+        run=$(dirname "$log")
+        run "$run" "runs/$key/$(basename "$run")"
+    done
+fi

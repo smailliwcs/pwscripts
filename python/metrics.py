@@ -52,7 +52,7 @@ class Metric(object):
         return self.getKey() + ".txt"
     
     def getDataPath(self, passive = False):
-        pathBase = os.path.join(self.run, "passive") if passive else self.run
+        pathBase = utility.getPassiveRun(run) if passive else run
         return os.path.join(pathBase, "data", self.getDataFileName())
     
     def readLines(self, passive = False):
@@ -437,7 +437,7 @@ class Gene(AgentBasedMetric):
         return "{0} gene".format(title.replace("_", "\\_"))
     
     def calculate(self, passive = False):
-        pathBase = os.path.join(self.run, "passive") if passive else self.run
+        pathBase = utility.getPassiveRun(run) if passive else run
         for agent in utility.getAgents(self.run):
             path = os.path.join(pathBase, "genome", "agents", "genome_{0}.txt.gz".format(agent))
             with gzip.open(path) as f:
@@ -506,7 +506,7 @@ class LearningRate(AgentBasedMetric):
         return "Learning rate"
     
     def calculate(self, passive = False):
-        pathBase = os.path.join(self.run, "passive") if passive else self.run
+        pathBase = utility.getPassiveRun(run) if passive else run
         for agent in utility.getAgents(self.run):
             path = os.path.join(pathBase, "brain", "synapses", "synapses_{0}_{1}.txt.gz".format(agent, Stage.INCEPT))
             with gzip.open(path) as f:

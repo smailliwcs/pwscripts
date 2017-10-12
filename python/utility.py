@@ -83,6 +83,9 @@ def getRuns(path):
             if isRun(subpath):
                 yield subpath
 
+def getPassiveRun(run):
+    return run.replace("driven", "passive")
+
 def getParameter(run, name):
     with open(os.path.join(run, "normalized.wf")) as f:
         for line in f:

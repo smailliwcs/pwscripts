@@ -59,7 +59,7 @@ class Graph(object):
     
     @staticmethod
     def read(run, agent, stage, graphType, passive = False):
-        pathBase = os.path.join(run, "passive") if passive else run
+        pathBase = utility.getPassiveRun(run) if passive else run
         path = os.path.join(pathBase, "brain", "synapses", "synapses_{0}_{1}.txt.gz".format(agent, stage))
         if not os.path.isfile(path):
             return None

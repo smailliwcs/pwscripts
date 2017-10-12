@@ -27,6 +27,4 @@ tar --ignore-failed-read -czf $archive \
     "$run/BirthsDeaths.log" \
     "$run/lifespans.txt" \
     "$run/brain/synapses" \
-    "$run/genome" \
-    "$run/passive/brain/synapses" \
-    "$run/passive/genome"
+    "$run/genome"
