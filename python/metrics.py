@@ -37,10 +37,11 @@ class Metric(object):
     def readArgs(self, args):
         pass
     
-    def initialize(self, run, args = None):
+    def initialize(self, run, args = None, start = None):
         self.run = run
         if args is not None:
             self.readArgs(args)
+        self.start = start
     
     def getKey(self):
         raise NotImplementedError
@@ -93,6 +94,9 @@ class TimeBasedMetric(Metric):
         return values
 
 class AgentBasedMetric(Metric):
+    def initialize(self, run, args = None, start = 1):
+        super(AgentBasedMetric, self).initialize(run, args, start)
+    
     def read(self, passive = False):
         values = dict.fromkeys(utility.getAgents(self.run), NAN)
         values.update(super(AgentBasedMetric, self).read(passive))
@@ -178,7 +182,7 @@ class WeightMetric(AgentBasedMetric):
             assert False
     
     def getGraphs(self, passive = False):
-        for agent in utility.getAgents(self.run):
+        for agent in utility.getAgents(self.run, self.start):
             graph = graph_mod.Graph.read(self.run, agent, self.stage, self.graphType, passive)
             if graph is None:
                 continue
@@ -220,7 +224,7 @@ class AgentEnergy(AgentBasedMetric):
     def calculate(self, passive = False):
         assert not passive
         lifespans = self.getLifespans()
-        for agent in utility.getAgents(self.run):
+        for agent in utility.getAgents(self.run, self.start):
             lifespan = lifespans[agent]
             if lifespan == 0:
                 value = NAN
@@ -320,7 +324,7 @@ class Density(AgentBasedMetric):
         return "Density ({0})".format(self.graphType)
     
     def calculate(self, passive = False):
-        for agent in utility.getAgents(self.run):
+        for agent in utility.getAgents(self.run, self.start):
             graph = graph_mod.Graph.read(self.run, agent, Stage.INCEPT, self.graphType, passive)
             if self.graphType == graph_mod.GraphType.ALL:
                 countMax = graph.size * (graph.size - graph.nodeTypes.count(graph_mod.NodeType.INPUT) - 1)
@@ -351,7 +355,7 @@ class Efficiency(AgentBasedMetric):
         return "{0} efficiency ({1})".format(self.type.capitalize(), self.graphType)
     
     def calculate(self, passive = False):
-        for agent in utility.getAgents(self.run):
+        for agent in utility.getAgents(self.run, self.start):
             graph = graph_mod.Graph.read(self.run, agent, self.stage, self.graphType, passive)
             if graph is None:
                 yield agent, NAN
@@ -438,7 +442,7 @@ class Gene(AgentBasedMetric):
     
     def calculate(self, passive = False):
         pathBase = utility.getPassiveRun(run) if passive else run
-        for agent in utility.getAgents(self.run):
+        for agent in utility.getAgents(self.run, self.start):
             path = os.path.join(pathBase, "genome", "agents", "genome_{0}.txt.gz".format(agent))
             with gzip.open(path) as f:
                 for index in xrange(self.index):
@@ -507,7 +511,7 @@ class LearningRate(AgentBasedMetric):
     
     def calculate(self, passive = False):
         pathBase = utility.getPassiveRun(run) if passive else run
-        for agent in utility.getAgents(self.run):
+        for agent in utility.getAgents(self.run, self.start):
             path = os.path.join(pathBase, "brain", "synapses", "synapses_{0}_{1}.txt.gz".format(agent, Stage.INCEPT))
             with gzip.open(path) as f:
                 f.readline()
@@ -547,7 +551,7 @@ class Modularity(AgentBasedMetric):
         return "Modularity ({0})".format(self.graphType)
     
     def calculate(self, passive = False):
-        for agent in utility.getAgents(self.run):
+        for agent in utility.getAgents(self.run, self.start):
             graph = graph_mod.Graph.read(self.run, agent, self.stage, self.graphType, passive)
             if graph is None:
                 yield agent, NAN
@@ -570,7 +574,7 @@ class NeuronCount(AgentBasedMetric):
         return "Neuron count ({0})".format(self.graphType)
     
     def calculate(self, passive = False):
-        for agent in utility.getAgents(self.run):
+        for agent in utility.getAgents(self.run, self.start):
             graph = graph_mod.Graph.read(self.run, agent, Stage.INCEPT, self.graphType, passive)
             if graph is None:
                 yield agent, NAN
@@ -655,6 +659,8 @@ class ProgenyRate(AgentBasedMetric):
             children[event.parent2].append(event.agent)
         end = utility.getFinalTimestep(self.run)
         for agent, start in self.getBirths().iteritems():
+            if agent < self.start:
+                continue
             if start == end:
                 value = 0.0
             else:
@@ -705,21 +711,6 @@ class SmallWorldness(AgentBasedMetric):
             values[agent] = value
         return values
 
-class Timestep(TimeBasedMetric):
-    integral = True
-    
-    def getKey(self):
-        return "time"
-    
-    def getLabel(self):
-        return "Timestep"
-    
-    def read(self, passive = False):
-        values = {}
-        for timestep in xrange(0, utility.getFinalTimestep(self.run) + 1):
-            values[timestep] = timestep
-        return values
-
 class Strength(WeightMetric):
     def getKey(self):
         return "strength-{0}-{1}-{2}".format(self.stage, self.graphType, self.weightType)
@@ -735,6 +726,21 @@ class Strength(WeightMetric):
                 values[nodeIn] += weight
             value = sum(values) / graph.size if graph.size > 0 else 0.0
             yield agent, value
+
+class Timestep(TimeBasedMetric):
+    integral = True
+    
+    def getKey(self):
+        return "time"
+    
+    def getLabel(self):
+        return "Timestep"
+    
+    def read(self, passive = False):
+        values = {}
+        for timestep in xrange(0, utility.getFinalTimestep(self.run) + 1):
+            values[timestep] = timestep
+        return values
 
 class Weight(WeightMetric):
     def getKey(self):

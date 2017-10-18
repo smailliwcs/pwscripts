@@ -108,8 +108,9 @@ def getAgentCount(run):
 def getInitialAgentCount(run):
     return int(getParameter(run, "InitAgents"))
 
-def getAgents(run):
-    return xrange(1, getAgentCount(run) + 1)
+def getAgents(run, start = 1):
+    assert start >= 1
+    return xrange(start, getAgentCount(run) + 1)
 
 def getPopulations(run):
     agents = range(1, getInitialAgentCount(run) + 1)
