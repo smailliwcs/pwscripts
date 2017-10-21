@@ -212,7 +212,7 @@ class AgentEnergy(AgentBasedMetric):
     
     def getLabel(self):
         if self.type == AgentEnergy.Type.TOTAL:
-            return "Total agent energy"
+            return "Agent energy"
         else:
             return "Agent energy {0}".format(self.type)
     
@@ -263,7 +263,7 @@ class Complexity(AgentBasedMetric):
         return "complexity-{0}".format(self.type)
     
     def getLabel(self):
-        return "Complexity ({0})".format(self.type)
+        return "Complexity"
     
     def read(self, passive = False):
         values = dict.fromkeys(utility.getAgents(self.run), NAN)
@@ -321,7 +321,7 @@ class Density(AgentBasedMetric):
         return "density-{0}".format(self.graphType)
     
     def getLabel(self):
-        return "Density ({0})".format(self.graphType)
+        return "Density"
     
     def calculate(self, passive = False):
         for agent in utility.getAgents(self.run, self.start):
@@ -352,7 +352,7 @@ class Efficiency(AgentBasedMetric):
         return "efficiency-{0}-{1}-{2}".format(self.type, self.stage, self.graphType)
     
     def getLabel(self):
-        return "{0} efficiency ({1})".format(self.type.capitalize(), self.graphType)
+        return "{0} efficiency".format(self.type.capitalize())
     
     def calculate(self, passive = False):
         for agent in utility.getAgents(self.run, self.start):
@@ -492,7 +492,7 @@ class Integration(AgentBasedMetric):
         return "complexity-{0}.txt".format(self.type)
     
     def getLabel():
-        return "Integration ({0})".format(self.type)
+        return "Integration"
     
     def read(self, passive = False):
         values = dict.fromkeys(utility.getAgents(self.run), NAN)
@@ -548,7 +548,7 @@ class Modularity(AgentBasedMetric):
         return "modularity-{0}-{1}".format(self.stage, self.graphType)
     
     def getLabel(self):
-        return "Modularity ({0})".format(self.graphType)
+        return "Modularity"
     
     def calculate(self, passive = False):
         for agent in utility.getAgents(self.run, self.start):
@@ -571,7 +571,7 @@ class NeuronCount(AgentBasedMetric):
         return "neuron-count-{0}".format(self.graphType)
     
     def getLabel(self):
-        return "Neuron count ({0})".format(self.graphType)
+        return "Neuron count"
     
     def calculate(self, passive = False):
         for agent in utility.getAgents(self.run, self.start):
@@ -687,7 +687,7 @@ class SmallWorldness(AgentBasedMetric):
         return "small-worldness-{0}-{1}".format(self.stage, self.graphType)
     
     def getLabel(self):
-        return "Small-worldness ({0})".format(self.graphType)
+        return "Small-worldness"
     
     def getEfficiencies(self, efficiencyType, passive = False):
         metric = Efficiency()
@@ -716,7 +716,7 @@ class Strength(WeightMetric):
         return "strength-{0}-{1}-{2}".format(self.stage, self.graphType, self.weightType)
     
     def getLabel(self):
-        return "Strength ({0}, {1})".format(self.graphType, self.weightType)
+        return "Strength"
     
     def calculate(self, passive = False):
         for agent, graph in self.getGraphs(passive):
@@ -747,7 +747,7 @@ class Weight(WeightMetric):
         return "weight-{0}-{1}-{2}".format(self.stage, self.graphType, self.weightType)
     
     def getLabel(self):
-        return "Weight ({0}, {1})".format(self.graphType, self.weightType)
+        return "Weight"
     
     def calculate(self, passive = False):
         for agent, graph in self.getGraphs(passive):
