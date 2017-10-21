@@ -13,21 +13,24 @@ import textwrap
 import utility
 
 COLORS = [
-    matplotlib.cm.get_cmap("Blues")(1.0),
-    matplotlib.cm.get_cmap("Greens")(0.5)
+    "#1764ab",
+    "#fc9c9c"
 ]
 ALPHA_RUN = 0.2
-ALPHA_HIST = 0.5
+ALPHA_HIST = 0.8
 BIN_COUNT = 100
+OFFSET_HIST = 0.0
 STROKE = matplotlib.patheffects.withStroke(linewidth = 2.0, foreground = "1.0")
 
 class HistNorm(matplotlib.colors.LogNorm):
-    def __init__(self, offset = 0.05, vmin = None, vmax = None, clip = False):
+    def __init__(self, offset = OFFSET_HIST, vmin = None, vmax = None, clip = False):
         super(HistNorm, self).__init__(vmin = vmin, vmax = vmax, clip = clip)
         self.offset = offset
 
     def __call__(self, value, clip = None):
-        return self.offset + (1.0 - self.offset) * super(HistNorm, self).__call__(value, clip = clip)
+        result = super(HistNorm, self).__call__(value, clip = clip)
+        result = numpy.ma.masked_less_equal(result, 0, False)
+        return self.offset + (1.0 - self.offset) * result
 
 class Plot(object):
     @staticmethod
@@ -170,9 +173,9 @@ plot = Plot()
 figure = matplotlib.pyplot.figure()
 if plot.sig:
     size = figure.get_size_inches()
-    size[1] *= 4.0 / 3.0
+    size[1] *= 5.0 / 4.0
     figure.set_size_inches(size)
-    grid = matplotlib.gridspec.GridSpec(3, 1)
+    grid = matplotlib.gridspec.GridSpec(4, 1)
     axes1 = figure.add_subplot(grid[0:-1, :])
     axes2 = figure.add_subplot(grid[-1, :])
 else:
