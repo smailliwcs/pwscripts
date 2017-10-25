@@ -453,7 +453,7 @@ class Gene(AgentBasedMetric):
         return numpy.linspace(0, 256, 65)
     
     def formatAxis(self, axis):
-        axis.set_view_interval(0, 256)
+        axis.set_view_interval(0, 256, True)
         axis.set_major_locator(matplotlib.ticker.MultipleLocator(64))
 
 class InfoModification(StagedAgentBasedMetric):
