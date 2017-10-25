@@ -21,6 +21,7 @@ ALPHA_HIST = 0.8
 BIN_COUNT = 100
 OFFSET_HIST = 0.0
 STROKE = matplotlib.patheffects.withStroke(linewidth = 2.0, foreground = "1.0")
+RASTERIZE = True
 
 class HistNorm(matplotlib.colors.LogNorm):
     def __init__(self, offset = OFFSET_HIST, vmin = None, vmax = None, clip = False):
@@ -45,6 +46,7 @@ class Plot(object):
         matplotlib.rcParams["image.cmap"] = "YlGnBu"
         matplotlib.rcParams["legend.fontsize"] = 6.0
         matplotlib.rcParams["legend.framealpha"] = 0.5
+        matplotlib.rcParams["savefig.dpi"] = 300
         matplotlib.rcParams["savefig.format"] = "pdf"
         matplotlib.rcParams["text.usetex"] = True
         matplotlib.rcParams["text.latex.preamble"] = [
@@ -210,7 +212,7 @@ for run in plot.runs:
     # Plot line
     if plot.args.line:
         axy = driven[run].axy_line
-        kwargs = {"color": COLORS[0], "alpha": ALPHA_RUN, "zorder": -2}
+        kwargs = {"rasterized": RASTERIZE, "color": COLORS[0], "alpha": ALPHA_RUN, "zorder": -2}
         axes1.plot(axy[0], axy[1], **kwargs)
         if plot.args.passive:
             axy = passive[run].axy_line
@@ -221,7 +223,7 @@ for run in plot.runs:
 lines = []
 if plot.args.line:
     axy = numpy.nanmean(map(lambda data: data.axy_line, driven.itervalues()), 0)
-    kwargs = {"color": COLORS[0], "path_effects": [STROKE]}
+    kwargs = {"rasterized": RASTERIZE, "color": COLORS[0], "path_effects": [STROKE]}
     lines.append(axes1.plot(axy[0], axy[1], **kwargs)[0])
     if plot.args.passive:
         axy = numpy.nanmean(map(lambda data: data.axy_line, passive.itervalues()), 0)
@@ -245,7 +247,7 @@ if plot.sig:
     for index in xrange(len(ax)):
         axy[0].append(ax[index])
         axy[1].append(1.0 - scipy.stats.ttest_rel(ays_d[index], ays_p[index])[1])
-    axes2.plot(axy[0], axy[1], color = COLORS[0])
+    axes2.plot(axy[0], axy[1], rasterized = RASTERIZE, color = COLORS[0])
 
 # Post-configure plot
 plot.xMetric.formatAxis(axes1.xaxis)
