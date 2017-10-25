@@ -26,6 +26,7 @@ class Enum(object):
 class EventType(Enum):
     BIRTH = "BIRTH"
     DEATH = "DEATH"
+    VIRTUAL = "VIRTUAL"
 
 class Event(object):
     @staticmethod
@@ -41,7 +42,7 @@ class Event(object):
         self.timestep = int(chunks[0])
         self.eventType = EventType.parse(chunks[1])
         self.agent = int(chunks[2])
-        if self.eventType == EventType.BIRTH:
+        if self.eventType == EventType.BIRTH or self.eventType == EventType.VIRTUAL:
             self.parent1 = int(chunks[3])
             self.parent2 = int(chunks[4])
 
