@@ -58,9 +58,8 @@ class Graph(object):
         r"numoutputneurons=(?P<numoutputneurons>\d+)$")))
     
     @staticmethod
-    def read(run, agent, stage, graphType, passive = False):
-        pathBase = utility.getPassiveRun(run) if passive else run
-        path = os.path.join(pathBase, "brain", "synapses", "synapses_{0}_{1}.txt.gz".format(agent, stage))
+    def read(run, agent, stage, graphType):
+        path = os.path.join(run, "brain", "synapses", "synapses_{0}_{1}.txt.gz".format(agent, stage))
         if not os.path.isfile(path):
             return None
         with gzip.open(path) as f:

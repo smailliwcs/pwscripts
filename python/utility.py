@@ -46,6 +46,14 @@ class Event(object):
             self.parent1 = int(chunks[3])
             self.parent2 = int(chunks[4])
 
+def contains(rng, value):
+    if rng[0] is not None and value < rng[0]:
+        return False
+    elif rng[1] is not None and value > rng[1]:
+        return False
+    else:
+        return True
+
 def coalesce(*values):
     for value in values:
         if value is not None:
@@ -90,8 +98,8 @@ def getRuns(path):
             if isRun(subpath):
                 yield subpath
 
-def getPassiveRun(run):
-    return run.replace("driven", "passive")
+def getRun(run, passive):
+    return run.replace("driven", "passive") if passive else run
 
 def getParameter(run, name):
     with open(os.path.join(run, "normalized.wf")) as f:
@@ -115,7 +123,8 @@ def getAgentCount(run):
 def getInitialAgentCount(run):
     return int(getParameter(run, "InitAgents"))
 
-def getAgents(run, start = 1):
+def getAgents(run, start = None):
+    start = 1 if start is None else start
     assert start >= 1
     return xrange(start, getAgentCount(run) + 1)
 

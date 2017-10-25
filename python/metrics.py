@@ -37,8 +37,8 @@ class Metric(object):
     def readArgs(self, args):
         pass
     
-    def initialize(self, run, args = None, start = None):
-        self.run = run
+    def initialize(self, run, passive = False, args = None, start = None):
+        self.run = utility.getRun(run, passive)
         if args is not None:
             self.readArgs(args)
         self.start = start
@@ -52,35 +52,37 @@ class Metric(object):
     def getDataFileName(self):
         return self.getKey() + ".txt"
     
-    def getDataPath(self, passive = False):
-        pathBase = utility.getPassiveRun(self.run) if passive else self.run
-        return os.path.join(pathBase, "data", self.getDataFileName())
+    def getDataPath(self):
+        return os.path.join(self.run, "data", self.getDataFileName())
     
-    def readLines(self, passive = False):
-        with open(self.getDataPath(passive)) as f:
+    def readLines(self):
+        with open(self.getDataPath()) as f:
             for line in f:
                 if line.startswith("#"):
                     continue
                 yield line
     
-    def read(self, passive = False):
+    def read(self):
         values = {}
-        for line in self.readLines(passive):
+        for line in self.readLines():
             key, value = line.split()
             values[int(key)] = float(value)
         return values
     
-    def write(self, values, passive = False):
-        path = self.getDataPath(passive)
+    def write(self, values):
+        path = self.getDataPath()
         utility.makeDirectories(os.path.dirname(path))
         with open(path, "w") as f:
             for key, value in values.iteritems():
                 f.write("{0} {1}\n".format(key, value))
     
-    def calculate(self, passive = False):
+    def calculate(self):
         raise NotImplementedError
     
-    def toTimeBased(self, values, mean):
+    def getRange(self, values, tmin, tmax):
+        raise NotImplementedError
+    
+    def toTimeBased(self, values, mean, tmin = None, tmax = None):
         raise NotImplementedError
     
     def getBins(self):
@@ -90,35 +92,48 @@ class Metric(object):
         pass
 
 class TimeBasedMetric(Metric):
-    def toTimeBased(self, values, mean):
-        return values
+    def getRange(self, values, tmin, tmax):
+        result = {}
+        for timestep, value in values.iteritems():
+            if utility.contains([tmin, tmax], timestep):
+                result[timestep] = value
+        return result
+    
+    def toTimeBased(self, values, mean, tmin = None, tmax = None):
+        return self.getRange(values, tmin, tmax)
 
 class AgentBasedMetric(Metric):
-    def initialize(self, run, args = None, start = 1):
-        super(AgentBasedMetric, self).initialize(run, args, start)
-    
-    def read(self, passive = False):
+    def read(self):
         values = dict.fromkeys(utility.getAgents(self.run), NAN)
-        values.update(super(AgentBasedMetric, self).read(passive))
+        values.update(super(AgentBasedMetric, self).read())
         return values
     
     def getTimesteps(self):
         metric = MeanTimestep()
-        metric.initialize(self.run)
+        metric.initialize(self.run, start = self.start)
         return metric.read()
     
-    def toTimeBased(self, values, mean):
+    def getRange(self, values, tmin, tmax):
+        result = {}
+        for agent, timestep in self.getTimesteps().iteritems():
+            if utility.contains([tmin, tmax], timestep):
+                result[agent] = values[agent]
+        return result
+    
+    def toTimeBased(self, values, mean, tmin = None, tmax = None):
         if mean:
             result = {}
             for timestep, agents in utility.getPopulations(self.run):
-                result[timestep] = numpy.nanmean(map(lambda agent: values[agent], agents))
+                if utility.contains([tmin, tmax], timestep):
+                    result[timestep] = numpy.nanmean(map(lambda agent: values[agent], agents))
             return result
         else:
             result = collections.defaultdict(list)
             for agent, timestep in self.getTimesteps().iteritems():
-                value = values[agent]
-                if value is not NAN:
-                    result[timestep].append(value)
+                if utility.contains([tmin, tmax], timestep):
+                    value = values[agent]
+                    if value is not NAN:
+                        result[timestep].append(value)
             return result
 
 class LifespanMetric(AgentBasedMetric):
@@ -127,8 +142,7 @@ class LifespanMetric(AgentBasedMetric):
     def getValue(self, row):
         raise NotImplementedError
     
-    def read(self, passive = False):
-        assert not passive
+    def read(self):
         values = {}
         path = os.path.join(self.run, "lifespans.txt")
         for row in utility.getDataTable(path, "LifeSpans").rows():
@@ -181,9 +195,9 @@ class WeightMetric(AgentBasedMetric):
         else:
             assert False
     
-    def getGraphs(self, passive = False):
+    def getGraphs(self):
         for agent in utility.getAgents(self.run, self.start):
-            graph = graph_mod.Graph.read(self.run, agent, self.stage, self.graphType, passive)
+            graph = graph_mod.Graph.read(self.run, agent, self.stage, self.graphType)
             if graph is None:
                 continue
             yield agent, graph
@@ -218,11 +232,10 @@ class AgentEnergy(AgentBasedMetric):
     
     def getLifespans(self):
         metric = Lifespan()
-        metric.initialize(self.run)
+        metric.initialize(self.run, start = self.start)
         return metric.read()
     
-    def calculate(self, passive = False):
-        assert not passive
+    def calculate(self):
         lifespans = self.getLifespans()
         for agent in utility.getAgents(self.run, self.start):
             lifespan = lifespans[agent]
@@ -265,9 +278,9 @@ class Complexity(AgentBasedMetric):
     def getLabel(self):
         return "Complexity"
     
-    def read(self, passive = False):
+    def read(self):
         values = dict.fromkeys(utility.getAgents(self.run), NAN)
-        for line in self.readLines(passive):
+        for line in self.readLines():
             if self.polyworld:
                 agent, value = line.split()
                 value = float(value)
@@ -323,9 +336,9 @@ class Density(AgentBasedMetric):
     def getLabel(self):
         return "Density"
     
-    def calculate(self, passive = False):
+    def calculate(self):
         for agent in utility.getAgents(self.run, self.start):
-            graph = graph_mod.Graph.read(self.run, agent, Stage.INCEPT, self.graphType, passive)
+            graph = graph_mod.Graph.read(self.run, agent, Stage.INCEPT, self.graphType)
             if self.graphType == graph_mod.GraphType.ALL:
                 countMax = graph.size * (graph.size - graph.nodeTypes.count(graph_mod.NodeType.INPUT) - 1)
             else:
@@ -354,9 +367,9 @@ class Efficiency(AgentBasedMetric):
     def getLabel(self):
         return "{0} efficiency".format(self.type.capitalize())
     
-    def calculate(self, passive = False):
+    def calculate(self):
         for agent in utility.getAgents(self.run, self.start):
-            graph = graph_mod.Graph.read(self.run, agent, self.stage, self.graphType, passive)
+            graph = graph_mod.Graph.read(self.run, agent, self.stage, self.graphType)
             if graph is None:
                 yield agent, NAN
                 continue
@@ -386,16 +399,16 @@ class FoodDistance(AgentBasedMetric):
     def getLabel(self):
         return "Food distance"
     
-    def read(self, passive = False):
-        assert not passive
-        values = dict.fromkeys(utility.getAgents(self.run), NAN)
+    def calculate(self):
         for agent in utility.getAgents(self.run):
             path = os.path.join(self.run, "food", "distance", "agent_{0}.txt".format(agent))
             rows = utility.getDataTable(path, "FoodDistance").rows()
-            if len(rows) > 0:
-                values[agent] = sum(map(lambda row: row["Distance"], rows)) / len(rows)
-        return values
-    
+            if len(rows) == 0:
+                value = NAN
+            else:
+                value = sum(map(lambda row: row["Distance"], rows)) / len(rows)
+            yield agent, value
+
 class FoodEnergy(TimeBasedMetric):
     def getKey(self):
         return "food-energy"
@@ -403,8 +416,7 @@ class FoodEnergy(TimeBasedMetric):
     def getLabel(self):
         return "Food energy"
     
-    def read(self, passive = False):
-        assert not passive
+    def read(self):
         values = {}
         path = os.path.join(self.run, "food", "energy.txt")
         for row in utility.getDataTable(path, "FoodEnergy").rows():
@@ -440,10 +452,9 @@ class Gene(AgentBasedMetric):
                 title = f.readline().split(" :: ")[0]
         return "{0} gene".format(title.replace("_", "\\_"))
     
-    def calculate(self, passive = False):
-        pathBase = utility.getPassiveRun(self.run) if passive else self.run
+    def calculate(self):
         for agent in utility.getAgents(self.run, self.start):
-            path = os.path.join(pathBase, "genome", "agents", "genome_{0}.txt.gz".format(agent))
+            path = os.path.join(self.run, "genome", "agents", "genome_{0}.txt.gz".format(agent))
             with gzip.open(path) as f:
                 for index in xrange(self.index):
                     f.readline()
@@ -494,9 +505,9 @@ class Integration(AgentBasedMetric):
     def getLabel():
         return "Integration"
     
-    def read(self, passive = False):
+    def read(self):
         values = dict.fromkeys(utility.getAgents(self.run), NAN)
-        for line in self.readLines(passive):
+        for line in self.readLines():
             agent, flag, value = line.split()
             if flag == "I":
                 values[int(agent)] = float(value)
@@ -509,10 +520,9 @@ class LearningRate(AgentBasedMetric):
     def getLabel(self):
         return "Learning rate"
     
-    def calculate(self, passive = False):
-        pathBase = utility.getPassiveRun(self.run) if passive else self.run
+    def calculate(self):
         for agent in utility.getAgents(self.run, self.start):
-            path = os.path.join(pathBase, "brain", "synapses", "synapses_{0}_{1}.txt.gz".format(agent, Stage.INCEPT))
+            path = os.path.join(self.run, "brain", "synapses", "synapses_{0}_{1}.txt.gz".format(agent, Stage.INCEPT))
             with gzip.open(path) as f:
                 f.readline()
                 values = []
@@ -550,9 +560,9 @@ class Modularity(AgentBasedMetric):
     def getLabel(self):
         return "Modularity"
     
-    def calculate(self, passive = False):
+    def calculate(self):
         for agent in utility.getAgents(self.run, self.start):
-            graph = graph_mod.Graph.read(self.run, agent, self.stage, self.graphType, passive)
+            graph = graph_mod.Graph.read(self.run, agent, self.stage, self.graphType)
             if graph is None:
                 yield agent, NAN
                 continue
@@ -573,9 +583,9 @@ class NeuronCount(AgentBasedMetric):
     def getLabel(self):
         return "Neuron count"
     
-    def calculate(self, passive = False):
+    def calculate(self):
         for agent in utility.getAgents(self.run, self.start):
-            graph = graph_mod.Graph.read(self.run, agent, Stage.INCEPT, self.graphType, passive)
+            graph = graph_mod.Graph.read(self.run, agent, Stage.INCEPT, self.graphType)
             if graph is None:
                 yield agent, NAN
                 continue
@@ -588,8 +598,7 @@ class OffspringCount(OffspringMetric):
     def getLabel(self):
         return "Offspring count"
     
-    def read(self, passive = False):
-        assert not passive
+    def read(self):
         return self.getCounts()
 
 class OffspringRate(OffspringMetric):
@@ -601,11 +610,10 @@ class OffspringRate(OffspringMetric):
     
     def getLifespans(self):
         metric = Lifespan()
-        metric.initialize(self.run)
+        metric.initialize(self.run, start = self.start)
         return metric.read()
     
-    def read(self, passive = False):
-        assert not passive
+    def read(self):
         values = {}
         counts = self.getCounts()
         for agent, lifespan in self.getLifespans().iteritems():
@@ -628,8 +636,7 @@ class Population(TimeBasedMetric):
     def getLabel(self):
         return "Population"
     
-    def read(self, passive = False):
-        assert not passive
+    def read(self):
         values = {}
         values[0] = utility.getInitialAgentCount(self.run)
         path = os.path.join(self.run, "population.txt")
@@ -646,11 +653,10 @@ class ProgenyRate(AgentBasedMetric):
     
     def getBirths(self):
         metric = BirthTimestep()
-        metric.initialize(self.run)
+        metric.initialize(self.run, start = self.start)
         return metric.read()
     
-    def calculate(self, passive = False):
-        assert not passive
+    def calculate(self):
         children = collections.defaultdict(list)
         for event in utility.Event.read(self.run):
             if event.eventType != utility.EventType.BIRTH:
@@ -659,8 +665,6 @@ class ProgenyRate(AgentBasedMetric):
             children[event.parent2].append(event.agent)
         end = utility.getFinalTimestep(self.run)
         for agent, start in self.getBirths().iteritems():
-            if agent < self.start:
-                continue
             if start == end:
                 value = 0.0
             else:
@@ -689,18 +693,18 @@ class SmallWorldness(AgentBasedMetric):
     def getLabel(self):
         return "Small-worldness"
     
-    def getEfficiencies(self, efficiencyType, passive = False):
+    def getEfficiencies(self, efficiencyType):
         metric = Efficiency()
         metric.type = efficiencyType
         metric.stage = self.stage
         metric.graphType = self.graphType
-        metric.initialize(self.run)
-        return metric.read(passive)
+        metric.initialize(self.run, start = self.start)
+        return metric.read()
     
-    def read(self, passive = False):
+    def read(self):
         values = {}
-        localValues = self.getEfficiencies(Efficiency.Type.LOCAL, passive)
-        globalValues = self.getEfficiencies(Efficiency.Type.GLOBAL, passive)
+        localValues = self.getEfficiencies(Efficiency.Type.LOCAL)
+        globalValues = self.getEfficiencies(Efficiency.Type.GLOBAL)
         for agent in utility.getAgents(self.run):
             localValue = localValues.get(agent)
             globalValue = globalValues.get(agent)
@@ -718,8 +722,8 @@ class Strength(WeightMetric):
     def getLabel(self):
         return "Strength"
     
-    def calculate(self, passive = False):
-        for agent, graph in self.getGraphs(passive):
+    def calculate(self):
+        for agent, graph in self.getGraphs():
             values = [0.0] * graph.size
             for nodeOut, nodeIn, weight in self.getSynapses(graph):
                 values[nodeOut] += weight
@@ -736,7 +740,7 @@ class Timestep(TimeBasedMetric):
     def getLabel(self):
         return "Timestep"
     
-    def read(self, passive = False):
+    def read(self):
         values = {}
         for timestep in xrange(0, utility.getFinalTimestep(self.run) + 1):
             values[timestep] = timestep
@@ -749,8 +753,8 @@ class Weight(WeightMetric):
     def getLabel(self):
         return "Weight"
     
-    def calculate(self, passive = False):
-        for agent, graph in self.getGraphs(passive):
+    def calculate(self):
+        for agent, graph in self.getGraphs():
             values = []
             for nodeOut, nodeIn, weight in self.getSynapses(graph):
                 values.append(weight)
