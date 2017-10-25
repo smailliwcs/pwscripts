@@ -13,11 +13,11 @@ import textwrap
 import utility
 
 COLORS = [
-    "#1764ab",
-    "#fc9c9c"
+    matplotlib.cm.get_cmap("Blues")(0.9),
+    matplotlib.cm.get_cmap("Oranges")(0.45)
 ]
 ALPHA_RUN = 0.2
-ALPHA_HIST = 0.8
+ALPHA_HIST = 1.0
 BIN_COUNT = 100
 OFFSET_HIST = 0.0
 STROKE = matplotlib.patheffects.withStroke(linewidth = 2.0, foreground = "1.0")
@@ -45,7 +45,6 @@ class Plot(object):
         matplotlib.rcParams["grid.linestyle"] = "-"
         matplotlib.rcParams["image.cmap"] = "YlGnBu"
         matplotlib.rcParams["legend.fontsize"] = 6.0
-        matplotlib.rcParams["legend.framealpha"] = 0.5
         matplotlib.rcParams["savefig.dpi"] = 300
         matplotlib.rcParams["savefig.format"] = "pdf"
         matplotlib.rcParams["text.usetex"] = True
