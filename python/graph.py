@@ -83,7 +83,7 @@ class Graph(object):
                 indexOut = nodes.index(nodeOut)
                 indexIn = nodes.index(nodeIn)
                 weight = float(chunks[2]) / weightMax
-                graph.weights[indexOut][indexIn] = (graph.weights[indexOut][indexIn] or 0.0) + weight
+                graph.weights[indexOut][indexIn] = utility.coalesce(graph.weights[indexOut][indexIn], 0.0) + weight
         return graph
     
     def __init__(self, size):
@@ -93,11 +93,14 @@ class Graph(object):
         for node in xrange(size):
             self.weights[node] = [None] * size
     
+    def hasLink(self, nodeOut, nodeIn):
+        return self.weights[nodeOut][nodeIn] is not None
+    
     def getLinkCount(self):
         count = 0
         for nodeOut in xrange(self.size):
             for nodeIn in xrange(self.size):
-                if self.weights[nodeOut][nodeIn] is not None:
+                if self.hasLink(nodeOut, nodeIn):
                     count += 1
         return count
     
@@ -117,6 +120,6 @@ class Graph(object):
     def getNeighborhood(self, node, include):
         nodes = []
         for neighbor in xrange(self.size):
-            if (neighbor == node and include) or self.weights[neighbor][node] is not None or self.weights[node][neighbor] is not None:
+            if (neighbor == node and include) or self.hasLink(neighbor, node) or self.hasLink(node, neighbor):
                 nodes.append(neighbor)
         return self.getSubgraph(nodes)

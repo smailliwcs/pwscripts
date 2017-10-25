@@ -45,6 +45,12 @@ class Event(object):
             self.parent1 = int(chunks[3])
             self.parent2 = int(chunks[4])
 
+def coalesce(*values):
+    for value in values:
+        if value is not None:
+            return value
+    return None
+
 def iterate(values):
     if values is None:
         return
