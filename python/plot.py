@@ -73,6 +73,11 @@ class Plot(object):
         parser.add_argument("--passive", action = "store_true")
         parser.add_argument("--tmin", metavar = "TMIN", type = int)
         parser.add_argument("--tmax", metavar = "TMAX", type = int)
+        parser.add_argument("--xmin", metavar = "XMIN", type = float)
+        parser.add_argument("--xmax", metavar = "XMAX", type = float)
+        parser.add_argument("--ymin", metavar = "YMIN", type = float)
+        parser.add_argument("--ymax", metavar = "YMAX", type = float)
+        parser.add_argument("--legend", metavar = "LOC", default = "upper right")
         parser.add_argument("runs", metavar = "RUNS")
         if len(metrics) != 2:
             parser.add_argument("xmetric", metavar = "XMETRIC")
@@ -141,12 +146,14 @@ class Data:
         return result
     
     @staticmethod
-    def bin(metric, ax):
+    def bin(metric, ax, xmin = None, xmax = None):
         bins = metric.getBins()
         if bins is not None:
             return bins
-        xmin = min(ax)
-        xmax = max(ax)
+        if xmin is None:
+            xmin = min(ax)
+        if xmax is None:
+            xmax = max(ax)
         count = BIN_COUNT
         if metric.integral:
             xrng = xmax - xmin
@@ -224,9 +231,10 @@ if plot.args.line:
 # Plot histogram
 if plot.args.hist:
     axy = Data.flatten(map(lambda data: data.axy_hist, driven.itervalues()))
-    bins = [Data.bin(plot.xMetric, axy[0]), Data.bin(plot.yMetric, axy[1])]
+    xbins = Data.bin(plot.xMetric, axy[0], plot.args.xmin, plot.args.xmax)
+    ybins = Data.bin(plot.yMetric, axy[1], plot.args.ymin, plot.args.ymax)
     alpha = ALPHA_HIST if plot.args.line else 1.0
-    axes1.hist2d(axy[0], axy[1], bins = bins, norm = HistNorm(), alpha = alpha, zorder = -4)
+    axes1.hist2d(axy[0], axy[1], bins = [xbins, ybins], norm = HistNorm(), alpha = alpha, zorder = -4)
 
 # Plot significance
 if plot.sig:
@@ -242,6 +250,8 @@ if plot.sig:
 # Post-configure plot
 plot.xMetric.formatAxis(axes1.xaxis)
 plot.yMetric.formatAxis(axes1.yaxis)
+axes1.set_xlim(plot.args.xmin, plot.args.xmax)
+axes1.set_ylim(plot.args.ymin, plot.args.ymax)
 if plot.sig:
     axes1.tick_params(labelbottom = False)
     axes2.set_xlabel(plot.xMetric.getLabel())
@@ -251,7 +261,7 @@ if plot.sig:
 else:
     axes1.set_xlabel(plot.xMetric.getLabel())
 if plot.args.passive:
-    axes1.legend(lines, ["Driven", "Passive"])
+    axes1.legend(lines, ["Driven", "Passive"], loc = plot.args.legend)
 axes1.set_ylabel(plot.yMetric.getLabel())
 matplotlib.pyplot.tight_layout()
 figure.savefig("{0}-vs-{1}".format(plot.yMetric.getKey(), plot.xMetric.getKey()))
