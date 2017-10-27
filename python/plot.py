@@ -78,7 +78,7 @@ class Plot(object):
         parser.add_argument("--xmax", metavar = "XMAX", type = float)
         parser.add_argument("--ymin", metavar = "YMIN", type = float)
         parser.add_argument("--ymax", metavar = "YMAX", type = float)
-        parser.add_argument("--legend", metavar = "LOC", default = "upper right")
+        parser.add_argument("--legend", metavar = "LOC", default = "lower right")
         parser.add_argument("runs", metavar = "RUNS")
         if len(metrics) != 2:
             parser.add_argument("xmetric", metavar = "XMETRIC")
