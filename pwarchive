@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-if [[ $# -ne 2 ]]; then
-    echo "Usage: $(basename "$0") ARCHIVE RUN"
+if [[ $# -ne 3 ]]; then
+    echo "Usage: $(basename "$0") ARCHIVE RUN STAGE"
     exit 1
 fi
 archive=$1
@@ -16,6 +16,8 @@ if [[ ! -e "$run/endStep.txt" ]]; then
     echo "Run '$run' is not valid."
     exit 1
 fi
+stage=$1
+shift
 tar --ignore-failed-read -czf $archive \
     "$run/gitrevision.txt" \
     "$run/original.wfs" \
@@ -26,5 +28,5 @@ tar --ignore-failed-read -czf $archive \
     "$run/endReason.txt" \
     "$run/BirthsDeaths.log" \
     "$run/lifespans.txt" \
-    "$run/brain/synapses" \
+    "$run/brain/synapses"/synapses_*_$stage.txt.gz \
     "$run/genome"
