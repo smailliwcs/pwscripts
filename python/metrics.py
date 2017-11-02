@@ -225,10 +225,14 @@ class AgentEnergy(AgentBasedMetric):
         return "agent-energy-{0}".format(self.type)
     
     def getLabel(self):
-        if self.type == AgentEnergy.Type.TOTAL:
+        if self.type == AgentEnergy.Type.IN:
+            return "Energy consumed"
+        elif self.type == AgentEnergy.Type.OUT:
+            return "Energy expended"
+        elif self.type == AgentEnergy.Type.TOTAL:
             return "Agent energy"
         else:
-            return "Agent energy {0}".format(self.type)
+            assert False
     
     def getLifespans(self):
         metric = Lifespan()
@@ -334,7 +338,7 @@ class Density(AgentBasedMetric):
         return "density-{0}".format(self.graphType)
     
     def getLabel(self):
-        return "Density"
+        return "Synaptic density"
     
     def calculate(self):
         for agent in utility.getAgents(self.run, self.start):
@@ -720,7 +724,7 @@ class Strength(WeightMetric):
         return "strength-{0}-{1}-{2}".format(self.stage, self.graphType, self.weightType)
     
     def getLabel(self):
-        return "Strength"
+        return "Synaptic strength"
     
     def calculate(self):
         for agent, graph in self.getGraphs():
@@ -751,7 +755,7 @@ class Weight(WeightMetric):
         return "weight-{0}-{1}-{2}".format(self.stage, self.graphType, self.weightType)
     
     def getLabel(self):
-        return "Weight"
+        return "Synaptic weight"
     
     def calculate(self):
         for agent, graph in self.getGraphs():
