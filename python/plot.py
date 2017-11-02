@@ -78,7 +78,7 @@ class Plot(object):
         parser.add_argument("--xmax", metavar = "XMAX", type = float)
         parser.add_argument("--ymin", metavar = "YMIN", type = float)
         parser.add_argument("--ymax", metavar = "YMAX", type = float)
-        parser.add_argument("--legend", metavar = "LOC", default = "lower right")
+        parser.add_argument("--legend", metavar = "LOC", default = "upper left")
         parser.add_argument("runs", metavar = "RUNS")
         if len(metrics) != 2:
             parser.add_argument("xmetric", metavar = "XMETRIC")
@@ -120,7 +120,7 @@ class Data:
         sys.stderr.flush()
         for key, value in metric.calculate():
             count += 1
-            if count % 100 == 0:
+            if count % 10 == 0:
                 sys.stderr.write("\b{0}".format(spinner.next()))
                 sys.stderr.flush()
             values[key] = value
