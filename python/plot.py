@@ -70,7 +70,7 @@ class Plot(object):
         epilog = wrapper.fill("available metrics: {0}".format(", ".join(sorted(metrics_mod.metrics.iterkeys()))))
         parser = argparse.ArgumentParser(add_help = False, epilog = epilog, formatter_class = argparse.RawDescriptionHelpFormatter)
         parser.add_argument("--line", action = "store_true")
-        parser.add_argument("--hist", action = "store_true")
+        parser.add_argument("--histogram", action = "store_true")
         parser.add_argument("--passive", action = "store_true")
         parser.add_argument("--tmin", metavar = "TMIN", type = int)
         parser.add_argument("--tmax", metavar = "TMAX", type = int)
@@ -100,7 +100,7 @@ class Plot(object):
         self.yMetric = self.metrics[1]
         if isinstance(self.xMetric, metrics_mod.AgentBasedMetric):
             assert isinstance(self.yMetric, metrics_mod.AgentBasedMetric)
-        assert self.args.line or self.args.hist
+        assert self.args.line or self.args.histogram
         if self.args.passive:
             assert isinstance(self.xMetric, metrics_mod.Timestep)
         self.sig = self.args.passive and len(self.runs) > 1
@@ -176,7 +176,7 @@ class Data:
             self.dx_line = plot.xMetric.toTimeBased(self.dx, True, **trange)
             self.dy_line = plot.yMetric.toTimeBased(self.dy, True, **trange)
             self.axy_line = Data.zip(self.dx_line, self.dy_line)
-        if plot.args.hist:
+        if plot.args.histogram:
             if isinstance(plot.xMetric, metrics_mod.AgentBasedMetric) and isinstance(plot.yMetric, metrics_mod.AgentBasedMetric):
                 self.dx_hist = plot.xMetric.getRange(self.dx, **trange)
                 self.dy_hist = plot.yMetric.getRange(self.dy, **trange)
@@ -230,7 +230,7 @@ if plot.args.line:
         lines.append(axes1.plot(axy[0], axy[1], **kwargs)[0])
 
 # Plot histogram
-if plot.args.hist:
+if plot.args.histogram:
     axy = Data.flatten(map(lambda data: data.axy_hist, driven.itervalues()))
     xbins = Data.bin(plot.xMetric, axy[0], plot.args.xmin, plot.args.xmax)
     ybins = Data.bin(plot.yMetric, axy[1], plot.args.ymin, plot.args.ymax)
