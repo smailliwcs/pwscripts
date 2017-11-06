@@ -312,10 +312,7 @@ class Consistency(TimeBasedMetric):
         return "consistency-{0}".format(self.groupSize)
     
     def getLabel(self):
-        if self.groupSize == 0:
-            return "Consistency"
-        else:
-            return "Consistency ({0}-bit groups)".format(self.groupSize)
+        return "Consistency"
 
 class DeathTimestep(LifespanMetric):
     def getKey(self):
