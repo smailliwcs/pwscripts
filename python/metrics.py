@@ -472,25 +472,85 @@ class Gene(AgentBasedMetric):
         axis.set_major_locator(matplotlib.ticker.MultipleLocator(64))
 
 class InfoModification(StagedAgentBasedMetric):
+    class Type(utility.Enum):
+        TRIVIAL = "trivial"
+        NONTRIVIAL = "nontrivial"
+        TOTAL = "total"
+    
+    def addArgs(self, parser):
+        self.addArg(parser, "type", metavar = "TYPE", choices = tuple(InfoModification.Type.getValues()))
+        self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
+    
+    def readArgs(self, args):
+        self.type = self.readArg(args, "type")
+        self.stage = self.readArg(args, "stage")
+    
     def getKey(self):
-        return "info-modification-{0}".format(self.stage)
+        return "info-modification-{0}-{1}".format(self.type, self.stage)
+    
+    def getDataFileName(self):
+        return "info-dynamics-{0}.txt".format(self.stage)
     
     def getLabel(self):
-        return "Information modification"
+        return "{0} information modification".format(self.type.capitalize())
+    
+    def read(self):
+        values = dict.fromkeys(utility.getAgents(self.run), NAN)
+        for line in self.readLines():
+            agent, flag, value = line.split(None, 2)
+            if flag == "M":
+                trivialValue, nontrivialValue = map(float, value.split())
+                if self.type == InfoModification.Type.TRIVIAL:
+                    value = trivialValue
+                elif self.type == InfoModification.Type.NONTRIVIAL:
+                    value = nontrivialValue
+                elif self.type == InfoModification.Type.TOTAL:
+                    value = trivialValue + nontrivialValue
+                else:
+                    assert False
+                values[int(agent)] = value
+        return values
+    
+    def formatAxis(self, axis):
+        if self.type == InfoModification.Type.NONTRIVIAL:
+            interval = axis.get_view_interval()
+            axis.set_view_interval(interval[1], interval[0], True)
 
 class InfoStorage(StagedAgentBasedMetric):
     def getKey(self):
         return "info-storage-{0}".format(self.stage)
     
+    def getDataFileName(self):
+        return "info-dynamics-{0}.txt".format(self.stage)
+    
     def getLabel(self):
         return "Information storage"
+    
+    def read(self):
+        values = dict.fromkeys(utility.getAgents(self.run), NAN)
+        for line in self.readLines():
+            agent, flag, value = line.split(None, 2)
+            if flag == "S":
+                values[int(agent)] = float(value)
+        return values
 
 class InfoTransfer(StagedAgentBasedMetric):
     def getKey(self):
         return "info-transfer-{0}".format(self.stage)
     
+    def getDataFileName(self):
+        return "info-dynamics-{0}.txt".format(self.stage)
+    
     def getLabel(self):
         return "Information transfer"
+    
+    def read(self):
+        values = dict.fromkeys(utility.getAgents(self.run), NAN)
+        for line in self.readLines():
+            agent, flag, value = line.split(None, 2)
+            if flag == "T":
+                values[int(agent)] = float(value)
+        return values
 
 class Integration(AgentBasedMetric):
     def addArgs(self, parser):

@@ -3,7 +3,7 @@ import java.util.*;
 import java.util.regex.*;
 
 public class TimeSeriesEnsembleReader implements AutoCloseable {
-    private static final Pattern ARGUMENT = Pattern.compile("^[a-zA-Z0-9_]+ = .+$");
+    private static final Pattern ARGUMENT = Pattern.compile("^[a-z_]+ = .+$");
     private static final Pattern AGENT = Pattern.compile("^# AGENT (?<agentIndex>\\d+$)");
     private static final Pattern DIMENSIONS = Pattern.compile("^# DIMENSIONS (?<neuronCount>\\d+) (?<inputNeuronCount>\\d+) (?<outputNeuronCount>\\d+)$");
     
@@ -18,14 +18,12 @@ public class TimeSeriesEnsembleReader implements AutoCloseable {
     }
     
     public void readArguments(PrintStream out) throws IOException {
-        {
-            String line = reader.readLine();
-            if (!line.equals("# BEGIN ARGUMENTS")) {
-                throw new IOException(getExceptionMessage(line));
-            }
+        String line = reader.readLine();
+        if (!line.equals("# BEGIN ARGUMENTS")) {
+            throw new IOException(getExceptionMessage(line));
         }
         while (true) {
-            String line = reader.readLine();
+            line = reader.readLine();
             if (line.equals("# END ARGUMENTS")) {
                 break;
             }
@@ -53,50 +51,60 @@ public class TimeSeriesEnsembleReader implements AutoCloseable {
     }
     
     private TimeSeriesEnsemble readHeader() throws IOException {
-        int agentIndex;
+        String line = reader.readLine();
+        if (line == null) {
+            return null;
+        }
+        Matcher matcher = AGENT.matcher(line);
+        if (!matcher.matches()) {
+            throw new IOException(getExceptionMessage(line));
+        }
+        int agentIndex = Integer.parseInt(matcher.group("agentIndex"));
+        line = reader.readLine();
+        matcher = DIMENSIONS.matcher(line);
+        if (!matcher.matches()) {
+            throw new IOException(getExceptionMessage(line));
+        }
+        int neuronCount = Integer.parseInt(matcher.group("neuronCount"));
+        int inputNeuronCount = Integer.parseInt(matcher.group("inputNeuronCount"));
+        int outputNeuronCount = Integer.parseInt(matcher.group("outputNeuronCount"));
+        TimeSeriesEnsemble ensemble = new TimeSeriesEnsemble(agentIndex, neuronCount, inputNeuronCount, outputNeuronCount);
         {
-            String line = reader.readLine();
-            if (line == null) {
-                return null;
-            }
-            Matcher matcher = AGENT.matcher(line);
-            if (!matcher.matches()) {
+            line = reader.readLine();
+            if (!line.equals("# BEGIN SYNAPSES")) {
                 throw new IOException(getExceptionMessage(line));
             }
-            agentIndex = Integer.parseInt(matcher.group("agentIndex"));
-        }
-        int neuronCount;
-        int inputNeuronCount;
-        int outputNeuronCount;
-        {
-            String line = reader.readLine();
-            Matcher matcher = DIMENSIONS.matcher(line);
-            if (!matcher.matches()) {
-                throw new IOException(getExceptionMessage(line));
+            while (true) {
+                line = reader.readLine();
+                if (line.equals("# END SYNAPSES")) {
+                    break;
+                }
+                try (Scanner scanner = new Scanner(line)) {
+                    int preNeuronIndex = scanner.nextInt();
+                    while (scanner.hasNext()) {
+                        int postNeuronIndex = scanner.nextInt();
+                        ensemble.addSynapse(new Synapse(preNeuronIndex, postNeuronIndex));
+                    }
+                }
             }
-            neuronCount = Integer.parseInt(matcher.group("neuronCount"));
-            inputNeuronCount = Integer.parseInt(matcher.group("inputNeuronCount"));
-            outputNeuronCount = Integer.parseInt(matcher.group("outputNeuronCount"));
         }
-        return new TimeSeriesEnsemble(agentIndex, neuronCount, inputNeuronCount, outputNeuronCount);
+        return ensemble;
     }
     
     private TimeSeries readTimeSeries(int dimension) throws IOException {
-        {
-            String line = reader.readLine();
-            if (line.equals("# BEGIN ENSEMBLE")) {
-                line = reader.readLine();
-            }
-            if (line.equals("# END ENSEMBLE")) {
-                return null;
-            }
-            if (!line.equals("# BEGIN TIME SERIES")) {
-                throw new IOException(getExceptionMessage(line));
-            }
+        String line = reader.readLine();
+        if (line.equals("# BEGIN ENSEMBLE")) {
+            line = reader.readLine();
+        }
+        if (line.equals("# END ENSEMBLE")) {
+            return null;
+        }
+        if (!line.equals("# BEGIN TIME SERIES")) {
+            throw new IOException(getExceptionMessage(line));
         }
         TimeSeries timeSeries = new TimeSeries(dimension);
         while (true) {
-            String line = reader.readLine();
+            line = reader.readLine();
             if (line.equals("# END TIME SERIES")) {
                 return timeSeries;
             }

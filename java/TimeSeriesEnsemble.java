@@ -13,12 +13,14 @@ public class TimeSeriesEnsemble extends LinkedList<TimeSeries> {
     private int neuronCount;
     private int inputNeuronCount;
     private int outputNeuronCount;
+    private Collection<Synapse> synapses;
     
     public TimeSeriesEnsemble(int agentIndex, int neuronCount, int inputNeuronCount, int outputNeuronCount) {
         this.agentIndex = agentIndex;
         this.neuronCount = neuronCount;
         this.inputNeuronCount = inputNeuronCount;
         this.outputNeuronCount = outputNeuronCount;
+        synapses = new LinkedList<Synapse>();
     }
     
     public int getAgentIndex() {
@@ -63,6 +65,14 @@ public class TimeSeriesEnsemble extends LinkedList<TimeSeries> {
     
     public int[] getProcessingNeuronIndices() {
         return getRange(inputNeuronCount, getProcessingNeuronCount());
+    }
+    
+    public Iterable<Synapse> getSynapses() {
+        return synapses;
+    }
+    
+    public void addSynapse(Synapse synapse) {
+        synapses.add(synapse);
     }
     
     public TimeSeries combine() {

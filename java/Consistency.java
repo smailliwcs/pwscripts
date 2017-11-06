@@ -24,52 +24,44 @@ public class Consistency {
         }
     }
     
-    private static final Pattern INIT_AGENT_COUNT = Pattern.compile("InitAgents\\s+(?<initAgentCount>\\d+)");
+    private static final Pattern INIT_AGENTS = Pattern.compile("InitAgents\\s+(?<initAgentCount>\\d+)");
     
     private static String run;
     private static int groupSize;
     private static EntropyCalculatorDiscrete calculator;
-    private static int geneCount;
     
     public static void main(String[] args) throws Exception {
         if (!tryParseArgs(args)) {
             System.err.printf("Usage: %s RUN GROUP_SIZE%n", Consistency.class.getSimpleName());
             return;
         }
-        System.out.printf("# groupSize = %d%n", groupSize);
+        System.out.printf("# group_size = %d%n", groupSize);
         calculator = new EntropyCalculatorDiscrete(256 >> groupSize);
         Map<Integer, Collection<Event>> events = readEvents();
         Map<Integer, List<Integer>> genomes = new HashMap<Integer, List<Integer>>();
         int initAgentCount = getInitAgentCount();
         for (int agentIndex = 1; agentIndex <= initAgentCount; agentIndex++) {
-            List<Integer> genome = readGenome(agentIndex);
-            if (agentIndex == 1) {
-                geneCount = genome.size();
-            }
-            genomes.put(agentIndex, genome);
+            genomes.put(agentIndex, readGenome(agentIndex));
         }
-        System.out.printf("0 %g%n", calculate(genomes.values()));
-        int timestepMax = getTimestepMax();
-        for (int timestep = 1; timestep <= timestepMax; timestep++) {
-            Collection<Event> timestepEvents = events.get(timestep);
-            if (timestepEvents != null) {
-                for (Event timestepEvent : timestepEvents) {
-                    int agentIndex = timestepEvent.getAgentIndex();
-                    switch (timestepEvent.getType()) {
-                        case "BIRTH":
-                            genomes.put(agentIndex, readGenome(agentIndex));
-                            break;
-                        case "DEATH":
-                            genomes.remove(agentIndex);
-                            break;
-                        case "VIRTUAL":
-                            break;
-                        default:
-                            assert false;
-                    }
+        System.out.printf("0 %g%n", getConsistency(genomes.values()));
+        int maxTimestep = getMaxTimestep();
+        for (int timestep = 1; timestep <= maxTimestep; timestep++) {
+            for (Event event : events.get(timestep)) {
+                int agentIndex = event.getAgentIndex();
+                switch (event.getType()) {
+                    case "BIRTH":
+                        genomes.put(agentIndex, readGenome(agentIndex));
+                        break;
+                    case "DEATH":
+                        genomes.remove(agentIndex);
+                        break;
+                    case "VIRTUAL":
+                        break;
+                    default:
+                        assert false;
                 }
             }
-            System.out.printf("%d %g%n", timestep, calculate(genomes.values()));
+            System.out.printf("%d %g%n", timestep, getConsistency(genomes.values()));
         }
     }
     
@@ -94,6 +86,10 @@ public class Consistency {
     
     private static Map<Integer, Collection<Event>> readEvents() throws Exception {
         Map<Integer, Collection<Event>> events = new HashMap<Integer, Collection<Event>>();
+        int maxTimestep = getMaxTimestep();
+        for (int timestep = 1; timestep <= maxTimestep; timestep++) {
+            events.put(timestep, new LinkedList<Event>());
+        }
         File file = new File(run, "BirthsDeaths.log");
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             while (true) {
@@ -108,12 +104,7 @@ public class Consistency {
                 int timestep = scanner.nextInt();
                 String type = scanner.next();
                 int agentIndex = scanner.nextInt();
-                Collection<Event> timestepEvents = events.get(timestep);
-                if (timestepEvents == null) {
-                    timestepEvents = new LinkedList<Event>();
-                    events.put(timestep, timestepEvents);
-                }
-                timestepEvents.add(new Event(type, agentIndex));
+                events.get(timestep).add(new Event(type, agentIndex));
             }
         }
         return events;
@@ -125,7 +116,7 @@ public class Consistency {
             while (true) {
                 String line = reader.readLine();
                 assert line != null;
-                Matcher matcher = INIT_AGENT_COUNT.matcher(line);
+                Matcher matcher = INIT_AGENTS.matcher(line);
                 if (matcher.matches()) {
                     return Integer.parseInt(matcher.group("initAgentCount"));
                 }
@@ -133,7 +124,7 @@ public class Consistency {
         }
     }
     
-    private static int getTimestepMax() throws Exception {
+    private static int getMaxTimestep() throws Exception {
         File file = new File(run, "endStep.txt");
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             return Integer.parseInt(reader.readLine());
@@ -156,23 +147,24 @@ public class Consistency {
         return genome;
     }
     
-    private static double calculate(Collection<List<Integer>> genomes) {
+    private static double getConsistency(Collection<List<Integer>> genomes) {
+        double entropy = 0.0;
         int[] genes = new int[genomes.size()];
-        double sum = 0.0;
+        int geneCount = genomes.iterator().next().size();
         for (int geneIndex = 0; geneIndex < geneCount; geneIndex++) {
             int genomeIndex = 0;
             for (List<Integer> genome : genomes) {
                 genes[genomeIndex] = genome.get(geneIndex) >> groupSize;
                 genomeIndex++;
             }
-            sum += calculate(genes);
+            entropy += getEntropy(genes);
         }
-        return sum / geneCount;
+        return 1.0 - entropy / geneCount;
     }
     
-    private static double calculate(int[] genes) {
+    private static double getEntropy(int[] genes) {
         calculator.initialise();
         calculator.addObservations(genes);
-        return 1.0 - calculator.computeAverageLocalOfObservations() / (8 - groupSize);
+        return calculator.computeAverageLocalOfObservations() / (8 - groupSize);
     }
 }

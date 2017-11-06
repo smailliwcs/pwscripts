@@ -13,12 +13,12 @@ public class Entropy {
                 if (ensemble == null) {
                     break;
                 }
-                System.out.printf("%d %g%n", ensemble.getAgentIndex(), calculate(ensemble));
+                System.out.printf("%d %g%n", ensemble.getAgentIndex(), getEntropy(ensemble));
             }
         }
     }
     
-    private static double calculate(TimeSeriesEnsemble ensemble) throws Exception {
+    private static double getEntropy(TimeSeriesEnsemble ensemble) throws Exception {
         int[] neuronIndices = ensemble.getProcessingNeuronIndices();
         calculator.initialise(neuronIndices.length);
         calculator.setObservations(ensemble.combine().getColumns(neuronIndices));
