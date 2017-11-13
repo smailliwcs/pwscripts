@@ -792,6 +792,29 @@ class Strength(WeightMetric):
             value = sum(values) / graph.size if graph.size > 0 else 0.0
             yield agent, value
 
+class SynapseCount(AgentBasedMetric):
+    integral = True
+    
+    def addArgs(self, parser):
+        self.addArg(parser, "graph-type", metavar = "GRAPH_TYPE", choices = tuple(graph_mod.GraphType.getValues()))
+    
+    def readArgs(self, args):
+        self.graphType = self.readArg(args, "graph-type")
+    
+    def getKey(self):
+        return "synapse-count-{0}".format(self.graphType)
+    
+    def getLabel(self):
+        return "Synapse count"
+    
+    def calculate(self):
+        for agent in utility.getAgents(self.run, self.start):
+            graph = graph_mod.Graph.read(self.run, agent, Stage.INCEPT, self.graphType)
+            if graph is None:
+                yield agent, NAN
+                continue
+            yield agent, graph.getLinkCount()
+
 class Timestep(TimeBasedMetric):
     integral = True
     
