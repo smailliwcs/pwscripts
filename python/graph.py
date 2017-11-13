@@ -93,7 +93,7 @@ class Graph(object):
             self.weights[node] = [None] * size
     
     def hasLink(self, nodeOut, nodeIn):
-        return self.weights[nodeOut][nodeIn] is not None
+        return utility.coalesce(self.weights[nodeOut][nodeIn], 0.0) != 0.0
     
     def getLinkCount(self):
         count = 0
