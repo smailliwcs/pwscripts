@@ -24,11 +24,11 @@ STROKE = matplotlib.patheffects.withStroke(linewidth = 2.0, foreground = "1.0")
 RASTERIZE = True
 
 class HistNorm(matplotlib.colors.LogNorm):
-    def __init__(self, offset = OFFSET_HIST, vmin = None, vmax = None, clip = False):
+    def __init__(self, offset = OFFSET_HIST, vmin = None, vmax = None, clip = True):
         super(HistNorm, self).__init__(vmin = vmin, vmax = vmax, clip = clip)
         self.offset = offset
 
-    def __call__(self, value, clip = None):
+    def __call__(self, value, clip = True):
         result = super(HistNorm, self).__call__(value, clip = clip)
         result = numpy.ma.masked_less_equal(result, 0, False)
         return self.offset + (1.0 - self.offset) * result
@@ -78,6 +78,7 @@ class Plot(object):
         parser.add_argument("--xmax", metavar = "XMAX", type = float)
         parser.add_argument("--ymin", metavar = "YMIN", type = float)
         parser.add_argument("--ymax", metavar = "YMAX", type = float)
+        parser.add_argument("--hmax", metavar = "HMAX", type = float)
         parser.add_argument("--legend", metavar = "LOC", default = "upper left")
         parser.add_argument("runs", metavar = "RUNS")
         if len(metrics) != 2:
@@ -235,7 +236,7 @@ if plot.args.histogram:
     xbins = Data.bin(plot.xMetric, axy[0], plot.args.xmin, plot.args.xmax)
     ybins = Data.bin(plot.yMetric, axy[1], plot.args.ymin, plot.args.ymax)
     alpha = ALPHA_HIST if plot.args.line else 1.0
-    axes1.hist2d(axy[0], axy[1], bins = [xbins, ybins], norm = HistNorm(), alpha = alpha, zorder = -4)
+    axes1.hist2d(axy[0], axy[1], bins = [xbins, ybins], norm = HistNorm(vmax = plot.args.hmax), alpha = alpha, zorder = -4)
 
 # Plot significance
 if plot.sig:
