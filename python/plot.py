@@ -1,4 +1,5 @@
 import argparse
+import colormaps
 import itertools
 import math
 import matplotlib
@@ -12,12 +13,15 @@ import sys
 import textwrap
 import utility
 
+CMAP_NAME = "plasma_r"
+CMAP = colormaps.cmaps[CMAP_NAME]
+matplotlib.cm.register_cmap(CMAP_NAME, CMAP)
 COLORS = [
-    matplotlib.cm.get_cmap("Blues")(0.9),
-    matplotlib.cm.get_cmap("Oranges")(0.45)
+    CMAP(1.0),
+    CMAP(0.25)
 ]
 ALPHA_RUN = 0.2
-ALPHA_HIST = 1.0
+ALPHA_HIST = 0.5
 BIN_COUNT = 100
 OFFSET_HIST = 0.0
 STROKE = matplotlib.patheffects.withStroke(linewidth = 2.0, foreground = "1.0")
@@ -43,7 +47,7 @@ class Plot(object):
         matplotlib.rcParams["font.size"] = 8.0
         matplotlib.rcParams["grid.alpha"] = 0.2
         matplotlib.rcParams["grid.linestyle"] = "-"
-        matplotlib.rcParams["image.cmap"] = "YlGnBu"
+        matplotlib.rcParams["image.cmap"] = CMAP_NAME
         matplotlib.rcParams["legend.fontsize"] = 6.0
         matplotlib.rcParams["savefig.dpi"] = 300
         matplotlib.rcParams["savefig.format"] = "pdf"
