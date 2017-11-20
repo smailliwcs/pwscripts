@@ -33,8 +33,8 @@ class HistNorm(matplotlib.colors.LogNorm):
         self.offset = offset
 
     def __call__(self, value, clip = True):
-        result = super(HistNorm, self).__call__(value, clip = clip)
-        result = numpy.ma.masked_less_equal(result, 0, False)
+        result = numpy.ma.masked_less_equal(value, 0, False)
+        result = super(HistNorm, self).__call__(result, clip = clip)
         return self.offset + (1.0 - self.offset) * result
 
 class Plot(object):
