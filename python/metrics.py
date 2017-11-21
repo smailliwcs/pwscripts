@@ -198,8 +198,6 @@ class WeightMetric(AgentBasedMetric):
     def getGraphs(self):
         for agent in utility.getAgents(self.run, self.start):
             graph = graph_mod.Graph.read(self.run, agent, self.stage, self.graphType)
-            if graph is None:
-                continue
             yield agent, graph
     
     def getSynapses(self, graph):
@@ -785,6 +783,9 @@ class Strength(WeightMetric):
     
     def calculate(self):
         for agent, graph in self.getGraphs():
+            if graph is None:
+                yield agent, NAN
+                continue
             values = [0.0] * graph.size
             for nodeOut, nodeIn, weight in self.getSynapses(graph):
                 values[nodeOut] += weight
@@ -839,6 +840,9 @@ class Weight(WeightMetric):
     
     def calculate(self):
         for agent, graph in self.getGraphs():
+            if graph is None:
+                yield agent, NAN
+                continue
             values = []
             for nodeOut, nodeIn, weight in self.getSynapses(graph):
                 values.append(weight)
