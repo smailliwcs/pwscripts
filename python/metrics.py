@@ -109,7 +109,7 @@ class AgentBasedMetric(Metric):
         return values
     
     def getTimesteps(self):
-        metric = MeanTimestep()
+        metric = BirthTimestep()
         metric.initialize(self.run, start = self.start)
         return metric.read()
     
