@@ -31,3 +31,4 @@ assert utility.isRun(args.run)
 metric.initialize(args.run, args = args, start = args.start)
 for key, value in metric.calculate():
     sys.stdout.write("{0} {1}\n".format(key, value))
+    sys.stdout.flush()
