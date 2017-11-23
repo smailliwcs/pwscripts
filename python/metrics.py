@@ -223,14 +223,10 @@ class AgentEnergy(AgentBasedMetric):
         return "agent-energy-{0}".format(self.type)
     
     def getLabel(self):
-        if self.type == AgentEnergy.Type.IN:
-            return "Energy consumed"
-        elif self.type == AgentEnergy.Type.OUT:
-            return "Energy expended"
-        elif self.type == AgentEnergy.Type.TOTAL:
-            return "Agent energy"
+        if self.type == AgentEnergy.Type.TOTAL:
+            return "Total agent energy"
         else:
-            assert False
+            return "Agent energy {0}".format(self.type)
     
     def getLifespans(self):
         metric = Lifespan()
@@ -561,7 +557,7 @@ class Integration(AgentBasedMetric):
     def getDataFileName(self):
         return "complexity-{0}.txt".format(self.type)
     
-    def getLabel():
+    def getLabel(self):
         return "Integration"
     
     def read(self):
@@ -640,7 +636,10 @@ class NeuronCount(AgentBasedMetric):
         return "neuron-count-{0}".format(self.graphType)
     
     def getLabel(self):
-        return "Neuron count"
+        if self.graphType == graph_mod.GraphType.ALL:
+            return "Neuron count"
+        else:
+            return "{0} neuron count".format(self.graphType.capitalize())
     
     def calculate(self):
         for agent in utility.getAgents(self.run, self.start):
@@ -779,7 +778,7 @@ class Strength(WeightMetric):
         return "strength-{0}-{1}-{2}".format(self.stage, self.graphType, self.weightType)
     
     def getLabel(self):
-        return "Synaptic strength"
+        return "{0} synaptic strength".format(self.weightType.capitalize())
     
     def calculate(self):
         for agent, graph in self.getGraphs():
@@ -836,7 +835,7 @@ class Weight(WeightMetric):
         return "weight-{0}-{1}-{2}".format(self.stage, self.graphType, self.weightType)
     
     def getLabel(self):
-        return "Synaptic weight"
+        return "{0} synaptic weight".format(self.weightType.capitalize())
     
     def calculate(self):
         for agent, graph in self.getGraphs():
