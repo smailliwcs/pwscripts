@@ -92,15 +92,15 @@ class Metric(object):
         pass
 
 class TimeBasedMetric(Metric):
-    def getRange(self, values, tmin, tmax):
+    def getRange(self, values, trange):
         result = {}
         for timestep, value in values.iteritems():
-            if utility.contains([tmin, tmax], timestep):
+            if utility.contains(trange, timestep):
                 result[timestep] = value
         return result
     
-    def toTimeBased(self, values, mean, tmin = None, tmax = None):
-        return self.getRange(values, tmin, tmax)
+    def toTimeBased(self, values, mean, trange):
+        return self.getRange(values, trange)
 
 class AgentBasedMetric(Metric):
     def read(self):
@@ -113,24 +113,24 @@ class AgentBasedMetric(Metric):
         metric.initialize(self.run, start = self.start)
         return metric.read()
     
-    def getRange(self, values, tmin, tmax):
+    def getRange(self, values, trange):
         result = {}
         for agent, timestep in self.getTimesteps().iteritems():
-            if utility.contains([tmin, tmax], timestep):
+            if utility.contains(trange, timestep):
                 result[agent] = values[agent]
         return result
     
-    def toTimeBased(self, values, mean, tmin = None, tmax = None):
+    def toTimeBased(self, values, mean, trange):
         if mean:
             result = {}
             for timestep, agents in utility.getPopulations(self.run):
-                if utility.contains([tmin, tmax], timestep):
+                if utility.contains(trange, timestep):
                     result[timestep] = numpy.nanmean(map(lambda agent: values[agent], agents))
             return result
         else:
             result = collections.defaultdict(list)
             for agent, timestep in self.getTimesteps().iteritems():
-                if utility.contains([tmin, tmax], timestep):
+                if utility.contains(trange, timestep):
                     value = values[agent]
                     if value is not NAN:
                         result[timestep].append(value)

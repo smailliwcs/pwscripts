@@ -176,18 +176,18 @@ class Data:
     def __init__(self, plot, run, passive):
         self.dx = Data.get(plot, run, passive, plot.xMetric)
         self.dy = Data.get(plot, run, passive, plot.yMetric)
-        trange = {"tmin": plot.args.tmin, "tmax": plot.args.tmax}
+        trange = [plot.args.tmin, plot.args.tmax]
         if plot.args.line:
-            self.dx_line = plot.xMetric.toTimeBased(self.dx, True, **trange)
-            self.dy_line = plot.yMetric.toTimeBased(self.dy, True, **trange)
+            self.dx_line = plot.xMetric.toTimeBased(self.dx, True, trange)
+            self.dy_line = plot.yMetric.toTimeBased(self.dy, True, trange)
             self.axy_line = Data.zip(self.dx_line, self.dy_line)
         if plot.args.histogram:
             if isinstance(plot.xMetric, metrics_mod.AgentBasedMetric) and isinstance(plot.yMetric, metrics_mod.AgentBasedMetric):
-                self.dx_hist = plot.xMetric.getRange(self.dx, **trange)
-                self.dy_hist = plot.yMetric.getRange(self.dy, **trange)
+                self.dx_hist = plot.xMetric.getRange(self.dx, trange)
+                self.dy_hist = plot.yMetric.getRange(self.dy, trange)
             else:
-                self.dx_hist = plot.xMetric.toTimeBased(self.dx, False, **trange)
-                self.dy_hist = plot.yMetric.toTimeBased(self.dy, False, **trange)
+                self.dx_hist = plot.xMetric.toTimeBased(self.dx, False, trange)
+                self.dy_hist = plot.yMetric.toTimeBased(self.dy, False, trange)
             self.axy_hist = Data.zip(self.dx_hist, self.dy_hist)
 
 # Pre-configure plot
