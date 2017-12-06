@@ -387,6 +387,13 @@ class Entropy(StagedAgentBasedMetric):
     def getLabel(self):
         return "Entropy"
 
+class Expansion(StagedAgentBasedMetric):
+    def getKey(self):
+        return "expansion-{0}".format(self.stage)
+    
+    def getLabel(self):
+        return "Phase space expansion"
+
 class FoodDistance(AgentBasedMetric):
     def getKey(self):
         return "food-distance"
@@ -677,13 +684,6 @@ class OffspringRate(OffspringMetric):
         for agent, lifespan in self.getLifespans().iteritems():
             values[agent] = float(counts[agent]) / lifespan if lifespan > 0 else 0.0
         return values
-
-class PhaseSpaceExpansion(StagedAgentBasedMetric):
-    def getKey(self):
-        return "expansion-{0}".format(self.stage)
-    
-    def getLabel(self):
-        return "Phase space expansion"
 
 class Population(TimeBasedMetric):
     integral = True
