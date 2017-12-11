@@ -13,7 +13,7 @@ import sys
 import textwrap
 import utility
 
-CMAP_NAME = "inferno_r"
+CMAP_NAME = "magma_r"
 CMAP = colormaps.cmaps[CMAP_NAME]
 matplotlib.cm.register_cmap(CMAP_NAME, CMAP)
 COLORS = [
@@ -27,15 +27,44 @@ OFFSET_HIST = 0.05
 STROKE = matplotlib.patheffects.withStroke(linewidth = 2.0, foreground = "1.0")
 RASTERIZE = True
 
-class HistNorm(matplotlib.colors.LogNorm):
+class HistogramNorm(matplotlib.colors.LogNorm):
     def __init__(self, offset = OFFSET_HIST, vmin = None, vmax = None, clip = True):
-        super(HistNorm, self).__init__(vmin = vmin, vmax = vmax, clip = clip)
+        super(HistogramNorm, self).__init__(vmin = vmin, vmax = vmax, clip = clip)
         self.offset = offset
 
     def __call__(self, value, clip = True):
         result = numpy.ma.masked_less_equal(value, 0, False)
-        result = super(HistNorm, self).__call__(result, clip = clip)
+        result = super(HistogramNorm, self).__call__(result, clip = clip)
         return self.offset + (1.0 - self.offset) * result
+
+class ColorbarLocator(matplotlib.ticker.Locator):
+    def __call__(self):
+        bounds = self.axis.get_view_interval()
+        start = int(math.floor(math.log10(bounds[0])))
+        stop = int(math.ceil(math.log10(bounds[1])))
+        ticks = [10.0 ** power for power in xrange(start, stop)]
+        ticks.append(bounds[1])
+        return ticks
+
+class ColorbarFormatter(matplotlib.ticker.Formatter):
+    @staticmethod
+    def getDistance(tick1, tick2):
+        return math.log10(tick2 / tick1)
+    
+    def __init__(self, formatSpec = "g"):
+        self.formatSpec = formatSpec
+    
+    def __call__(self, tick, index):
+        bounds = self.axis.get_view_interval()
+        if tick < bounds[1]:
+            distanceToMax = ColorbarFormatter.getDistance(tick, bounds[1])
+            totalDistance = ColorbarFormatter.getDistance(bounds[0], bounds[1])
+            if distanceToMax / totalDistance < 0.1:
+                return ""
+        return self.format(tick)
+    
+    def format(self, tick):
+        return format(tick, self.formatSpec)
 
 class Plot(object):
     @staticmethod
@@ -108,7 +137,7 @@ class Plot(object):
         assert self.args.line or self.args.histogram
         if self.args.passive:
             assert isinstance(self.xMetric, metrics_mod.Timestep)
-        self.sig = self.args.passive and len(self.runs) > 1
+        self.significance = self.args.passive and len(self.runs) > 1
 
 class Data:
     @staticmethod
@@ -193,7 +222,7 @@ class Data:
 # Pre-configure plot
 plot = Plot()
 figure = matplotlib.pyplot.figure()
-if plot.sig:
+if plot.significance:
     size = figure.get_size_inches()
     size[1] *= 5.0 / 4.0
     figure.set_size_inches(size)
@@ -240,10 +269,14 @@ if plot.args.histogram:
     xbins = Data.bin(plot.xMetric, axy[0], plot.args.xmin, plot.args.xmax)
     ybins = Data.bin(plot.yMetric, axy[1], plot.args.ymin, plot.args.ymax)
     alpha = ALPHA_HIST if plot.args.line else 1.0
-    axes1.hist2d(axy[0], axy[1], bins = [xbins, ybins], norm = HistNorm(vmax = plot.args.hmax), alpha = alpha, zorder = -4)
+    image = axes1.hist2d(axy[0], axy[1], bins = [xbins, ybins], norm = HistogramNorm(vmax = plot.args.hmax), alpha = alpha, zorder = -4)[3]
+    colorbar = figure.colorbar(image)
+    colorbar.locator = ColorbarLocator()
+    colorbar.formatter = ColorbarFormatter()
+    colorbar.update_ticks()
 
 # Plot significance
-if plot.sig:
+if plot.significance:
     axy = [[], []]
     ax = driven.itervalues().next().axy_line[0]
     ays_d = numpy.transpose(map(lambda data: data.axy_line[1], driven.itervalues()))
@@ -258,7 +291,7 @@ plot.xMetric.formatAxis(axes1.xaxis)
 plot.yMetric.formatAxis(axes1.yaxis)
 axes1.set_xlim(plot.args.xmin, plot.args.xmax)
 axes1.set_ylim(plot.args.ymin, plot.args.ymax)
-if plot.sig:
+if plot.significance:
     axes1.tick_params(labelbottom = False)
     axes2.set_xlabel(plot.xMetric.getLabel())
     axes2.set_ylabel("Significance")
