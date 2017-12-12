@@ -46,10 +46,10 @@ class Event(object):
             self.parent1 = int(chunks[3])
             self.parent2 = int(chunks[4])
 
-def contains(rng, value):
-    if rng[0] is not None and value < rng[0]:
+def contains(ival, value):
+    if ival[0] is not None and value < ival[0]:
         return False
-    elif rng[1] is not None and value > rng[1]:
+    elif ival[1] is not None and value > ival[1]:
         return False
     else:
         return True

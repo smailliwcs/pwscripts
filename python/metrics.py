@@ -11,6 +11,12 @@ import utility
 
 NAN = float("nan")
 
+def getBin(timestep, tstep):
+    index = timestep / tstep
+    if timestep % tstep > 0:
+        index += 1
+    return index * tstep
+
 class Stage(utility.Enum):
     INCEPT = "incept"
     BIRTH = "birth"
@@ -79,10 +85,13 @@ class Metric(object):
     def calculate(self):
         raise NotImplementedError
     
-    def getRange(self, values, tmin, tmax):
+    def aggregate(self, values):
+        return float(sum(values)) / len(values)
+    
+    def getInterval(self, values, tival):
         raise NotImplementedError
     
-    def toTimeBased(self, values, mean, tmin = None, tmax = None):
+    def toTimeBased(self, values, tival, tstep = 0):
         raise NotImplementedError
     
     def getBins(self):
@@ -92,15 +101,25 @@ class Metric(object):
         pass
 
 class TimeBasedMetric(Metric):
-    def getRange(self, values, trange):
+    def getInterval(self, values, tival):
         result = {}
         for timestep, value in values.iteritems():
-            if utility.contains(trange, timestep):
+            if utility.contains(tival, timestep):
                 result[timestep] = value
         return result
     
-    def toTimeBased(self, values, mean, trange):
-        return self.getRange(values, trange)
+    def toTimeBased(self, values, tival, tstep = 0):
+        if tstep == 0:
+            return self.getInterval(values, tival)
+        else:
+            bins = collections.defaultdict(list)
+            for timestep, value in values.iteritems():
+                if utility.contains(tival, timestep):
+                    bins[getBin(timestep, tstep)].append(value)
+            result = {}
+            for timestep, values in bins.iteritems():
+                result[timestep] = self.aggregate(values)
+            return result
 
 class AgentBasedMetric(Metric):
     def read(self):
@@ -113,27 +132,29 @@ class AgentBasedMetric(Metric):
         metric.initialize(self.run, start = self.start)
         return metric.read()
     
-    def getRange(self, values, trange):
+    def getInterval(self, values, tival):
         result = {}
         for agent, timestep in self.getTimesteps().iteritems():
-            if utility.contains(trange, timestep):
+            if utility.contains(tival, timestep):
                 result[agent] = values[agent]
         return result
     
-    def toTimeBased(self, values, mean, trange):
-        if mean:
-            result = {}
-            for timestep, agents in utility.getPopulations(self.run):
-                if utility.contains(trange, timestep):
-                    result[timestep] = numpy.nanmean(map(lambda agent: values[agent], agents))
-            return result
+    def toTimeBased(self, values, tival, tstep = 0):
+        bins = collections.defaultdict(list)
+        for agent, timestep in self.getTimesteps().iteritems():
+            if utility.contains(tival, timestep):
+                value = values[agent]
+                if value is not NAN:
+                    if tstep == 0:
+                        bins[timestep].append(value)
+                    else:
+                        bins[getBin(timestep, tstep)].append(value)
+        if tstep == 0:
+            return bins
         else:
-            result = collections.defaultdict(list)
-            for agent, timestep in self.getTimesteps().iteritems():
-                if utility.contains(trange, timestep):
-                    value = values[agent]
-                    if value is not NAN:
-                        result[timestep].append(value)
+            result = {}
+            for timestep, values in bins.iteritems():
+                result[timestep] = self.aggregate(values)
             return result
 
 class LifespanMetric(AgentBasedMetric):
@@ -829,6 +850,9 @@ class Timestep(TimeBasedMetric):
         for timestep in xrange(0, utility.getFinalTimestep(self.run) + 1):
             values[timestep] = timestep
         return values
+    
+    def aggregate(self, values):
+        return max(values)
 
 class Weight(WeightMetric):
     def getKey(self):
