@@ -25,7 +25,7 @@ ALPHA_RUN = 0.2
 ALPHA_HIST = 1.0
 BIN_COUNT = 100
 OFFSET_HIST = 0.05
-STROKE = matplotlib.patheffects.withStroke(linewidth = 2.0, foreground = "1.0")
+STROKE = matplotlib.patheffects.withStroke(linewidth = 3.0, foreground = "1.0")
 RASTERIZE = False
 
 class HistNorm(matplotlib.colors.LogNorm):
