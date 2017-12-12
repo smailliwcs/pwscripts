@@ -228,44 +228,6 @@ class WeightMetric(AgentBasedMetric):
                 if weight is not None:
                     yield nodeOut, nodeIn, weight
 
-class AgentEnergy(AgentBasedMetric):
-    class Type(utility.Enum):
-        IN = "in"
-        OUT = "out"
-        TOTAL = "total"
-    
-    def addArgs(self, parser):
-        self.addArg(parser, "type", metavar = "TYPE", choices = tuple(AgentEnergy.Type.getValues()))
-    
-    def readArgs(self, args):
-        self.type = self.readArg(args, "type")
-    
-    def getKey(self):
-        return "agent-energy-{0}".format(self.type)
-    
-    def getLabel(self):
-        if self.type == AgentEnergy.Type.TOTAL:
-            return "Total agent energy"
-        else:
-            return "Agent energy {0}".format(self.type)
-    
-    def getLifespans(self):
-        metric = Lifespan()
-        metric.initialize(self.run, start = self.start)
-        return metric.read()
-    
-    def calculate(self):
-        lifespans = self.getLifespans()
-        for agent in utility.getAgents(self.run, self.start):
-            lifespan = lifespans[agent]
-            if lifespan == 0:
-                value = NAN
-            else:
-                path = os.path.join(self.run, "energy", self.type, "agent_{0}.txt".format(agent))
-                table = utility.getDataTable(path, "AgentEnergy{0}".format(self.type.capitalize()))
-                value = sum(map(lambda row: row["Energy"], table.rows())) / lifespan
-            yield agent, value
-
 class BirthTimestep(LifespanMetric):
     def getKey(self):
         return "birth"
@@ -415,35 +377,24 @@ class Expansion(StagedAgentBasedMetric):
     def getLabel(self):
         return "Phase space expansion"
 
-class FoodDistance(AgentBasedMetric):
-    def getKey(self):
-        return "food-distance"
-    
-    def getLabel(self):
-        return "Food distance"
-    
-    def calculate(self):
-        for agent in utility.getAgents(self.run):
-            path = os.path.join(self.run, "food", "distance", "agent_{0}.txt".format(agent))
-            rows = utility.getDataTable(path, "FoodDistance").rows()
-            if len(rows) == 0:
-                value = NAN
-            else:
-                value = sum(map(lambda row: row["Distance"], rows)) / len(rows)
-            yield agent, value
-
 class FoodEnergy(TimeBasedMetric):
+    def addArgs(self, parser):
+        self.addArg(parser, "type", metavar = "TYPE")
+    
+    def readArgs(self, args):
+        self.type = self.readArg(args, "type")
+    
     def getKey(self):
-        return "food-energy"
+        return "{0}-energy".format(self.type.lower())
     
     def getLabel(self):
-        return "Food energy"
+        return "{0} energy".format(self.type)
     
     def read(self):
         values = {}
-        path = os.path.join(self.run, "food", "energy.txt")
+        path = os.path.join(self.run, "energy", "food.txt")
         for row in utility.getDataTable(path, "FoodEnergy").rows():
-            values[row["Timestep"]] = row["Energy"]
+            values[row["Timestep"]] = row[self.type]
         return values
 
 class Gene(AgentBasedMetric):
