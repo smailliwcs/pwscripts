@@ -86,7 +86,7 @@ class Metric(object):
         raise NotImplementedError
     
     def aggregate(self, values):
-        return float(sum(values)) / len(values)
+        return numpy.nanmean(values)
     
     def getInterval(self, values, tival):
         raise NotImplementedError

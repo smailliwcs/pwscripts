@@ -289,8 +289,12 @@ if plot.sig:
     ays_d = numpy.transpose(map(lambda data: data.axy_line[1], driven.itervalues()))
     ays_p = numpy.transpose(map(lambda data: data.axy_line[1], passive.itervalues()))
     for index in xrange(len(ax)):
-        axy[0].append(ax[index])
-        axy[1].append(1.0 - scipy.stats.ttest_rel(ays_d[index], ays_p[index])[1])
+        timestep = ax[index]
+        sig = 1.0 - scipy.stats.ttest_rel(ays_d[index], ays_p[index])[1]
+        if numpy.isnan(sig):
+            sig = 0.0
+        axy[0].append(timestep)
+        axy[1].append(sig)
     axes2.plot(axy[0], axy[1], rasterized = RASTERIZE, color = COLORS[0])
 
 # Post-configure plot
