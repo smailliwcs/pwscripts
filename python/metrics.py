@@ -112,14 +112,11 @@ class TimeBasedMetric(Metric):
         if tstep == 0:
             return self.getInterval(values, tival)
         else:
-            bins = collections.defaultdict(list)
+            result = collections.defaultdict(list)
             for timestep, value in values.iteritems():
                 if utility.contains(tival, timestep):
-                    bins[getBin(timestep, tstep)].append(value)
-            result = {}
-            for timestep, values in bins.iteritems():
-                result[timestep] = self.aggregate(values)
-            return result
+                    result[getBin(timestep, tstep)].append(value)
+            return {timestep: self.aggregate(vals) for timestep, vals in result.iteritems()}
 
 class AgentBasedMetric(Metric):
     def read(self):
@@ -140,22 +137,19 @@ class AgentBasedMetric(Metric):
         return result
     
     def toTimeBased(self, values, tival, tstep = 0):
-        bins = collections.defaultdict(list)
+        result = collections.defaultdict(list)
         for agent, timestep in self.getTimesteps().iteritems():
             if utility.contains(tival, timestep):
                 value = values[agent]
                 if value is not NAN:
                     if tstep == 0:
-                        bins[timestep].append(value)
+                        result[timestep].append(value)
                     else:
-                        bins[getBin(timestep, tstep)].append(value)
+                        result[getBin(timestep, tstep)].append(value)
         if tstep == 0:
-            return bins
-        else:
-            result = {}
-            for timestep, values in bins.iteritems():
-                result[timestep] = self.aggregate(values)
             return result
+        else:
+            return {timestep: self.aggregate(vals) for timestep, vals in result.iteritems()}
 
 class LifespanMetric(AgentBasedMetric):
     integral = True
