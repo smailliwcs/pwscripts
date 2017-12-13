@@ -85,14 +85,14 @@ class Metric(object):
     def calculate(self):
         raise NotImplementedError
     
-    def aggregate(self, values):
-        return numpy.nanmean(values)
-    
     def getInterval(self, values, tival):
         raise NotImplementedError
     
     def toTimeBased(self, values, tival, tstep = 0):
         raise NotImplementedError
+    
+    def aggregate(self, values):
+        return numpy.nanmean(values)
     
     def getBins(self):
         pass
