@@ -371,6 +371,54 @@ class Expansion(StagedAgentBasedMetric):
     def getLabel(self):
         return "Phase space expansion"
 
+class FoodConsumption(TimeBasedMetric):
+    def addArgs(self, parser):
+        self.addArg(parser, "type", metavar = "TYPE")
+    
+    def readArgs(self, args):
+        self.type = self.readArg(args, "type")
+    
+    def getKey(self):
+        return "{0}-consumption".format(self.type.lower())
+    
+    def getLabel(self):
+        return "{0} consumption".format(self.type)
+    
+    def read(self):
+        values = collections.defaultdict(float)
+        path = os.path.join(self.run, "energy", "consumption.txt")
+        for row in utility.getDataTable(path, "FoodConsumption").rows():
+            if row["FoodType"] == self.type:
+                values[row["Timestep"]] += row["EnergyRaw"]
+        return values
+
+class FoodConsumptionRate(AgentBasedMetric):
+    def addArgs(self, parser):
+        self.addArg(parser, "type", metavar = "TYPE")
+    
+    def readArgs(self, args):
+        self.type = self.readArg(args, "type")
+    
+    def getKey(self):
+        return "{0}-consumption-rate".format(self.type.lower())
+    
+    def getLabel(self):
+        return "{0} consumption rate".format(self.type)
+    
+    def getLifespans(self):
+        metric = Lifespan()
+        metric.initialize(self.run, start = self.start)
+        return metric.read()
+    
+    def calculate(self):
+        values = collections.defaultdict(float)
+        path = os.path.join(self.run, "energy", "consumption.txt")
+        for row in utility.getDataTable(path, "FoodConsumption").rows():
+            if row["FoodType"] == self.type:
+                values[row["Agent"]] += row["EnergyRaw"]
+        for agent, lifespan in self.getLifespans().iteritems():
+            yield agent, float(values[agent]) / lifespan if lifespan > 0 else 0.0
+
 class FoodEnergy(TimeBasedMetric):
     def addArgs(self, parser):
         self.addArg(parser, "type", metavar = "TYPE")
@@ -675,7 +723,7 @@ class ProgenyRate(AgentBasedMetric):
     def getLabel(self):
         return "Progeny rate"
     
-    def getBirths(self):
+    def getTimesteps(self):
         metric = BirthTimestep()
         metric.initialize(self.run, start = self.start)
         return metric.read()
@@ -688,7 +736,7 @@ class ProgenyRate(AgentBasedMetric):
             children[event.parent1].append(event.agent)
             children[event.parent2].append(event.agent)
         end = utility.getFinalTimestep(self.run)
-        for agent, start in self.getBirths().iteritems():
+        for agent, start in self.getTimesteps().iteritems():
             if start == end:
                 value = 0.0
             else:
