@@ -222,6 +222,56 @@ class WeightMetric(AgentBasedMetric):
                 if weight is not None:
                     yield nodeOut, nodeIn, weight
 
+class Activity(TimeBasedMetric):
+    class Type(utility.Enum):
+        MEAN = "mean"
+        NEW = "new"
+    
+    def addArgs(self, parser):
+        self.addArg(parser, "type", metavar = "TYPE", choices = tuple(Activity.Type.getValues()))
+        self.addArg(parser, "amin", metavar = "AMIN", nargs = "?", type = float)
+        self.addArg(parser, "amax", metavar = "AMAX", nargs = "?", type = float)
+    
+    def readArgs(self, args):
+        self.type = self.readArg(args, "type")
+        self.amin = self.readArg(args, "amin")
+        self.amax = self.readArg(args, "amax")
+        if self.type == Activity.Type.NEW:
+            assert self.amin is not None and self.amax is not None
+    
+    def getKey(self):
+        return "activity-{0}".format(self.type)
+    
+    def getDataFileName(self):
+        return "activity.txt"
+    
+    def getLabel(self):
+        if self.type == Activity.Type.MEAN:
+            return "Mean cumulative evolutionary activity"
+        elif self.type == Activity.Type.NEW:
+            return "New evolutionary activity"
+        else:
+            assert False
+    
+    def getDiversities(self):
+        metric = Diversity()
+        metric.initialize(self.run)
+        return metric.read()
+    
+    def read(self):
+        activities = collections.defaultdict(int)
+        for line in self.readLines():
+            timestep, activity, count = line.split()
+            activity = int(activity)
+            if self.type == Activity.Type.NEW:
+                if activity < self.amin or activity > self.amax:
+                    continue
+            activities[int(timestep)] += activity * int(count)
+        values = {}
+        for timestep, diversity in self.getDiversities().iteritems():
+            values[timestep] = float(activities[timestep]) / diversity
+        return values
+
 class BirthTimestep(LifespanMetric):
     def getKey(self):
         return "birth"
@@ -317,6 +367,15 @@ class Density(AgentBasedMetric):
                 countMax = graph.size * (graph.size - 1)
             value = float(graph.getLinkCount()) / countMax if countMax > 0 else 0.0
             yield agent, value
+
+class Diversity(TimeBasedMetric):
+    integral = True
+    
+    def getKey(self):
+        return "diversity"
+    
+    def getLabel(self):
+        return "Diversity"
 
 class Efficiency(AgentBasedMetric):
     class Type(utility.Enum):
