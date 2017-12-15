@@ -671,6 +671,8 @@ class NeuronCount(AgentBasedMetric):
             yield agent, graph.size
 
 class OffspringCount(OffspringMetric):
+    integral = True
+    
     def getKey(self):
         return "offspring-count"
     
