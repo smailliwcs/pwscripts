@@ -62,7 +62,9 @@ class Metric(object):
         return os.path.join(self.run, "data", self.getDataFileName())
     
     def readLines(self):
-        with open(self.getDataPath()) as f:
+        path = self.getDataPath()
+        fn = gzip.open if path.endswith(".gz") else open
+        with fn(path) as f:
             for line in f:
                 if line.startswith("#"):
                     continue
@@ -243,7 +245,7 @@ class Activity(TimeBasedMetric):
         return "activity-{0}".format(self.type)
     
     def getDataFileName(self):
-        return "activity.txt"
+        return "activity.txt.gz"
     
     def getLabel(self):
         if self.type == Activity.Type.MEAN:

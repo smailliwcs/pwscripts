@@ -32,7 +32,8 @@ def getGenome(run, agent):
 def getFile(run, name):
     path = os.path.join(run, "data")
     utility.makeDirectories(path)
-    return open(os.path.join(path, name + ".txt"), "w")
+    fn = gzip.open if name.endswith(".gz") else open
+    return fn(os.path.join(path, name), "w")
 
 args = parseArgs()
 genome = []
@@ -48,7 +49,7 @@ for agent in xrange(1, utility.getInitialAgentCount(args.run) + 1):
 events = collections.defaultdict(list)
 for event in utility.Event.read(args.run):
     events[event.timestep].append(event)
-with getFile(args.run, "diversity") as d, getFile(args.run, "activity") as a:
+with getFile(args.run, "diversity.txt") as d, getFile(args.run, "activity.txt.gz") as a:
     for timestep in xrange(1, utility.getFinalTimestep(args.run) + 1):
         if timestep % 100 == 0:
             sys.stderr.write("{0}\n".format(timestep))
