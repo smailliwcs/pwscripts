@@ -51,7 +51,7 @@ def lifespans():
             chunks = line.split()
             y.append(int(chunks[3]) - int(chunks[1]))
     subplot(3, 1, 3)
-    hist(y, bins = 20, range = [0, 500])
+    hist(y, bins = 40, range = [0, 1000])
 
 def _plot(fn):
     try:
