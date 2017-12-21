@@ -56,6 +56,8 @@ def lifespans():
 def _plot(fn):
     try:
         fn()
+    except IOError:
+        raise
     except Exception as ex:
         sys.stderr.write("{0}\n".format(ex))
 
