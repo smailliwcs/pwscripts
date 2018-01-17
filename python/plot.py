@@ -21,7 +21,7 @@ COLORS = [
     CMAP(1.0),
     CMAP(0.2)
 ]
-ALPHA_RUN = 0.2
+ALPHA_RUNS = [0.1, 0.2]
 ALPHA_HIST = 1.0
 BIN_COUNT = 100
 OFFSET_HIST = 0.05
@@ -83,10 +83,9 @@ class Plot(object):
         matplotlib.rcParams["savefig.format"] = "pdf"
         matplotlib.rcParams["text.usetex"] = True
         matplotlib.rcParams["text.latex.preamble"] = [
-            r"\usepackage{amsmath}",
             r"\usepackage[T1]{fontenc}",
-            r"\usepackage{newtxtext}",
-            r"\usepackage{newtxmath}"
+            r"\usepackage{newtxmath}",
+            r"\usepackage{newtxtext}"
         ]
     
     @staticmethod
@@ -252,11 +251,11 @@ for run in plot.runs:
     # Plot line
     if plot.args.line:
         axy = driven[run].axy_line
-        kwargs = {"rasterized": RASTERIZE, "color": COLORS[0], "alpha": ALPHA_RUN, "zorder": -2}
+        kwargs = {"rasterized": RASTERIZE, "color": COLORS[0], "alpha": ALPHA_RUNS[0], "zorder": -2}
         axes1.plot(axy[0], axy[1], **kwargs)
         if plot.args.passive:
             axy = passive[run].axy_line
-            kwargs.update({"color": COLORS[1], "zorder": -3})
+            kwargs.update({"color": COLORS[1], "alpha": ALPHA_RUNS[1], "zorder": -3})
             axes1.plot(axy[0], axy[1], **kwargs)
 
 # Plot line
