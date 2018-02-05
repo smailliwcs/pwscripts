@@ -116,6 +116,7 @@ class Plot(object):
         parser.add_argument("--ymin", metavar = "YMIN", type = float)
         parser.add_argument("--ymax", metavar = "YMAX", type = float)
         parser.add_argument("--hmax", metavar = "HMAX", type = float)
+        parser.add_argument("--htmin", metavar = "HTMIN", type = int, default = 1)
         parser.add_argument("--legend", metavar = "LOC", default = "upper left")
         parser.add_argument("runs", metavar = "RUNS")
         if len(metrics) != 2:
@@ -143,7 +144,7 @@ class Plot(object):
             assert isinstance(self.xMetric, metrics_mod.Timestep)
         self.sig = self.args.passive and len(self.runs) > 1
         if self.args.tstep is None:
-            if isinstance(self.xMetric, metrics_mod.TimeBasedMetric) and isinstance(self.yMetric, metrics_mod.TimeBasedMetric):
+            if all(map(lambda metric: isinstance(metric, metrics_mod.TimeBasedMetric), self.metrics)):
                 self.args.tstep = 0
             else:
                 self.args.tstep = TSTEP
@@ -220,7 +221,8 @@ class Data:
             self.dy_line = plot.yMetric.toTimeBased(self.dy, tival, plot.args.tstep)
             self.axy_line = Data.zip(self.dx_line, self.dy_line)
         if plot.args.hist:
-            if isinstance(plot.xMetric, metrics_mod.AgentBasedMetric) and isinstance(plot.yMetric, metrics_mod.AgentBasedMetric):
+            tival[0] = plot.args.htmin
+            if all(map(lambda metric: isinstance(metric, metrics_mod.AgentBasedMetric), plot.metrics)):
                 self.dx_hist = plot.xMetric.getInterval(self.dx, tival)
                 self.dy_hist = plot.yMetric.getInterval(self.dy, tival)
             else:
