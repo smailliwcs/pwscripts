@@ -347,6 +347,25 @@ class DeathTimestep(LifespanMetric):
     def getValue(self, row):
         return row["DeathStep"]
 
+class Degree(AgentBasedMetric):
+    def addArgs(self, parser):
+        self.addArg(parser, "graph-type", metavar = "GRAPH_TYPE", choices = tuple(graph_mod.GraphType.getNonInputValues()))
+    
+    def readArgs(self, args):
+        self.graphType = self.readArg(args, "graph-type")
+    
+    def getKey(self):
+        return "degree-{0}".format(self.graphType)
+    
+    def getLabel(self):
+        return "Synaptic degree"
+    
+    def calculate(self):
+        for agent in utility.getAgents(self.run, self.start):
+            graph = graph_mod.Graph.read(self.run, agent, Stage.INCEPT, self.graphType)
+            value = 2.0 * graph.getLinkCount() / graph.size if graph.size > 0 else 0.0
+            yield agent, value
+
 class Density(AgentBasedMetric):
     def addArgs(self, parser):
         self.addArg(parser, "graph-type", metavar = "GRAPH_TYPE", choices = tuple(graph_mod.GraphType.getNonInputValues()))
