@@ -14,17 +14,20 @@ import textwrap
 import utility
 
 TSTEP = 250
-CMAP_NAME = "magma_r"
-CMAP = colormaps.cmaps[CMAP_NAME]
-matplotlib.cm.register_cmap(CMAP_NAME, CMAP)
+CMAP_NAME = "YlGnBu"
+if CMAP_NAME in colormaps.cmaps:
+    CMAP = colormaps.cmaps[CMAP_NAME]
+    matplotlib.cm.register_cmap(CMAP_NAME, CMAP)
+else:
+    CMAP = matplotlib.cm.get_cmap(CMAP_NAME)
 COLORS = [
-    CMAP(1.0),
-    CMAP(0.2)
+    matplotlib.cm.Blues(0.9),
+    matplotlib.cm.Greens(0.45)
 ]
 ALPHA_RUNS = [0.1, 0.2]
 ALPHA_HIST = 1.0
 BIN_COUNT = 100
-OFFSET_HIST = 0.05
+OFFSET_HIST = 0.1
 STROKE = matplotlib.patheffects.withStroke(linewidth = 3.0, foreground = "1.0")
 RASTERIZE = False
 
@@ -276,10 +279,11 @@ if plot.args.hist:
     ybins = Data.bin(plot.yMetric, axy[1], plot.args.ymin, plot.args.ymax)
     alpha = ALPHA_HIST if plot.args.line else 1.0
     image = axes1.hist2d(axy[0], axy[1], bins = [xbins, ybins], norm = HistNorm(vmax = plot.args.hmax), alpha = alpha, zorder = -4)[3]
-    colorbar = figure.colorbar(image)
-    colorbar.locator = ColorbarLocator()
-    colorbar.formatter = ColorbarFormatter()
-    colorbar.update_ticks()
+    if not plot.sig:
+        colorbar = figure.colorbar(image)
+        colorbar.locator = ColorbarLocator()
+        colorbar.formatter = ColorbarFormatter()
+        colorbar.update_ticks()
 
 # Plot significance
 if plot.sig:
