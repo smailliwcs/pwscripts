@@ -69,26 +69,49 @@ public class TimeSeriesEnsembleReader implements AutoCloseable {
         int inputNeuronCount = Integer.parseInt(matcher.group("inputNeuronCount"));
         int outputNeuronCount = Integer.parseInt(matcher.group("outputNeuronCount"));
         TimeSeriesEnsemble ensemble = new TimeSeriesEnsemble(agentIndex, neuronCount, inputNeuronCount, outputNeuronCount);
-        {
+        readNerves(ensemble);
+        readSynapses(ensemble);
+        return ensemble;
+    }
+    
+    private void readNerves(TimeSeriesEnsemble ensemble) throws IOException {
+        String line = reader.readLine();
+        if (!line.equals("# BEGIN NERVES")) {
+            throw new IOException(getExceptionMessage(line));
+        }
+        int start = 0;
+        while (true) {
             line = reader.readLine();
-            if (!line.equals("# BEGIN SYNAPSES")) {
-                throw new IOException(getExceptionMessage(line));
+            if (line.equals("# END NERVES")) {
+                break;
             }
-            while (true) {
-                line = reader.readLine();
-                if (line.equals("# END SYNAPSES")) {
-                    break;
-                }
-                try (Scanner scanner = new Scanner(line)) {
-                    int preNeuronIndex = scanner.nextInt();
-                    while (scanner.hasNext()) {
-                        int postNeuronIndex = scanner.nextInt();
-                        ensemble.addSynapse(new Synapse(preNeuronIndex, postNeuronIndex));
-                    }
+            try (Scanner scanner = new Scanner(line)) {
+                String name = scanner.next();
+                int count = scanner.nextInt();
+                ensemble.addNerve(new Nerve(name, Utility.getRange(start, count)));
+                start += count;
+            }
+        }
+    }
+    
+    private void readSynapses(TimeSeriesEnsemble ensemble) throws IOException {
+        String line = reader.readLine();
+        if (!line.equals("# BEGIN SYNAPSES")) {
+            throw new IOException(getExceptionMessage(line));
+        }
+        while (true) {
+            line = reader.readLine();
+            if (line.equals("# END SYNAPSES")) {
+                break;
+            }
+            try (Scanner scanner = new Scanner(line)) {
+                int preNeuronIndex = scanner.nextInt();
+                while (scanner.hasNext()) {
+                    int postNeuronIndex = scanner.nextInt();
+                    ensemble.addSynapse(new Synapse(preNeuronIndex, postNeuronIndex));
                 }
             }
         }
-        return ensemble;
     }
     
     private TimeSeries readTimeSeries(int dimension) throws IOException {

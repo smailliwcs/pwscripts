@@ -1,18 +1,11 @@
 import java.util.*;
 
 public class TimeSeriesEnsemble extends LinkedList<TimeSeries> {
-    private static int[] getRange(int start, int count) {
-        int[] range = new int[count];
-        for (int index = 0; index < count; index++) {
-            range[index] = start + index;
-        }
-        return range;
-    }
-    
     private int agentIndex;
     private int neuronCount;
     private int inputNeuronCount;
     private int outputNeuronCount;
+    private Collection<Nerve> nerves;
     private Collection<Synapse> synapses;
     
     public TimeSeriesEnsemble(int agentIndex, int neuronCount, int inputNeuronCount, int outputNeuronCount) {
@@ -20,6 +13,7 @@ public class TimeSeriesEnsemble extends LinkedList<TimeSeries> {
         this.neuronCount = neuronCount;
         this.inputNeuronCount = inputNeuronCount;
         this.outputNeuronCount = outputNeuronCount;
+        nerves = new LinkedList<Nerve>();
         synapses = new LinkedList<Synapse>();
     }
     
@@ -48,23 +42,31 @@ public class TimeSeriesEnsemble extends LinkedList<TimeSeries> {
     }
     
     public int[] getNeuronIndices() {
-        return getRange(0, neuronCount);
+        return Utility.getRange(0, neuronCount);
     }
     
     public int[] getInputNeuronIndices() {
-        return getRange(0, inputNeuronCount);
+        return Utility.getRange(0, inputNeuronCount);
     }
     
     public int[] getOutputNeuronIndices() {
-        return getRange(inputNeuronCount, outputNeuronCount);
+        return Utility.getRange(inputNeuronCount, outputNeuronCount);
     }
     
     public int[] getInternalNeuronIndices() {
-        return getRange(inputNeuronCount + outputNeuronCount, getInternalNeuronCount());
+        return Utility.getRange(inputNeuronCount + outputNeuronCount, getInternalNeuronCount());
     }
     
     public int[] getProcessingNeuronIndices() {
-        return getRange(inputNeuronCount, getProcessingNeuronCount());
+        return Utility.getRange(inputNeuronCount, getProcessingNeuronCount());
+    }
+    
+    public Iterable<Nerve> getNerves() {
+        return nerves;
+    }
+    
+    public void addNerve(Nerve nerve) {
+        nerves.add(nerve);
     }
     
     public Iterable<Synapse> getSynapses() {

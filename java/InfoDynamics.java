@@ -26,11 +26,26 @@ public class InfoDynamics {
                 if (ensemble == null) {
                     break;
                 }
-                double[][] storages = getStorages(ensemble);
-                System.out.printf("%d S %g%n", ensemble.getAgentIndex(), MatrixUtils.mean(storages));
-                System.out.printf("%d T %g%n", ensemble.getAgentIndex(), getTransfer(ensemble));
-                double[] modifications = getModifications(ensemble, storages);
-                System.out.printf("%d M %g %g%n", ensemble.getAgentIndex(), modifications[TRIVIAL], modifications[NONTRIVIAL]);
+                int agentIndex = ensemble.getAgentIndex();
+                int inputNeuronCount = ensemble.getInputNeuronCount();
+                double[] storage = getStorage(ensemble);
+                System.out.printf("%d S %g%n", agentIndex, MatrixUtils.mean(storage));
+                Collection<double[]> transfers = new LinkedList<double[]>();
+                double[] transfer;
+                for (Nerve nerve : ensemble.getNerves()) {
+                    int[] neuronIndices = nerve.getNeuronIndices();
+                    if (neuronIndices[neuronIndices.length - 1] >= inputNeuronCount) {
+                        assert neuronIndices[0] >= inputNeuronCount;
+                        break;
+                    }
+                    transfer = getTransfer(ensemble, neuronIndices);
+                    System.out.printf("%d AT %s %g%n", agentIndex, nerve.getName(), MatrixUtils.mean(transfer));
+                    transfers.add(transfer);
+                }
+                transfer = getTransfer(ensemble, ensemble.getInputNeuronIndices());
+                System.out.printf("%d CT %g%n", agentIndex, MatrixUtils.mean(transfer));
+                double[][] modification = getModification(storage, transfers);
+                System.out.printf("%d M %g %g%n", agentIndex, MatrixUtils.mean(modification[TRIVIAL]), MatrixUtils.mean(modification[NONTRIVIAL]));
             }
         }
     }
@@ -46,109 +61,46 @@ public class InfoDynamics {
         }
     }
     
-    private static double[][] getStorages(TimeSeriesEnsemble ensemble) throws Exception {
+    private static double[] getStorage(TimeSeriesEnsemble ensemble) throws Exception {
         int[] neuronIndices = ensemble.getProcessingNeuronIndices();
-        double[][] storages = new double[ensemble.size() * (ensemble.getFirst().size() - embedding)][neuronIndices.length];
-        for (int index = 0; index < neuronIndices.length; index++) {
-            int neuronIndex = neuronIndices[index];
-            miCalculator.initialise(embedding, 1);
-            miCalculator.startAddObservations();
-            for (TimeSeries timeSeries : ensemble) {
-                double[][] data = timeSeries.getColumns(new int[] { neuronIndex });
-                miCalculator.addObservations(embedData(data), selectData(data));
-            }
-            miCalculator.finaliseAddObservations();
-            MatrixUtils.copyIntoColumn(storages, index, miCalculator.computeLocalOfPreviousObservations());
+        miCalculator.initialise(neuronIndices.length * embedding, neuronIndices.length);
+        miCalculator.startAddObservations();
+        for (TimeSeries timeSeries : ensemble) {
+            double[][] data = timeSeries.getColumns(neuronIndices);
+            miCalculator.addObservations(
+                MatrixUtils.makeDelayEmbeddingVector(data, embedding, embedding - 1, data.length - embedding),
+                MatrixUtils.selectRows(data, embedding, data.length - embedding));
         }
-        return storages;
+        miCalculator.finaliseAddObservations();
+        return miCalculator.computeLocalOfPreviousObservations();
     }
     
-    private static double getTransfer(TimeSeriesEnsemble ensemble) throws Exception {
-        int[] postNeuronIndices = ensemble.getProcessingNeuronIndices();
-        double[] transfers = new double[postNeuronIndices.length];
-        for (int postIndex = 0; postIndex < postNeuronIndices.length; postIndex++) {
-            int postNeuronIndex = postNeuronIndices[postIndex];
-            int[] preNeuronIndices = getPreNeuronIndices(ensemble, postNeuronIndex);
-            if (preNeuronIndices.length == 0) {
-                transfers[postIndex] = 0.0;
-                continue;
-            }
-            cmiCalculator.initialise(embedding * preNeuronIndices.length, 1, embedding);
-            cmiCalculator.startAddObservations();
-            for (TimeSeries timeSeries : ensemble) {
-                double[][] source = timeSeries.getColumns(preNeuronIndices);
-                double[][] target = timeSeries.getColumns(new int[] { postNeuronIndex });
-                cmiCalculator.addObservations(embedData(source), selectData(target), embedData(target));
-            }
-            cmiCalculator.finaliseAddObservations();
-            transfers[postIndex] = cmiCalculator.computeAverageLocalOfObservations();
+    private static double[] getTransfer(TimeSeriesEnsemble ensemble, int[] sourceNeuronIndices) throws Exception {
+        int[] targetNeuronIndices = ensemble.getProcessingNeuronIndices();
+        cmiCalculator.initialise(sourceNeuronIndices.length * embedding, targetNeuronIndices.length, targetNeuronIndices.length * embedding);
+        cmiCalculator.startAddObservations();
+        for (TimeSeries timeSeries : ensemble) {
+            double[][] source = timeSeries.getColumns(sourceNeuronIndices);
+            double[][] target = timeSeries.getColumns(targetNeuronIndices);
+            cmiCalculator.addObservations(
+                MatrixUtils.makeDelayEmbeddingVector(source, embedding, embedding, source.length - embedding),
+                MatrixUtils.selectRows(target, embedding, target.length - embedding),
+                MatrixUtils.makeDelayEmbeddingVector(target, embedding, embedding - 1, target.length - embedding));
         }
-        return MatrixUtils.mean(transfers);
+        cmiCalculator.finaliseAddObservations();
+        return cmiCalculator.computeLocalOfPreviousObservations();
     }
     
-    private static double[] getModifications(TimeSeriesEnsemble ensemble, double[][] storages) throws Exception {
-        int[] postNeuronIndices = ensemble.getProcessingNeuronIndices();
-        double[] modifications = new double[2];
-        for (int postIndex = 0; postIndex < postNeuronIndices.length; postIndex++) {
-            int postNeuronIndex = postNeuronIndices[postIndex];
-            int[] preNeuronIndices = getPreNeuronIndices(ensemble, postNeuronIndex);
-            double[][] transfers = new double[storages.length][preNeuronIndices.length];
-            for (int preIndex = 0; preIndex < preNeuronIndices.length; preIndex++) {
-                int preNeuronIndex = preNeuronIndices[preIndex];
-                cmiCalculator.initialise(embedding, 1, embedding);
-                cmiCalculator.startAddObservations();
-                for (TimeSeries timeSeries : ensemble) {
-                    double[][] source = timeSeries.getColumns(new int[] { preNeuronIndex });
-                    double[][] target = timeSeries.getColumns(new int[] { postNeuronIndex });
-                    cmiCalculator.addObservations(embedData(source), selectData(target), embedData(target));
-                }
-                cmiCalculator.finaliseAddObservations();
-                MatrixUtils.copyIntoColumn(transfers, preIndex, cmiCalculator.computeLocalOfPreviousObservations());
+    private static double[][] getModification(double[] storage, Collection<double[]> transfers) {
+        double[][] modification = new double[2][storage.length];
+        for (int time = 0; time < storage.length; time++) {
+            double value = storage[time];
+            for (double[] transfer : transfers) {
+                value += transfer[time];
             }
-            for (int time = 0; time < storages.length; time++) {
-                double modification = storages[time][postIndex];
-                for (int preIndex = 0; preIndex < preNeuronIndices.length; preIndex++) {
-                    modification += transfers[time][preIndex];
-                }
-                if (modification >= 0.0) {
-                    modifications[TRIVIAL] += modification;
-                } else {
-                    modifications[NONTRIVIAL] += modification;
-                }
-            }
+            modification[TRIVIAL][time] = Math.max(value, 0.0);
+            modification[NONTRIVIAL][time] = Math.min(value, 0.0);
         }
-        int count = storages.length * postNeuronIndices.length;
-        modifications[TRIVIAL] /= count;
-        modifications[NONTRIVIAL] /= count;
-        return modifications;
-    }
-    
-    private static double[][] embedData(double[][] data) throws Exception {
-        return MatrixUtils.makeDelayEmbeddingVector(data, embedding, embedding - 1, data.length - embedding);
-    }
-    
-    private static double[][] selectData(double[][] data) {
-        return MatrixUtils.selectRows(data, embedding, data.length - embedding);
-    }
-    
-    private static int[] getPreNeuronIndices(TimeSeriesEnsemble ensemble, int postNeuronIndex) {
-        Collection<Integer> preNeuronIndices = new LinkedList<Integer>();
-        for (Synapse synapse : ensemble.getSynapses()) {
-            if (synapse.getPostNeuronIndex() == postNeuronIndex) {
-                assert synapse.getPreNeuronIndex() != postNeuronIndex;
-                preNeuronIndices.add(synapse.getPreNeuronIndex());
-            }
-        }
-        return toPrimitive(preNeuronIndices);
-    }
-    
-    private static int[] toPrimitive(Collection<Integer> values) {
-        int[] result = new int[values.size()];
-        int index = 0;
-        for (int value : values) {
-            result[index] = value;
-            index++;
-        }
-        return result;
+        return modification;
     }
 }
