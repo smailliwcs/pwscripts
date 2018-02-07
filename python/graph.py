@@ -92,6 +92,13 @@ class Graph(object):
         for node in xrange(size):
             self.weights[node] = [None] * size
     
+    def getNodeCount(self, nodeType):
+        count = 0
+        for node in xrange(self.size):
+            if self.nodeTypes[node] == nodeType:
+                count += 1
+        return count
+    
     def hasLink(self, nodeOut, nodeIn):
         return utility.coalesce(self.weights[nodeOut][nodeIn], 0.0) != 0.0
     
