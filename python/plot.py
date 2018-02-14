@@ -13,7 +13,7 @@ import sys
 import textwrap
 import utility
 
-TSTEP = 250
+TSTEP = 100
 CMAP_NAME = "YlGnBu"
 if CMAP_NAME in colormaps.cmaps:
     CMAP = colormaps.cmaps[CMAP_NAME]
@@ -22,7 +22,7 @@ else:
     CMAP = matplotlib.cm.get_cmap(CMAP_NAME)
 COLORS = [
     matplotlib.cm.Blues(0.9),
-    matplotlib.cm.Greens(0.45)
+    matplotlib.cm.Oranges(0.45)
 ]
 ALPHA_RUNS = [0.1, 0.2]
 ALPHA_HIST = 1.0
