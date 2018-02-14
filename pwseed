@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+usage="Usage: $(basename "$0") WORLDFILE RUN AGENT STAGE [OUTPUT]"
+if [[ $# -lt 4 || $# -gt 5 ]]; then
+    echo "$usage"
+    exit 1
+fi
+worldfile=$1
+shift
+run=$1
+shift
+if [[ ! -e "$run/endStep.txt" ]]; then
+    echo "Run '$run' is not valid."
+    exit 1
+fi
+agent=$1
+shift
+stage=$1
+shift
+if [[ $# -gt 0 ]]; then
+    output=$1
+    shift
+else
+    output=/dev/null
+fi
+if [[ $# -gt 0 ]]; then
+    echo "$usage"
+    exit 1
+fi
+genome=$(readlink -f "$run/genome/agents/genome_$agent.txt.gz")
+if [[ ! -e "$genome" ]]; then
+    echo "Genome file '$genome' does not exist."
+    exit 1
+fi
+echo "$genome" > genomeSeeds.txt
+synapses=$(readlink -f "$run/brain/synapses/synapses_${agent}_$stage.txt.gz")
+if [[ ! -e "$synapses" ]]; then
+    echo "Synapse file '$synapses' does not exist."
+    exit 1
+fi
+echo "$synapses" > synapseSeeds.txt
+./Polyworld --InitSeed "$(date +%s)" "$worldfile"
+echo "$agent" $(cat run/endStep.txt) >> "$output"
+rm -rf run
+rm genomeSeeds.txt
+rm synapseSeeds.txt
