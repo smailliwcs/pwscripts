@@ -13,19 +13,20 @@ import sys
 import textwrap
 import utility
 
-TSTEP = 100
+TSTEP = 200
+COLORS = [
+    matplotlib.cm.Blues(0.9),
+    matplotlib.cm.Oranges(0.45)
+]
 CMAP_NAME = "YlGnBu"
 if CMAP_NAME in colormaps.cmaps:
     CMAP = colormaps.cmaps[CMAP_NAME]
     matplotlib.cm.register_cmap(CMAP_NAME, CMAP)
 else:
     CMAP = matplotlib.cm.get_cmap(CMAP_NAME)
-COLORS = [
-    matplotlib.cm.Blues(0.9),
-    matplotlib.cm.Oranges(0.45)
-]
+CMAP.set_bad("1.0")
 ALPHA_RUNS = [0.1, 0.2]
-ALPHA_HIST = 1.0
+ALPHA_HIST = 0.5
 BIN_COUNT = 100
 OFFSET_HIST = 0.1
 STROKE = matplotlib.patheffects.withStroke(linewidth = 3.0, foreground = "1.0")
@@ -73,23 +74,25 @@ class ColorbarFormatter(matplotlib.ticker.Formatter):
 class Plot(object):
     @staticmethod
     def configure():
+        matplotlib.rcParams["axes.autolimit_mode"] = "round_numbers"
+        matplotlib.rcParams["axes.axisbelow"] = False
         matplotlib.rcParams["axes.grid"] = True
-        matplotlib.rcParams["figure.figsize"] = (3.5, 3.0)
+        matplotlib.rcParams["axes.xmargin"] = 0.0
+        matplotlib.rcParams["axes.ymargin"] = 0.0
+        matplotlib.rcParams["figure.figsize"] = (3.2, 2.8)
         matplotlib.rcParams["font.family"] = "serif"
         matplotlib.rcParams["font.serif"] = ["Times"]
         matplotlib.rcParams["font.size"] = 8.0
         matplotlib.rcParams["grid.alpha"] = 0.2
-        matplotlib.rcParams["grid.linestyle"] = "-"
+        matplotlib.rcParams["grid.color"] = "0.0"
         matplotlib.rcParams["image.cmap"] = CMAP_NAME
+        matplotlib.rcParams["legend.edgecolor"] = "inherit"
+        matplotlib.rcParams["legend.fancybox"] = False
         matplotlib.rcParams["legend.fontsize"] = 6.0
+        matplotlib.rcParams["legend.framealpha"] = None
         matplotlib.rcParams["savefig.dpi"] = 300
         matplotlib.rcParams["savefig.format"] = "pdf"
         matplotlib.rcParams["text.usetex"] = True
-        matplotlib.rcParams["text.latex.preamble"] = [
-            r"\usepackage[T1]{fontenc}",
-            r"\usepackage{newtxmath}",
-            r"\usepackage{newtxtext}"
-        ]
     
     @staticmethod
     def getMetrics():
