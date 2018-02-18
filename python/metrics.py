@@ -176,13 +176,6 @@ class OffspringMetric(AgentBasedMetric):
             values[event.parent2] += 1
         return values
 
-class StagedAgentBasedMetric(AgentBasedMetric):
-    def addArgs(self, parser):
-        self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
-    
-    def readArgs(self, args):
-        self.stage = self.readArg(args, "stage")
-
 class WeightMetric(AgentBasedMetric):
     class Type(utility.Enum):
         EXCITATORY = "excitatory"
@@ -437,14 +430,26 @@ class Efficiency(AgentBasedMetric):
                 assert False
             yield agent, value
 
-class Entropy(StagedAgentBasedMetric):
+class Entropy(AgentBasedMetric):
+    def addArgs(self, parser):
+        self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
+    
+    def readArgs(self, args):
+        self.stage = self.readArg(args, "stage")
+    
     def getKey(self):
         return "entropy-{0}".format(self.stage)
     
     def getLabel(self):
         return "Entropy"
 
-class Expansion(StagedAgentBasedMetric):
+class Expansion(AgentBasedMetric):
+    def addArgs(self, parser):
+        self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
+    
+    def readArgs(self, args):
+        self.stage = self.readArg(args, "stage")
+    
     def getKey(self):
         return "expansion-{0}".format(self.stage)
     
@@ -563,7 +568,7 @@ class Gene(AgentBasedMetric):
         axis.set_view_interval(0, 256, True)
         axis.set_major_locator(matplotlib.ticker.MultipleLocator(64))
 
-class InfoModification(StagedAgentBasedMetric):
+class InfoModification(AgentBasedMetric):
     class Type(utility.Enum):
         TRIVIAL = "trivial"
         NONTRIVIAL = "nontrivial"
@@ -608,7 +613,13 @@ class InfoModification(StagedAgentBasedMetric):
             interval = axis.get_view_interval()
             axis.set_view_interval(interval[1], interval[0], True)
 
-class InfoStorage(StagedAgentBasedMetric):
+class InfoStorage(AgentBasedMetric):
+    def addArgs(self, parser):
+        self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
+    
+    def readArgs(self, args):
+        self.stage = self.readArg(args, "stage")
+    
     def getKey(self):
         return "info-storage-{0}".format(self.stage)
     
@@ -626,22 +637,53 @@ class InfoStorage(StagedAgentBasedMetric):
                 values[int(agent)] = float(value)
         return values
 
-class InfoTransfer(StagedAgentBasedMetric):
+class InfoTransfer(AgentBasedMetric):
+    class Type(utility.Enum):
+        APPARENT = "apparent"
+        COMPLETE = "complete"
+    
+    def addArgs(self, parser):
+        self.addArg(parser, "type", metavar = "TYPE", choices = tuple(InfoTransfer.Type.getValues()))
+        self.addArg(parser, "source", metavar = "SOURCE", nargs = "?")
+        self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
+    
+    def readArgs(self, args):
+        self.type = self.readArg(args, "type")
+        self.source = self.readArg(args, "source")
+        self.stage = self.readArg(args, "stage")
+        if self.type == InfoTransfer.Type.APPARENT:
+            assert self.source is not None
+    
     def getKey(self):
-        return "info-transfer-{0}".format(self.stage)
+        if self.type == InfoTransfer.Type.APPARENT:
+            return "info-transfer-apparent-{0}-{1}".format(self.source.lower(), self.stage)
+        elif self.type == InfoTransfer.Type.COMPLETE:
+            return "info-transfer-complete-{0}".format(self.stage)
+        else:
+            assert False
     
     def getDataFileName(self):
         return "info-dynamics-{0}.txt".format(self.stage)
     
     def getLabel(self):
-        return "Information transfer"
+        if self.type == InfoTransfer.Type.APPARENT:
+            return "{0} apparent information transfer".format(self.source)
+        elif self.type == InfoTransfer.Type.COMPLETE:
+            return "Complete information transfer"
+        else:
+            assert False
     
     def read(self):
         values = dict.fromkeys(utility.getAgents(self.run), NAN)
         for line in self.readLines():
             agent, flag, value = line.split(None, 2)
-            if flag == "T":
-                values[int(agent)] = float(value)
+            agent = int(agent)
+            if flag == "AT" and self.type == InfoTransfer.Type.APPARENT:
+                source, value = value.split()
+                if source == self.source:
+                    values[agent] = float(value)
+            elif flag == "CT" and self.type == InfoTransfer.Type.COMPLETE:
+                values[agent] = float(value)
         return values
 
 class Integration(AgentBasedMetric):
