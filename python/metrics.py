@@ -638,52 +638,31 @@ class InfoStorage(AgentBasedMetric):
         return values
 
 class InfoTransfer(AgentBasedMetric):
-    class Type(utility.Enum):
-        APPARENT = "apparent"
-        COMPLETE = "complete"
-    
     def addArgs(self, parser):
-        self.addArg(parser, "type", metavar = "TYPE", choices = tuple(InfoTransfer.Type.getValues()))
-        self.addArg(parser, "source", metavar = "SOURCE", nargs = "?")
+        self.addArg(parser, "source", metavar = "SOURCE")
         self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
     
     def readArgs(self, args):
-        self.type = self.readArg(args, "type")
         self.source = self.readArg(args, "source")
         self.stage = self.readArg(args, "stage")
-        if self.type == InfoTransfer.Type.APPARENT:
-            assert self.source is not None
     
     def getKey(self):
-        if self.type == InfoTransfer.Type.APPARENT:
-            return "info-transfer-apparent-{0}-{1}".format(self.source.lower(), self.stage)
-        elif self.type == InfoTransfer.Type.COMPLETE:
-            return "info-transfer-complete-{0}".format(self.stage)
-        else:
-            assert False
+        return "info-transfer-{0}-{1}".format(self.source.lower(), self.stage)
     
     def getDataFileName(self):
         return "info-dynamics-{0}.txt".format(self.stage)
     
     def getLabel(self):
-        if self.type == InfoTransfer.Type.APPARENT:
-            return "{0} information transfer".format(self.source)
-        elif self.type == InfoTransfer.Type.COMPLETE:
-            return "Information transfer"
-        else:
-            assert False
+        return "{0} information transfer".format(self.source)
     
     def read(self):
         values = dict.fromkeys(utility.getAgents(self.run), NAN)
         for line in self.readLines():
             agent, flag, value = line.split(None, 2)
-            agent = int(agent)
-            if flag == "AT" and self.type == InfoTransfer.Type.APPARENT:
+            if flag == "T":
                 source, value = value.split()
                 if source == self.source:
-                    values[agent] = float(value)
-            elif flag == "CT" and self.type == InfoTransfer.Type.COMPLETE:
-                values[agent] = float(value)
+                    values[int(agent)] = float(value)
         return values
 
 class Integration(AgentBasedMetric):

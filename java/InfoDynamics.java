@@ -44,13 +44,13 @@ public class InfoDynamics {
                             break;
                         }
                         transfer = getTransfer(ensemble, neuronIndices);
-                        System.out.printf("%d AT %s %g%n", agentIndex, nerve.getName(), MatrixUtils.mean(transfer));
+                        System.out.printf("%d T %s %g%n", agentIndex, nerve.getName(), MatrixUtils.mean(transfer));
                         transfers.add(transfer);
                     }
                 }
-                if (mode == null || mode.equals("CT")) {
+                if (mode == null || mode.equals("T")) {
                     transfer = getTransfer(ensemble, ensemble.getInputNeuronIndices());
-                    System.out.printf("%d CT %g%n", agentIndex, MatrixUtils.mean(transfer));
+                    System.out.printf("%d T Total %g%n", agentIndex, MatrixUtils.mean(transfer));
                 }
                 if (mode == null) {
                     double[][] modification = getModification(storage, transfers);
