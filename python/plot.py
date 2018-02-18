@@ -1,5 +1,4 @@
 import argparse
-import colormaps
 import itertools
 import math
 import matplotlib
@@ -19,11 +18,7 @@ COLORS = [
     matplotlib.cm.Oranges(0.45)
 ]
 CMAP_NAME = "YlGnBu"
-if CMAP_NAME in colormaps.cmaps:
-    CMAP = colormaps.cmaps[CMAP_NAME]
-    matplotlib.cm.register_cmap(CMAP_NAME, CMAP)
-else:
-    CMAP = matplotlib.cm.get_cmap(CMAP_NAME)
+CMAP = matplotlib.cm.get_cmap(CMAP_NAME)
 CMAP.set_bad("1.0")
 ALPHA_RUNS = [0.1, 0.2]
 ALPHA_HIST = 0.5

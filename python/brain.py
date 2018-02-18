@@ -4,7 +4,6 @@ import matplotlib.pyplot
 import numpy
 
 matplotlib.rcParams["figure.figsize"] = (5.0, 5.0)
-matplotlib.rcParams["image.interpolation"] = "none"
 matplotlib.rcParams["savefig.format"] = "pdf"
 parser = argparse.ArgumentParser()
 parser.add_argument("run", metavar = "RUN")
