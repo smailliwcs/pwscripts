@@ -33,8 +33,9 @@ axes.set_yticks([])
 inputCount = graph.getNodeCount(graph_mod.GraphType.INPUT)
 outputCount = graph.getNodeCount(graph_mod.GraphType.OUTPUT)
 def axline(x, alpha):
-    axes.axhline(x, color = "0", alpha = alpha)
-    axes.axvline(x, color = "0", alpha = alpha)
+    kwargs = {"color": "0.0", "alpha": alpha}
+    axes.axhline(x, **kwargs)
+    axes.axvline(x, **kwargs)
 for node in xrange(graph.size):
     axline(node - 0.5, 0.1)
 axline(inputCount - 0.5, 0.5)
