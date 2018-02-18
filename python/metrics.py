@@ -544,14 +544,12 @@ class Gene(AgentBasedMetric):
             title = f.readline().split()[1]
         path = os.path.join(self.run, "genome", "meta", "genetitle.txt")
         with open(path) as f:
-            found = True
             for index in xrange(self.index):
-                if f.readline() == "":
-                    found = False
-                    break
-            if found:
-                title = f.readline().split(" :: ")[0]
-        return "{0} gene".format(title.replace("_", "\\_"))
+                f.readline()
+            line = f.readline()
+            if line != "":
+                title = line.split(" :: ")[0]
+        return "\\texttt{{{0}}} gene".format(title.replace("_", "\\_").replace(">", "\\textgreater"))
     
     def calculate(self):
         for agent in utility.getAgents(self.run, self.start):
