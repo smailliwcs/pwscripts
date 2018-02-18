@@ -667,9 +667,9 @@ class InfoTransfer(AgentBasedMetric):
     
     def getLabel(self):
         if self.type == InfoTransfer.Type.APPARENT:
-            return "{0} apparent information transfer".format(self.source)
+            return "{0} information transfer".format(self.source)
         elif self.type == InfoTransfer.Type.COMPLETE:
-            return "Complete information transfer"
+            return "Information transfer"
         else:
             assert False
     
