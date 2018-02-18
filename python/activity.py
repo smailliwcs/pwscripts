@@ -15,11 +15,6 @@ class Gene(object):
     def getActivity(self, timestep):
         return timestep - self.timestep
 
-def parseArgs():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("run", metavar = "RUN")
-    return parser.parse_args()
-
 def getGenome(run, agent):
     path = os.path.join(run, "genome", "agents", "genome_{0}.txt.gz".format(agent))
     with gzip.open(path) as f:
@@ -35,7 +30,9 @@ def getFile(run, name):
     fn = gzip.open if name.endswith(".gz") else open
     return fn(os.path.join(path, name), "w")
 
-args = parseArgs()
+parser = argparse.ArgumentParser()
+parser.add_argument("run", metavar = "RUN")
+args = parser.parse_args()
 genome = []
 geneLists = []
 usage = utility.getInitialAgentCount(args.run)
