@@ -75,9 +75,11 @@ public class TimeSeriesEnsembleReader implements AutoCloseable {
     }
     
     private void readNerves(TimeSeriesEnsemble ensemble) throws IOException {
+        reader.mark(1024);
         String line = reader.readLine();
         if (!line.equals("# BEGIN NERVES")) {
-            throw new IOException(getExceptionMessage(line));
+            reader.reset();
+            return;
         }
         int start = 0;
         while (true) {
