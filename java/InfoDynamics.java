@@ -8,12 +8,13 @@ public class InfoDynamics {
     private static final int NONTRIVIAL = 1;
     
     private static int embedding;
+    private static String mode;
     private static MutualInfoCalculatorMultiVariate miCalculator;
     private static ConditionalMutualInfoCalculatorMultiVariate cmiCalculator;
     
     public static void main(String[] args) throws Exception {
         if (!tryParseArgs(args)) {
-            System.err.printf("Usage: %s EMBEDDING%n", InfoDynamics.class.getSimpleName());
+            System.err.printf("Usage: %s EMBEDDING [MODE]%n", InfoDynamics.class.getSimpleName());
             return;
         }
         miCalculator = new MutualInfoCalculatorMultiVariateKraskov1();
@@ -28,33 +29,49 @@ public class InfoDynamics {
                 }
                 int agentIndex = ensemble.getAgentIndex();
                 int inputNeuronCount = ensemble.getInputNeuronCount();
-                double[] storage = getStorage(ensemble);
-                System.out.printf("%d S %g%n", agentIndex, MatrixUtils.mean(storage));
-                Collection<double[]> transfers = new LinkedList<double[]>();
-                double[] transfer;
-                for (Nerve nerve : ensemble.getNerves()) {
-                    int[] neuronIndices = nerve.getNeuronIndices();
-                    if (neuronIndices[neuronIndices.length - 1] >= inputNeuronCount) {
-                        assert neuronIndices[0] >= inputNeuronCount;
-                        break;
-                    }
-                    transfer = getTransfer(ensemble, neuronIndices);
-                    System.out.printf("%d AT %s %g%n", agentIndex, nerve.getName(), MatrixUtils.mean(transfer));
-                    transfers.add(transfer);
+                double[] storage = null;
+                if (mode == null || mode.equals("S")) {
+                    storage = getStorage(ensemble);
+                    System.out.printf("%d S %g%n", agentIndex, MatrixUtils.mean(storage));
                 }
-                transfer = getTransfer(ensemble, ensemble.getInputNeuronIndices());
-                System.out.printf("%d CT %g%n", agentIndex, MatrixUtils.mean(transfer));
-                double[][] modification = getModification(storage, transfers);
-                System.out.printf("%d M %g %g%n", agentIndex, MatrixUtils.mean(modification[TRIVIAL]), MatrixUtils.mean(modification[NONTRIVIAL]));
+                double[] transfer = null;
+                Collection<double[]> transfers = new LinkedList<double[]>();
+                if (mode == null) {
+                    for (Nerve nerve : ensemble.getNerves()) {
+                        int[] neuronIndices = nerve.getNeuronIndices();
+                        if (neuronIndices[neuronIndices.length - 1] >= inputNeuronCount) {
+                            assert neuronIndices[0] >= inputNeuronCount;
+                            break;
+                        }
+                        transfer = getTransfer(ensemble, neuronIndices);
+                        System.out.printf("%d AT %s %g%n", agentIndex, nerve.getName(), MatrixUtils.mean(transfer));
+                        transfers.add(transfer);
+                    }
+                }
+                if (mode == null || mode.equals("CT")) {
+                    transfer = getTransfer(ensemble, ensemble.getInputNeuronIndices());
+                    System.out.printf("%d CT %g%n", agentIndex, MatrixUtils.mean(transfer));
+                }
+                if (mode == null) {
+                    double[][] modification = getModification(storage, transfers);
+                    System.out.printf(
+                        "%d M %g %g%n",
+                        agentIndex,
+                        MatrixUtils.mean(modification[TRIVIAL]),
+                        MatrixUtils.mean(modification[NONTRIVIAL]));
+                }
             }
         }
     }
     
     private static boolean tryParseArgs(String[] args) {
         try {
-            assert args.length == 1;
+            assert args.length >= 1 && args.length <= 2;
             embedding = Integer.parseInt(args[0]);
             assert embedding > 0;
+            if (args.length > 1) {
+                mode = args[1];
+            }
             return true;
         } catch (Throwable ex) {
             return false;
