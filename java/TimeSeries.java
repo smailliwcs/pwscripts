@@ -60,7 +60,11 @@ public class TimeSeries extends ArrayList<double[]> {
     public int[] getColumnDiscrete(int index, int base) {
         int[] column = new int[size()];
         for (int time = 0; time < size(); time++) {
-            column[time] = (int)(get(time)[index] * base);
+            int value = (int)(get(time)[index] * base);
+            if (value == base) {
+                value--;
+            }
+            column[time] = value;
         }
         return column;
     }

@@ -435,7 +435,7 @@ class Entropy(AgentBasedMetric):
         return "entropy-{0}".format(self.stage)
     
     def getLabel(self):
-        return "Differential entropy"
+        return "Entropy"
 
 class Expansion(AgentBasedMetric):
     def addArgs(self, parser):
