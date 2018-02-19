@@ -76,22 +76,4 @@ public class TimeSeriesEnsemble extends LinkedList<TimeSeries> {
     public void addSynapse(Synapse synapse) {
         synapses.add(synapse);
     }
-    
-    public TimeSeries combine() {
-        switch (size()) {
-            case 0:
-                return null;
-            case 1:
-                return getFirst();
-            default:
-                int capacity = size() * getFirst().size();
-                TimeSeries combinedTimeSeries = new TimeSeries(neuronCount, capacity);
-                for (TimeSeries timeSeries : this) {
-                    for (double[] row : timeSeries) {
-                        combinedTimeSeries.add(row);
-                    }
-                }
-                return combinedTimeSeries;
-        }
-    }
 }

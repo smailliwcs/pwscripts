@@ -10,21 +10,20 @@ public class Complexity {
                 if (ensemble == null) {
                     break;
                 }
-                try {
-                    int[] neuronIndices = ensemble.getProcessingNeuronIndices();
-                    double[][] data = ensemble.combine().getColumnsGaussian(neuronIndices, 1e-6);
+                int[] neuronIndices = ensemble.getProcessingNeuronIndices();
+                double[] integrations = new double[ensemble.size()];
+                double[] complexities = new double[ensemble.size()];
+                int index = 0;
+                for (TimeSeries timeSeries : ensemble) {
+                    double[][] data = timeSeries.getColumnsGaussian(neuronIndices, 1e-6);
                     double[][] covariance = MatrixUtils.covarianceMatrix(data);
                     double integration = getIntegration(covariance);
-                    System.out.printf("%d I %g%n", ensemble.getAgentIndex(), integration);
-                    double complexity = (neuronIndices.length - 1) * integration;
-                    for (int index = 0; index < neuronIndices.length; index++) {
-                        complexity -= getIntegration(MatrixUtils.copyMatrixEliminateRowAndColumn(covariance, index, index));
-                    }
-                    complexity /= neuronIndices.length;
-                    System.out.printf("%d C %g%n", ensemble.getAgentIndex(), complexity);
-                } catch (Exception ex) {
-                    System.err.printf("%d: %s%n", ensemble.getAgentIndex(), ex.getMessage());
+                    integrations[index] = integration;
+                    complexities[index] = getComplexity(covariance, integration);
+                    index++;
                 }
+                System.out.printf("%d I %g%n", ensemble.getAgentIndex(), MatrixUtils.mean(integrations));
+                System.out.printf("%d C %g%n", ensemble.getAgentIndex(), MatrixUtils.mean(complexities));
             }
         }
     }
@@ -39,5 +38,13 @@ public class Complexity {
             product *= matrix[index][index];
         }
         return product;
+    }
+    
+    private static double getComplexity(double[][] covariance, double integration) throws Exception {
+        double complexity = (covariance.length - 1) * integration;
+        for (int index = 0; index < covariance.length; index++) {
+            complexity -= getIntegration(MatrixUtils.copyMatrixEliminateRowAndColumn(covariance, index, index));
+        }
+        return complexity / covariance.length;
     }
 }
