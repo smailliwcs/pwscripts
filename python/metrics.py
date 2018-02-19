@@ -318,14 +318,8 @@ class Complexity(AgentBasedMetric):
         return values
 
 class Consistency(TimeBasedMetric):
-    def addArgs(self, parser):
-        self.addArg(parser, "group-size", metavar = "GROUP_SIZE", type = int, choices = tuple(xrange(8)))
-    
-    def readArgs(self, args):
-        self.groupSize = self.readArg(args, "group-size")
-    
     def getKey(self):
-        return "consistency-{0}".format(self.groupSize)
+        return "consistency"
     
     def getLabel(self):
         return "Consistency"
