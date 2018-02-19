@@ -549,7 +549,14 @@ class Gene(AgentBasedMetric):
             line = f.readline()
             if line != "":
                 title = line.split(" :: ")[0]
-        return "\\texttt{{{0}}} gene".format(title.replace("_", "\\_").replace(">", "\\textgreater"))
+        replacements = {
+            "_": "\\_",
+            ">": "\\textgreater",
+            "InternalNeurGroup ": ""
+        }
+        for old, new in replacements.iteritems():
+            title = title.replace(old, new)
+        return "\\texttt{{{0}}} gene".format(title)
     
     def calculate(self):
         for agent in utility.getAgents(self.run, self.start):
