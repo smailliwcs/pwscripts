@@ -18,40 +18,38 @@ public class TimeSeries extends ArrayList<double[]> {
         this(dimension, 100);
     }
     
-    public double[] getColumn(int index, Double noise, boolean gaussianize) {
-        double[] column = new double[size()];
+    public double[][] getColumns(int[] indices) {
+        double[][] columns = new double[size()][indices.length];
         for (int time = 0; time < size(); time++) {
-            column[time] = get(time)[index];
-        }
-        if (noise != null) {
-            for (int time = 0; time < size(); time++) {
-                column[time] += noise * random.nextGaussian();
+            double[] source = get(time);
+            double[] target = columns[time];
+            for (int index = 0; index < indices.length; index++) {
+                target[index] = source[indices[index]];
             }
         }
-        if (gaussianize) {
-            double[] gaussians = new double[size()];
-            for (int time = 0; time < size(); time++) {
-                gaussians[time] = random.nextGaussian();
-            }
-            Arrays.sort(gaussians);
-            IndexComparator comparator = new IndexComparator(column);
-            Integer[] sortedTimes = comparator.getIndices();
-            Arrays.sort(sortedTimes, comparator);
-            for (int time = 0; time < size(); time++) {
-                column[sortedTimes[time]] = gaussians[time];
-            }
-        }
-        return column;
+        return columns;
     }
     
-    public double[] getColumn(int index) {
-        return getColumn(index, null, false);
+    private void getColumnGaussian(int index, double noise, double[] gaussians, double[] column) {
+        for (int time = 0; time < size(); time++) {
+            gaussians[time] = random.nextGaussian();
+            column[time] = get(time)[index] + noise * random.nextGaussian();
+        }
+        Arrays.sort(gaussians);
+        IndexComparator comparator = new IndexComparator(column);
+        Integer[] times = comparator.getIndices();
+        Arrays.sort(times, comparator);
+        for (int order = 0; order < size(); order++) {
+            column[times[order]] = gaussians[order];
+        }
     }
     
-    public double[][] getColumns(int[] indices, Double noise, boolean gaussianize) {
+    public double[][] getColumnsGaussian(int[] indices, double noise) {
+        double[] gaussians = new double[size()];
+        double[] column = new double[size()];
         double[][] columns = new double[size()][indices.length];
         for (int index = 0; index < indices.length; index++) {
-            double[] column = getColumn(indices[index], noise, gaussianize);
+            getColumnGaussian(indices[index], noise, gaussians, column);
             for (int time = 0; time < size(); time++) {
                 columns[time][index] = column[time];
             }
@@ -59,8 +57,12 @@ public class TimeSeries extends ArrayList<double[]> {
         return columns;
     }
     
-    public double[][] getColumns(int[] indices) {
-        return getColumns(indices, null, false);
+    public int[] getColumnDiscrete(int index, int base) {
+        int[] column = new int[size()];
+        for (int time = 0; time < size(); time++) {
+            column[time] = (int)(get(time)[index] * base);
+        }
+        return column;
     }
     
     public boolean add(double[] row) {

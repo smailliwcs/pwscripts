@@ -12,7 +12,7 @@ public class Complexity {
                 }
                 try {
                     int[] neuronIndices = ensemble.getProcessingNeuronIndices();
-                    double[][] data = ensemble.combine().getColumns(neuronIndices, 1e-6, true);
+                    double[][] data = ensemble.combine().getColumnsGaussian(neuronIndices, 1e-6);
                     double[][] covariance = MatrixUtils.covarianceMatrix(data);
                     double integration = getIntegration(covariance);
                     System.out.printf("%d I %g%n", ensemble.getAgentIndex(), integration);
