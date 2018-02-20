@@ -45,6 +45,6 @@ public class Entropy {
         for (TimeSeries timeSeries : ensemble) {
             calculator.addObservations(timeSeries.getColumnDiscrete(neuronIndex, base));
         }
-        return calculator.computeAverageLocalOfObservations() * Math.log(2.0) / Math.log(base);
+        return calculator.computeAverageLocalOfObservations();
     }
 }

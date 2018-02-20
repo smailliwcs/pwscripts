@@ -306,7 +306,6 @@ class Complexity(AgentBasedMetric):
                 value = float(value)
                 if value == 0.0:
                     continue
-                value *= math.log(2.0)
             elif self.jidt:
                 agent, flag, value = line.split()
                 if flag != "C":

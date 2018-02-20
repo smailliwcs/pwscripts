@@ -29,7 +29,7 @@ public class Complexity {
     }
     
     private static double getIntegration(double[][] covariance) throws Exception {
-        return Math.log(getDiagonalProduct(covariance) / MatrixUtils.determinantSymmPosDefMatrix(covariance)) / 2.0;
+        return Utility.log2(getDiagonalProduct(covariance) / MatrixUtils.determinantSymmPosDefMatrix(covariance)) / 2.0;
     }
     
     private static double getDiagonalProduct(double[][] matrix) {
