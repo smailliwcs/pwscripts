@@ -1,5 +1,4 @@
 import infodynamics.utils.*;
-import java.util.*;
 
 public class Complexity {
     public static void main(String[] args) throws Exception {
@@ -10,6 +9,7 @@ public class Complexity {
                 if (ensemble == null) {
                     break;
                 }
+                int agentIndex = ensemble.getAgentIndex();
                 int[] neuronIndices = ensemble.getProcessingNeuronIndices();
                 double[] integrations = new double[ensemble.size()];
                 double[] complexities = new double[ensemble.size()];
@@ -22,8 +22,8 @@ public class Complexity {
                     complexities[index] = getComplexity(covariance, integration);
                     index++;
                 }
-                System.out.printf("%d I %g%n", ensemble.getAgentIndex(), MatrixUtils.mean(integrations));
-                System.out.printf("%d C %g%n", ensemble.getAgentIndex(), MatrixUtils.mean(complexities));
+                System.out.printf("%d I %g%n", agentIndex, MatrixUtils.mean(integrations));
+                System.out.printf("%d C %g%n", agentIndex, MatrixUtils.mean(complexities));
             }
         }
     }
