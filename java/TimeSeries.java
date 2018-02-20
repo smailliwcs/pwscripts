@@ -15,7 +15,7 @@ public class TimeSeries extends ArrayList<double[]> {
     }
     
     public TimeSeries(int dimension) {
-        this(dimension, 100);
+        this(dimension, 110);
     }
     
     public double[][] getColumns(int[] indices) {
