@@ -24,7 +24,7 @@ public class Consistency {
         }
     }
     
-    private static final Pattern INIT_AGENTS = Pattern.compile("InitAgents\\s+(?<initAgentCount>\\d+)");
+    private static final Pattern INIT_AGENTS_PATTERN = Pattern.compile("InitAgents\\s+(?<initAgentCount>\\d+)");
     
     private static String run;
     private static int groupSize;
@@ -116,7 +116,7 @@ public class Consistency {
             while (true) {
                 String line = reader.readLine();
                 assert line != null;
-                Matcher matcher = INIT_AGENTS.matcher(line);
+                Matcher matcher = INIT_AGENTS_PATTERN.matcher(line);
                 if (matcher.matches()) {
                     return Integer.parseInt(matcher.group("initAgentCount"));
                 }
