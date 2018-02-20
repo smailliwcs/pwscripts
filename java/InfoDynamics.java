@@ -27,10 +27,9 @@ public class InfoDynamics {
                     break;
                 }
                 int agentIndex = ensemble.getAgentIndex();
-                int[][][] data = discretize(ensemble);
                 double[][][] locals = new double[ensemble.getProcessingNeuronCount()][ensemble.size()][];
-                System.out.printf("%d S %g%n", agentIndex, getStorage(ensemble, data, locals));
-                System.out.printf("%d T %g%n", agentIndex, getTransfer(ensemble, data, locals));
+                System.out.printf("%d S %g%n", agentIndex, getStorage(ensemble, locals));
+                System.out.printf("%d T %g%n", agentIndex, getTransfer(ensemble, locals));
                 double[] modifications = getModifications(locals);
                 System.out.printf("%d M %g %g%n", agentIndex, modifications[TRIVIAL], modifications[NONTRIVIAL]);
             }
@@ -50,32 +49,20 @@ public class InfoDynamics {
         }
     }
     
-    private static int[][][] discretize(TimeSeriesEnsemble ensemble) {
-        int[][][] data = new int[ensemble.getNeuronCount()][ensemble.size()][];
-        for (int neuronIndex : ensemble.getNeuronIndices()) {
-            int[][] columns = data[neuronIndex];
-            int columnIndex = 0;
-            for (TimeSeries timeSeries : ensemble) {
-                columns[columnIndex++] = timeSeries.getColumnDiscrete(neuronIndex, base);
-            }
-        }
-        return data;
-    }
-    
-    private static double getStorage(TimeSeriesEnsemble ensemble, int[][][] data, double[][][] locals) throws Exception {
+    private static double getStorage(TimeSeriesEnsemble ensemble, double[][][] locals) throws Exception {
         int count = 0;
         double sum = 0.0;
         int[] neuronIndices = ensemble.getProcessingNeuronIndices();
         for (int index = 0; index < neuronIndices.length; index++) {
             int neuronIndex = neuronIndices[index];
-            int[][] columns = data[neuronIndex];
             storageCalculator.initialise();
-            for (int columnIndex = 0; columnIndex < ensemble.size(); columnIndex++) {
-                storageCalculator.addObservations(columns[columnIndex]);
+            for (TimeSeries timeSeries : ensemble) {
+                storageCalculator.addObservations(timeSeries.getColumnDiscrete(neuronIndex, base));
             }
-            for (int columnIndex = 0; columnIndex < ensemble.size(); columnIndex++) {
-                double[] storages = storageCalculator.computeLocalFromPreviousObservations(columns[columnIndex]);
-                locals[index][columnIndex] = storages;
+            int ensembleIndex = 0;
+            for (TimeSeries timeSeries : ensemble) {
+                double[] storages = storageCalculator.computeLocalFromPreviousObservations(timeSeries.getColumnDiscrete(neuronIndex, base));
+                locals[index][ensembleIndex++] = storages;
                 count += storages.length - embedding;
                 sum += MatrixUtils.sum(storages);
             }
@@ -83,27 +70,30 @@ public class InfoDynamics {
         return sum / count;
     }
     
-    private static double getTransfer(TimeSeriesEnsemble ensemble, int[][][] data, double[][][] locals) throws Exception {
+    private static double getTransfer(TimeSeriesEnsemble ensemble, double[][][] locals) throws Exception {
         int count = 0;
         double sum = 0.0;
         int[] postNeuronIndices = ensemble.getProcessingNeuronIndices();
         for (int postIndex = 0; postIndex < postNeuronIndices.length; postIndex++) {
             int postNeuronIndex = postNeuronIndices[postIndex];
-            int[][] postColumns = data[postNeuronIndex];
             int[] preNeuronIndices = ensemble.getPreNeuronIndices(postNeuronIndex);
             if (preNeuronIndices.length == 0) {
                 continue;
             }
             for (int preIndex = 0; preIndex < preNeuronIndices.length; preIndex++) {
                 int preNeuronIndex = preNeuronIndices[preIndex];
-                int[][] preColumns = data[preNeuronIndex];
                 transferCalculator.initialise();
-                for (int columnIndex = 0; columnIndex < ensemble.size(); columnIndex++) {
-                    transferCalculator.addObservations(preColumns[columnIndex], postColumns[columnIndex]);
+                for (TimeSeries timeSeries : ensemble) {
+                    transferCalculator.addObservations(
+                        timeSeries.getColumnDiscrete(preNeuronIndex, base),
+                        timeSeries.getColumnDiscrete(postNeuronIndex, base));
                 }
-                for (int columnIndex = 0; columnIndex < ensemble.size(); columnIndex++) {
-                    double[] transfers = transferCalculator.computeLocalFromPreviousObservations(preColumns[columnIndex], postColumns[columnIndex]);
-                    MatrixUtils.addInPlace(locals[postIndex][columnIndex], transfers);
+                int ensembleIndex = 0;
+                for (TimeSeries timeSeries : ensemble) {
+                    double[] transfers = transferCalculator.computeLocalFromPreviousObservations(
+                        timeSeries.getColumnDiscrete(preNeuronIndex, base),
+                        timeSeries.getColumnDiscrete(postNeuronIndex, base));
+                    MatrixUtils.addInPlace(locals[postIndex][ensembleIndex++], transfers);
                     count += transfers.length - embedding;
                     sum += MatrixUtils.sum(transfers);
                 }
@@ -115,12 +105,12 @@ public class InfoDynamics {
     private static double[] getModifications(double[][][] locals) {
         int count = 0;
         double[] modifications = new double[2];
-        for (double[][] columns : locals) {
-            for (double[] column : columns) {
-                count += column.length - embedding;
-                for (double modification : column) {
-                    modifications[TRIVIAL] += Math.max(modification, 0.0);
-                    modifications[NONTRIVIAL] += Math.min(modification, 0.0);
+        for (double[][] local : locals) {
+            for (double[] values : local) {
+                count += values.length - embedding;
+                for (double value : values) {
+                    modifications[TRIVIAL] += Math.max(value, 0.0);
+                    modifications[NONTRIVIAL] += Math.min(value, 0.0);
                 }
             }
         }
