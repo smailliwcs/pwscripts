@@ -3,9 +3,9 @@ import java.util.*;
 import java.util.regex.*;
 
 public class TimeSeriesEnsembleReader implements AutoCloseable {
-    private static final Pattern ARGUMENT = Pattern.compile("^[a-z_]+ = .+$");
-    private static final Pattern AGENT = Pattern.compile("^# AGENT (?<agentIndex>\\d+$)");
-    private static final Pattern DIMENSIONS = Pattern.compile("^# DIMENSIONS (?<neuronCount>\\d+) (?<inputNeuronCount>\\d+) (?<outputNeuronCount>\\d+)$");
+    private static final Pattern ARGUMENT_PATTERN = Pattern.compile("^[a-z_]+ = .+$");
+    private static final Pattern AGENT_PATTERN = Pattern.compile("^# AGENT (?<agentIndex>\\d+$)");
+    private static final Pattern DIMENSIONS_PATTERN = Pattern.compile("^# DIMENSIONS (?<neuronCount>\\d+) (?<inputNeuronCount>\\d+) (?<outputNeuronCount>\\d+)$");
     
     private static String getExceptionMessage(String line) {
         return String.format("Unexpected line '%s'.", line);
@@ -27,7 +27,7 @@ public class TimeSeriesEnsembleReader implements AutoCloseable {
             if (line.equals("# END ARGUMENTS")) {
                 break;
             }
-            Matcher matcher = ARGUMENT.matcher(line);
+            Matcher matcher = ARGUMENT_PATTERN.matcher(line);
             if (!matcher.matches()) {
                 throw new IOException(getExceptionMessage(line));
             }
@@ -55,13 +55,13 @@ public class TimeSeriesEnsembleReader implements AutoCloseable {
         if (line == null) {
             return null;
         }
-        Matcher matcher = AGENT.matcher(line);
+        Matcher matcher = AGENT_PATTERN.matcher(line);
         if (!matcher.matches()) {
             throw new IOException(getExceptionMessage(line));
         }
         int agentIndex = Integer.parseInt(matcher.group("agentIndex"));
         line = reader.readLine();
-        matcher = DIMENSIONS.matcher(line);
+        matcher = DIMENSIONS_PATTERN.matcher(line);
         if (!matcher.matches()) {
             throw new IOException(getExceptionMessage(line));
         }
