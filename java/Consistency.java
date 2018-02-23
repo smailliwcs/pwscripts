@@ -68,10 +68,9 @@ public class Consistency {
     private static boolean tryParseArgs(String[] args) {
         try {
             assert args.length == 2;
-            int index = 0;
-            run = args[index++];
+            run = args[0];
             assert hasValidRun();
-            groupSize = Integer.parseInt(args[index++]);
+            groupSize = Integer.parseInt(args[1]);
             assert groupSize >= 0 && groupSize <= 7;
             return true;
         } catch (Throwable ex) {

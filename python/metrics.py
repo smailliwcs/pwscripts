@@ -306,6 +306,7 @@ class Complexity(AgentBasedMetric):
                 value = float(value)
                 if value == 0.0:
                     continue
+                value *= math.log(2.0)
             elif self.jidt:
                 agent, flag, value = line.split()
                 if flag != "C":
@@ -434,7 +435,7 @@ class Entropy(AgentBasedMetric):
         return "entropy-{0}".format(self.stage)
     
     def getLabel(self):
-        return "Entropy"
+        return "Differential entropy"
 
 class Expansion(AgentBasedMetric):
     def addArgs(self, parser):
@@ -605,11 +606,6 @@ class InfoModification(AgentBasedMetric):
                     assert False
                 values[int(agent)] = value
         return values
-    
-    def formatAxis(self, axis):
-        if self.type == InfoModification.Type.NONTRIVIAL:
-            interval = axis.get_view_interval()
-            axis.set_view_interval(interval[1], interval[0], True)
 
 class InfoStorage(AgentBasedMetric):
     def addArgs(self, parser):

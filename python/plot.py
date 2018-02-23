@@ -205,7 +205,7 @@ class Data:
             else:
                 step = int(round(xrng / count))
                 count = int(math.ceil(xrng / step))
-                fuzz = 0.5 * (count * step - xrng)
+                fuzz = (count * step - xrng) / 2.0
                 return numpy.linspace(xmin - fuzz, xmax + fuzz, count + 1)
         else:
             return numpy.linspace(xmin, xmax, count + 1)

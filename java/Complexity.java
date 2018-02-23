@@ -13,14 +13,12 @@ public class Complexity {
                 int[] neuronIndices = ensemble.getProcessingNeuronIndices();
                 double[] integrations = new double[ensemble.size()];
                 double[] complexities = new double[ensemble.size()];
-                int index = 0;
-                for (TimeSeries timeSeries : ensemble) {
-                    double[][] data = timeSeries.getColumnsGaussian(neuronIndices, 1e-6);
+                for (int ensembleIndex = 0; ensembleIndex < ensemble.size(); ensembleIndex++) {
+                    double[][] data = ensemble.get(ensembleIndex).getColumnsGaussian(neuronIndices, 1e-6);
                     double[][] covariance = MatrixUtils.covarianceMatrix(data);
                     double integration = getIntegration(covariance);
-                    integrations[index] = integration;
-                    complexities[index] = getComplexity(covariance, integration);
-                    index++;
+                    integrations[ensembleIndex] = integration;
+                    complexities[ensembleIndex] = getComplexity(covariance, integration);
                 }
                 System.out.printf("%d I %g%n", agentIndex, MatrixUtils.mean(integrations));
                 System.out.printf("%d C %g%n", agentIndex, MatrixUtils.mean(complexities));
@@ -29,15 +27,7 @@ public class Complexity {
     }
     
     private static double getIntegration(double[][] covariance) throws Exception {
-        return Utility.log2(getDiagonalProduct(covariance) / MatrixUtils.determinantSymmPosDefMatrix(covariance)) / 2.0;
-    }
-    
-    private static double getDiagonalProduct(double[][] matrix) {
-        double product = 1.0;
-        for (int index = 0; index < matrix.length; index++) {
-            product *= matrix[index][index];
-        }
-        return product;
+        return Math.log(Utility.getDiagonalProduct(covariance) / MatrixUtils.determinantSymmPosDefMatrix(covariance)) / 2.0;
     }
     
     private static double getComplexity(double[][] covariance, double integration) throws Exception {
