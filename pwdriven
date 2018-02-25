@@ -6,16 +6,20 @@ if [[ $# -lt 3 ]]; then
 fi
 worldfile=$1
 shift
+if [[ ! -e "$worldfile" ]]; then
+    echo "WORLDFILE '$worldfile' does not exist."
+    exit 1
+fi
 count=$1
 shift
 if [[ $count -le 0 ]]; then
-    echo "Count must be greater than zero."
+    echo "COUNT must be greater than zero."
     exit 1
 fi
 key=$1
 shift
 if [[ -e "runs/$key" ]]; then
-    echo "Key '$key' is already in use."
+    echo "KEY '$key' is already in use."
     exit 1
 fi
 if [[ $1 == "--complete" ]]; then

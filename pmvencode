@@ -6,12 +6,12 @@ if [[ $# -lt 2 ]]; then
 fi
 input=$1
 shift
-output=$1
-shift
 if [[ ! -e "$input" ]]; then
-    echo "Input '$input' does not exist."
+    echo "INPUT '$input' does not exist."
     exit 1
 fi
+output=$1
+shift
 vf="vflip, drawtext=text=%{n}: start_number=1: x=10: y=10: fontcolor=white"
 ./bin/PwMoviePlayer -f "$input" "$@" -w | ffmpeg \
     -f rawvideo -pix_fmt rgba -s 640x480 -r 60 -i pipe:0 \

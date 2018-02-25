@@ -21,7 +21,7 @@ if [[ $# -gt 1 ]]; then
     steps=$1
     shift
     if [[ $steps -le 0 ]]; then
-        echo "Number of timesteps must be greater than zero."
+        echo "STEPS must be greater than zero."
         exit 1
     fi
 else
@@ -29,6 +29,10 @@ else
 fi
 run=$1
 shift
+if [[ ! -e "$run/endStep.txt" ]]; then
+    echo "RUN '$run' is not valid."
+    exit 1
+fi
 if [[ $# -gt 0 ]]; then
     echo "$usage"
     exit 1
