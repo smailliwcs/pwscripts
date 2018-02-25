@@ -78,7 +78,7 @@ class Plot(object):
         matplotlib.rcParams["font.family"] = "serif"
         matplotlib.rcParams["font.serif"] = ["Times"]
         matplotlib.rcParams["font.size"] = 8.0
-        matplotlib.rcParams["grid.alpha"] = 0.2
+        matplotlib.rcParams["grid.alpha"] = 0.1
         matplotlib.rcParams["grid.color"] = "0.0"
         matplotlib.rcParams["image.cmap"] = CMAP_NAME
         matplotlib.rcParams["legend.edgecolor"] = "inherit"
