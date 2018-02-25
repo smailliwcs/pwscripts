@@ -581,17 +581,19 @@ class InfoModification(AgentBasedMetric):
     
     def addArgs(self, parser):
         self.addArg(parser, "type", metavar = "TYPE", choices = tuple(InfoModification.Type.getValues()))
+        self.addArg(parser, "embedding", metavar = "EMBEDDING", type = int)
         self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
     
     def readArgs(self, args):
         self.type = self.readArg(args, "type")
+        self.embedding = self.readArg(args, "embedding")
         self.stage = self.readArg(args, "stage")
     
     def getKey(self):
-        return "info-modification-{0}-{1}".format(self.type, self.stage)
+        return "info-modification-{0}-{1}-{2}".format(self.type, self.embedding, self.stage)
     
     def getDataFileName(self):
-        return "info-dynamics-{0}.txt".format(self.stage)
+        return "info-dynamics-{0}-{1}.txt".format(self.embedding, self.stage)
     
     def getLabel(self):
         return "{0} information modification".format(self.type.capitalize())
@@ -615,16 +617,18 @@ class InfoModification(AgentBasedMetric):
 
 class InfoStorage(AgentBasedMetric):
     def addArgs(self, parser):
+        self.addArg(parser, "embedding", metavar = "EMBEDDING", type = int)
         self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
     
     def readArgs(self, args):
+        self.embedding = self.readArg(args, "embedding")
         self.stage = self.readArg(args, "stage")
     
     def getKey(self):
-        return "info-storage-{0}".format(self.stage)
+        return "info-storage-{0}-{1}".format(self.embedding, self.stage)
     
     def getDataFileName(self):
-        return "info-dynamics-{0}.txt".format(self.stage)
+        return "info-dynamics-{0}-{1}.txt".format(self.embedding, self.stage)
     
     def getLabel(self):
         return "Information storage"
@@ -640,17 +644,19 @@ class InfoStorage(AgentBasedMetric):
 class InfoTransfer(AgentBasedMetric):
     def addArgs(self, parser):
         self.addArg(parser, "source", metavar = "SOURCE")
+        self.addArg(parser, "embedding", metavar = "EMBEDDING", type = int)
         self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
     
     def readArgs(self, args):
         self.source = self.readArg(args, "source")
+        self.embedding = self.readArg(args, "embedding")
         self.stage = self.readArg(args, "stage")
     
     def getKey(self):
-        return "info-transfer-{0}-{1}".format(self.source.lower(), self.stage)
+        return "info-transfer-{0}-{1}-{2}".format(self.source.lower(), self.embedding, self.stage)
     
     def getDataFileName(self):
-        return "info-dynamics-{0}.txt".format(self.stage)
+        return "info-dynamics-{0}-{1}.txt".format(self.embedding, self.stage)
     
     def getLabel(self):
         if self.source == "Total":
