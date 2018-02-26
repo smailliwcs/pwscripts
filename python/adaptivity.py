@@ -7,13 +7,13 @@ import sys
 import utility
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--multiplier", metavar = "MULTIPLIER", type = float)
 parser.add_argument("worldfile", metavar = "WORLDFILE")
 parser.add_argument("run", metavar = "RUN")
 parser.add_argument("trials", metavar = "TRIALS", type = int)
 parser.add_argument("agents", metavar = "AGENTS", type = int)
 parser.add_argument("stage", metavar = "STAGE", choices = ("incept", "birth", "death"))
 parser.add_argument("output", metavar = "OUTPUT")
+parser.add_argument("--multiplier", metavar = "MULTIPLIER", type = float)
 args = parser.parse_args()
 assert not os.path.exists("run")
 agents = list(utility.getAgents(args.run))

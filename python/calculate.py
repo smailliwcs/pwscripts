@@ -15,8 +15,8 @@ def parseArgs(metric):
     wrapper = textwrap.TextWrapper(subsequent_indent = "  ")
     epilog = wrapper.fill("available metrics: {0}".format(", ".join(sorted(metrics_mod.metrics.iterkeys()))))
     parser = argparse.ArgumentParser(add_help = False, epilog = epilog, formatter_class = argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("run", metavar = "RUN")
     parser.add_argument("--start", metavar = "START", type = int)
+    parser.add_argument("run", metavar = "RUN")
     if metric is None:
         parser.add_argument("metric", metavar = "METRIC")
         parser.print_help()
