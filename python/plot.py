@@ -294,7 +294,7 @@ if plot.sig:
     for index in xrange(len(ax)):
         timestep = ax[index]
         sig = 1.0 - scipy.stats.ttest_rel(ays_d[index], ays_p[index])[1]
-        if numpy.isnan(sig):
+        if math.isnan(sig):
             sig = 0.0
         axy[0].append(timestep)
         axy[1].append(sig)

@@ -892,11 +892,7 @@ class SmallWorldness(AgentBasedMetric):
         for agent in utility.getAgents(self.run):
             localValue = localValues.get(agent)
             globalValue = globalValues.get(agent)
-            if localValue is None or globalValue is None:
-                value = NAN
-            else:
-                value = localValue * globalValue
-            values[agent] = value
+            values[agent] = localValue * globalValue
         return values
 
 class Strength(WeightMetric):
