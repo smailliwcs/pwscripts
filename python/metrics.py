@@ -267,6 +267,22 @@ class Activity(TimeBasedMetric):
             values[timestep] = float(activities[timestep]) / diversity
         return values
 
+class Adaptivity(AgentBasedMetric):
+    integral = True
+    
+    def getKey(self):
+        return "adaptivity"
+    
+    def getLabel(self):
+        return "Adaptivity"
+    
+    def read(self):
+        values = collections.defaultdict(list)
+        for line in self.readLines():
+            agent, value = line.split()
+            values[int(agent)].append(int(value))
+        return {agent: self.aggregate(values[agent]) for agent in utility.getAgents(self.run)}
+
 class BirthTimestep(LifespanMetric):
     def getKey(self):
         return "birth"
