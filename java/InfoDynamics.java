@@ -34,15 +34,17 @@ public class InfoDynamics {
                 int agentIndex = ensemble.getAgentIndex();
                 int[] processingNeuronIndices = ensemble.getProcessingNeuronIndices();
                 double[][] locals = new double[processingNeuronIndices.length][];
-                if (mode == null || mode.equals("S")) {
+                {
                     double sum = 0.0;
                     int count = 0;
                     for (int neuronIndex : processingNeuronIndices) {
                         sum += getStorage(ensemble, neuronIndex, locals);
                         count++;
                     }
-                    double storage = sum / count;
-                    System.out.printf("%d S %g%n", agentIndex, storage);
+                    if (mode == null || mode.equals("S")) {
+                        double storage = sum / count;
+                        System.out.printf("%d S %g%n", agentIndex, storage);
+                    }
                 }
                 if (mode == null || mode.equals("T")) {
                     double sum = 0.0;
