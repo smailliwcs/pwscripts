@@ -271,18 +271,14 @@ for run in plot.runs:
             axes1.plot(axy[0], axy[1], **kwargs)
 
 # Plot line
-lines = []
-labels = []
 if plot.args.line:
     axy = numpy.nanmean(map(lambda data: data.axy_line, driven.itervalues()), 0)
     kwargs = {"rasterized": RASTERIZE, "color": COLORS[0], "path_effects": [STROKE]}
-    lines.append(axes1.plot(axy[0], axy[1], **kwargs)[0])
-    labels.append("Driven")
+    axes1.plot(axy[0], axy[1], label = "Driven", **kwargs)
     if plot.args.passive:
         axy = numpy.nanmean(map(lambda data: data.axy_line, passive.itervalues()), 0)
         kwargs.update({"color": COLORS[1], "zorder": -1})
-        lines.append(axes1.plot(axy[0], axy[1], **kwargs)[0])
-        labels.append("Passive")
+        axes1.plot(axy[0], axy[1], label = "Passive", **kwargs)
 
 # Plot histogram
 if plot.args.hist:
@@ -303,8 +299,7 @@ if plot.args.regress:
     ax = [min(axy[0]), max(axy[0])]
     ay = map(lambda x: slope * x + intercept, ax)
     kwargs = {"rasterized": RASTERIZE, "color": COLORS[0], "path_effects": [STROKE]}
-    lines.append(axes1.plot(ax, ay, **kwargs)[0])
-    labels.append("$r = {0:.3f}$".format(correlation))
+    axes1.plot(ax, ay, label = "$r = {0:.3f}$".format(correlation), **kwargs)
 
 # Plot significance
 if plot.sig:
@@ -335,7 +330,7 @@ if plot.sig:
 else:
     axes1.set_xlabel(plot.xMetric.getLabel())
 if plot.args.regress or plot.args.passive:
-    axes1.legend(lines, labels, loc = plot.args.legend)
+    axes1.legend(loc = plot.args.legend)
 axes1.set_ylabel(plot.yMetric.getLabel())
 matplotlib.pyplot.tight_layout()
 figure.savefig("{0}-vs-{1}".format(plot.yMetric.getKey(), plot.xMetric.getKey()))
