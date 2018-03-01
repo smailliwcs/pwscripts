@@ -219,7 +219,8 @@ class Data:
             self.dy_line = plot.yMetric.toTimeBased(self.dy, tival, plot.args.tstep)
             self.axy_line = Data.zip(self.dx_line, self.dy_line)
         if plot.args.hist:
-            tival[0] = plot.args.htmin
+            if plot.args.tmin is None or plot.args.htmin > plot.args.tmin:
+                tival[0] = plot.args.htmin
             if all(map(lambda metric: isinstance(metric, metrics_mod.AgentBasedMetric), plot.metrics)):
                 self.dx_hist = plot.xMetric.getInterval(self.dx, tival)
                 self.dy_hist = plot.yMetric.getInterval(self.dy, tival)
