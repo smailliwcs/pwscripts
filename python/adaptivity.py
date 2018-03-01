@@ -19,7 +19,11 @@ assert not os.path.exists("run")
 agents = list(utility.getAgents(args.run))
 batchCount = int(math.ceil(float(len(agents)) / args.agents))
 with open(args.output, "w") as f:
-    pass
+    f.write("# trials = {0}\n".format(args.trials))
+    f.write("# agents = {0}\n".format(args.agents))
+    f.write("# stage = {0}\n".format(args.stage))
+    if args.multiplier is not None:
+        f.write("# multiplier = {0}\n".format(args.multiplier))
 for trialIndex in xrange(args.trials):
     random.shuffle(agents)
     batches = [None] * batchCount
