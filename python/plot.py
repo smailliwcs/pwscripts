@@ -74,7 +74,7 @@ class Plot(object):
         matplotlib.rcParams["axes.grid"] = True
         matplotlib.rcParams["axes.xmargin"] = 0.0
         matplotlib.rcParams["axes.ymargin"] = 0.0
-        matplotlib.rcParams["figure.figsize"] = (3.2, 2.8)
+        matplotlib.rcParams["figure.figsize"] = (3.25, 2.75)
         matplotlib.rcParams["font.family"] = "serif"
         matplotlib.rcParams["font.serif"] = ["Times"]
         matplotlib.rcParams["font.size"] = 8.0
@@ -147,7 +147,7 @@ class Plot(object):
         self.sig = self.args.passive and len(self.runs) > 1
         if self.args.tstep is None:
             if all(map(lambda metric: isinstance(metric, metrics_mod.TimeBasedMetric), self.metrics)):
-                self.args.tstep = 0
+                self.args.tstep = TSTEP / 10
             else:
                 self.args.tstep = TSTEP
 
@@ -242,7 +242,7 @@ plot = Plot()
 figure = matplotlib.pyplot.figure()
 if plot.sig:
     size = figure.get_size_inches()
-    size[1] *= 5.0 / 4.0
+    size[1] *= 4.0 / 3.0
     figure.set_size_inches(size)
     grid = matplotlib.gridspec.GridSpec(4, 1)
     axes1 = figure.add_subplot(grid[0:-1, :])
