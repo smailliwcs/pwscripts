@@ -263,22 +263,30 @@ for run in plot.runs:
     # Plot line
     if plot.args.line:
         axy = driven[run].axy_line
-        kwargs = {"rasterized": RASTERIZE, "color": COLORS[0], "alpha": ALPHA_RUNS[0], "zorder": -2}
-        axes1.plot(axy[0], axy[1], **kwargs)
+        kwargs = lambda index: {
+            "rasterized": RASTERIZE,
+            "color": COLORS[index],
+            "alpha": ALPHA_RUNS[index],
+            "zorder": -2 - index
+        }
+        axes1.plot(axy[0], axy[1], **kwargs(0))
         if plot.args.passive:
             axy = passive[run].axy_line
-            kwargs.update({"color": COLORS[1], "alpha": ALPHA_RUNS[1], "zorder": -3})
-            axes1.plot(axy[0], axy[1], **kwargs)
+            axes1.plot(axy[0], axy[1], **kwargs(1))
 
 # Plot line
 if plot.args.line:
     axy = numpy.nanmean(map(lambda data: data.axy_line, driven.itervalues()), 0)
-    kwargs = {"rasterized": RASTERIZE, "color": COLORS[0], "path_effects": [STROKE]}
-    axes1.plot(axy[0], axy[1], label = "Driven", **kwargs)
+    kwargs = lambda index: {
+        "rasterized": RASTERIZE,
+        "color": COLORS[index],
+        "path_effects": [STROKE],
+        "zorder": -index
+    }
+    axes1.plot(axy[0], axy[1], label = "Driven", **kwargs(0))
     if plot.args.passive:
         axy = numpy.nanmean(map(lambda data: data.axy_line, passive.itervalues()), 0)
-        kwargs.update({"color": COLORS[1], "zorder": -1})
-        axes1.plot(axy[0], axy[1], label = "Passive", **kwargs)
+        axes1.plot(axy[0], axy[1], label = "Passive", **kwargs(1))
 
 # Plot histogram
 if plot.args.hist:
@@ -298,8 +306,13 @@ if plot.args.regress:
     slope, intercept, correlation = scipy.stats.linregress(axy[0], axy[1])[:3]
     ax = [min(axy[0]), max(axy[0])]
     ay = map(lambda x: slope * x + intercept, ax)
-    kwargs = {"rasterized": RASTERIZE, "color": COLORS[0], "path_effects": [STROKE]}
-    axes1.plot(ax, ay, label = "$r = {0:.3f}$".format(correlation), **kwargs)
+    kwargs = {
+        "label": "$r = {0:.3f}$".format(correlation),
+        "rasterized": RASTERIZE,
+        "color": COLORS[0],
+        "path_effects": [STROKE]
+    }
+    axes1.plot(ax, ay, **kwargs)
 
 # Plot significance
 if plot.sig:
