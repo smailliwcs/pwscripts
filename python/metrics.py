@@ -281,7 +281,7 @@ class Adaptivity(AgentBasedMetric):
         for line in self.readLines():
             agent, value = line.split()
             values[int(agent)].append(int(value))
-        return {agent: self.aggregate(values[agent]) for agent in utility.getAgents(self.run)}
+        return {agent: numpy.median(values[agent]) for agent in utility.getAgents(self.run)}
 
 class BirthTimestep(LifespanMetric):
     def getKey(self):
