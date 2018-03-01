@@ -105,6 +105,7 @@ class Plot(object):
         parser = argparse.ArgumentParser(add_help = False, epilog = epilog, formatter_class = argparse.RawDescriptionHelpFormatter)
         parser.add_argument("--line", action = "store_true")
         parser.add_argument("--hist", action = "store_true")
+        parser.add_argument("--regress", action = "store_true")
         parser.add_argument("--passive", action = "store_true")
         parser.add_argument("--tmin", metavar = "TMIN", type = int)
         parser.add_argument("--tmax", metavar = "TMAX", type = int)
@@ -138,7 +139,10 @@ class Plot(object):
         if isinstance(self.xMetric, metrics_mod.AgentBasedMetric):
             assert isinstance(self.yMetric, metrics_mod.AgentBasedMetric)
         assert self.args.line or self.args.hist
+        if self.args.regress:
+            assert not self.args.line and self.args.hist
         if self.args.passive:
+            assert self.args.line
             assert isinstance(self.xMetric, metrics_mod.Timestep)
         self.sig = self.args.passive and len(self.runs) > 1
         if self.args.tstep is None:
@@ -174,7 +178,11 @@ class Data:
     def zip(dx, dy):
         result = [[], []]
         for key, x in sorted(dx.iteritems()):
+            if math.isnan(x):
+                continue
             for y in utility.iterate(dy.get(key)):
+                if math.isnan(y):
+                    continue
                 result[0].append(x)
                 result[1].append(y)
         return result
@@ -264,14 +272,17 @@ for run in plot.runs:
 
 # Plot line
 lines = []
+labels = []
 if plot.args.line:
     axy = numpy.nanmean(map(lambda data: data.axy_line, driven.itervalues()), 0)
     kwargs = {"rasterized": RASTERIZE, "color": COLORS[0], "path_effects": [STROKE]}
     lines.append(axes1.plot(axy[0], axy[1], **kwargs)[0])
+    labels.append("Driven")
     if plot.args.passive:
         axy = numpy.nanmean(map(lambda data: data.axy_line, passive.itervalues()), 0)
         kwargs.update({"color": COLORS[1], "zorder": -1})
         lines.append(axes1.plot(axy[0], axy[1], **kwargs)[0])
+        labels.append("Passive")
 
 # Plot histogram
 if plot.args.hist:
@@ -285,6 +296,15 @@ if plot.args.hist:
         colorbar.locator = ColorbarLocator()
         colorbar.formatter = ColorbarFormatter()
         colorbar.update_ticks()
+
+# Plot regression
+if plot.args.regress:
+    slope, intercept, correlation = scipy.stats.linregress(axy[0], axy[1])[:3]
+    ax = [min(axy[0]), max(axy[0])]
+    ay = map(lambda x: slope * x + intercept, ax)
+    kwargs = {"rasterized": RASTERIZE, "color": COLORS[0], "path_effects": [STROKE]}
+    lines.append(axes1.plot(ax, ay, **kwargs)[0])
+    labels.append("$r = {0:.3f}$".format(correlation))
 
 # Plot significance
 if plot.sig:
@@ -314,8 +334,8 @@ if plot.sig:
     axes2.set_yticks([0.8, 0.95, 1.0])
 else:
     axes1.set_xlabel(plot.xMetric.getLabel())
-if plot.args.passive:
-    axes1.legend(lines, ["Driven", "Passive"], loc = plot.args.legend)
+if plot.args.regress or plot.args.passive:
+    axes1.legend(lines, labels, loc = plot.args.legend)
 axes1.set_ylabel(plot.yMetric.getLabel())
 matplotlib.pyplot.tight_layout()
 figure.savefig("{0}-vs-{1}".format(plot.yMetric.getKey(), plot.xMetric.getKey()))
