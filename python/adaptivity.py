@@ -48,10 +48,7 @@ for trialIndex in xrange(args.trials):
             batch.remove(agent)
         pwargs = [
             "--InitSeed $(date +%s)",
-            "--MinAgents 0",
-            "--MaxAgents {0}".format(len(batch)),
-            "--InitAgents MaxAgents",
-            "--SeedAgents MaxAgents",
+            "--InitAgents {0}".format(len(batch)),
             "--AdaptivityMode True",
             "--SeedGenomeFromRun True",
             "--SeedSynapsesFromRun True",
