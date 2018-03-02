@@ -27,11 +27,11 @@ with open(args.output, "w") as f:
 for trialIndex in xrange(args.trials):
     random.shuffle(agents)
     batches = [None] * batchCount
-    end = -1
+    start = 0
     for batchIndex in xrange(batchCount):
-        start = end + 1
-        end = int((batchIndex + 1) * float(len(agents)) / batchCount)
-        batches[batchIndex] = agents[start:end + 1]
+        end = int(math.floor((batchIndex + 1) * float(len(agents)) / batchCount))
+        batches[batchIndex] = agents[start:end]
+        start = end
     for batch in batches:
         missing = []
         with open("genomeSeeds.txt", "w") as g, open("synapseSeeds.txt", "w") as s:
