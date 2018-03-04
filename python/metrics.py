@@ -486,7 +486,7 @@ class FoodConsumption(TimeBasedMetric):
         return "{0} consumption".format(self.type)
     
     def read(self):
-        values = collections.defaultdict(float)
+        values = dict.fromkeys(xrange(1, utility.getFinalTimestep(self.run) + 1), 0.0)
         path = os.path.join(self.run, "energy", "consumption.txt")
         for row in utility.getDataTable(path, "FoodConsumption").rows():
             if row["FoodType"] == self.type:
