@@ -13,14 +13,14 @@ import textwrap
 import utility
 
 TSTEP = 200
-COLORS = [
+COLOR = [
     matplotlib.cm.Blues(0.9),
     matplotlib.cm.Oranges(0.45)
 ]
 CMAP_NAME = "YlGnBu"
 CMAP = matplotlib.cm.get_cmap(CMAP_NAME)
 CMAP.set_bad("1.0")
-ALPHA_RUNS = [0.1, 0.2]
+ALPHA_RUN = [0.1, 0.2]
 ALPHA_HIST = 0.5
 BIN_COUNT = 100
 OFFSET_HIST = 0.1
@@ -265,8 +265,8 @@ for run in plot.runs:
         axy = driven[run].axy_line
         kwargs = lambda index: {
             "rasterized": RASTERIZE,
-            "color": COLORS[index],
-            "alpha": ALPHA_RUNS[index],
+            "color": COLOR[index],
+            "alpha": ALPHA_RUN[index],
             "zorder": -2 - index
         }
         axes1.plot(axy[0], axy[1], **kwargs(0))
@@ -279,7 +279,7 @@ if plot.args.line:
     axy = numpy.nanmean(map(lambda data: data.axy_line, driven.itervalues()), 0)
     kwargs = lambda index: {
         "rasterized": RASTERIZE,
-        "color": COLORS[index],
+        "color": COLOR[index],
         "path_effects": [STROKE],
         "zorder": -index
     }
@@ -309,7 +309,7 @@ if plot.args.regress:
     kwargs = {
         "label": "$r = {0:.3f}$".format(correlation),
         "rasterized": RASTERIZE,
-        "color": COLORS[0],
+        "color": COLOR[0],
         "path_effects": [STROKE]
     }
     axes1.plot(ax, ay, **kwargs)
@@ -327,7 +327,7 @@ if plot.sig:
             sig = 0.0
         axy[0].append(timestep)
         axy[1].append(sig)
-    axes2.plot(axy[0], axy[1], rasterized = RASTERIZE, color = COLORS[0])
+    axes2.plot(axy[0], axy[1], rasterized = RASTERIZE, color = COLOR[0])
 
 # Post-configure plot
 plot.xMetric.formatAxis(axes1.xaxis)
