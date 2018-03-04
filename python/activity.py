@@ -47,7 +47,7 @@ events = collections.defaultdict(list)
 for event in utility.Event.read(args.run):
     events[event.timestep].append(event)
 with getFile(args.run, "diversity.txt") as d, getFile(args.run, "activity.txt.gz") as a:
-    for timestep in xrange(1, utility.getFinalTimestep(args.run) + 1):
+    for timestep in xrange(utility.getFinalTimestep(args.run) + 1):
         if timestep % 100 == 0:
             sys.stderr.write("{0}\n".format(timestep))
         for event in events[timestep]:
