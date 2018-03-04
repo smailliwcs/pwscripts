@@ -12,7 +12,7 @@ import sys
 import textwrap
 import utility
 
-TSTEP = 200
+TSTEP = 250
 COLOR = [
     matplotlib.cm.Blues(0.9),
     matplotlib.cm.Oranges(0.45)
