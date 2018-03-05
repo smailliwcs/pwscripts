@@ -1,10 +1,34 @@
 import argparse
+import collections
 import math
 import os
 import random
 import shutil
 import sys
 import utility
+
+def getSurvival():
+    values = {}
+    path = os.path.join("run", "lifespans.txt")
+    for row in utility.getDataTable(path, "LifeSpans").rows():
+        values[row["Agent"]] = row["DeathStep"] - row["BirthStep"]
+    return values
+
+def getForaging():
+    values = collections.defaultdict(float)
+    path = os.path.join("run", "energy", "consumption.txt")
+    for row in utility.getDataTable(path, "FoodConsumption").rows():
+        values[row["Agent"]] += row["Energy"]
+    return values
+
+def getReproductive():
+    values = collections.defaultdict(int)
+    path = os.path.join("run", "events", "contacts.log")
+    for row in utility.getDataTable(path, "Contacts").rows():
+        if "M" in row["Events"] and "o" in row["Events"]:
+            values[row["Agent1"]] += 1
+            values[row["Agent2"]] += 1
+    return values
 
 parser = argparse.ArgumentParser()
 parser.add_argument("worldfile", metavar = "WORLDFILE")
@@ -53,16 +77,20 @@ for trialIndex in xrange(args.trials):
             "--SeedGenomeFromRun True",
             "--SeedSynapsesFromRun True",
             "--FreezeSeededSynapses True",
+            "--RecordContacts True",
+            "--RecordFoodConsumption True"
         ]
         if args.multiplier is not None:
             pwargs.append("--AgeEnergyMultiplier {0}".format(args.multiplier))
         pwargs.append("\"{0}\"".format(args.worldfile))
         os.system("./Polyworld {0}".format(" ".join(pwargs)))
         assert os.path.exists(os.path.join("run", "endStep.txt"))
-        lifespans = os.path.join("run", "lifespans.txt")
+        survival = getSurvival()
+        foraging = getForaging()
+        reproductive = getReproductive()
         with open(args.output, "a") as f:
-            for row in utility.getDataTable(lifespans, "LifeSpans").rows():
-                f.write("{0} {1}\n".format(batch[row["Agent"] - 1], row["DeathStep"] - row["BirthStep"]))
+            for agent in xrange(1, len(batch) + 1):
+                f.write("{0} {1} {2} {3}\n".format(batch[agent - 1], survival[agent], foraging[agent], reproductive[agent]))
         shutil.rmtree("run")
 os.remove("genomeSeeds.txt")
 os.remove("synapseSeeds.txt")
