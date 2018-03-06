@@ -71,14 +71,32 @@ for trialIndex in xrange(args.trials):
         for agent in missing:
             batch.remove(agent)
         pwargs = [
+            "--AdaptivityMode True",
             "--InitSeed $(date +%s)",
             "--InitAgents {0}".format(len(batch)),
-            "--AdaptivityMode True",
             "--SeedGenomeFromRun True",
             "--SeedSynapsesFromRun True",
             "--FreezeSeededSynapses True",
+            "--RecordAdamiComplexity False",
+            "--RecordAgentEnergy False",
+            "--RecordBarrierPosition False",
+            "--RecordBirthsDeaths False",
+            "--RecordBrainAnatomy False",
+            "--RecordBrainFunction False",
+            "--RecordCarry False",
+            "--RecordCollisions False",
+            "--RecordComplexity False",
             "--RecordContacts True",
-            "--RecordFoodConsumption True"
+            "--RecordEnergy False",
+            "--RecordFoodConsumption True",
+            "--RecordFoodEnergy False",
+            "--RecordGeneStats False",
+            "--RecordGenomes False",
+            "--RecordGitRevision False",
+            "--RecordPopulation False",
+            "--RecordPosition False",
+            "--RecordSeparations False",
+            "--RecordSynapses False"
         ]
         if args.multiplier is not None:
             pwargs.append("--AgeEnergyMultiplier {0}".format(args.multiplier))
