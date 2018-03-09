@@ -268,19 +268,43 @@ class Activity(TimeBasedMetric):
         return values
 
 class Adaptivity(AgentBasedMetric):
-    integral = True
+    class Type(utility.Enum):
+        SURVIVAL = "survival"
+        FORAGING = "foraging"
+        REPRODUCTIVE = "reproductive"
+    
+    def addArgs(self, parser):
+        self.addArg(parser, "type", metavar = "TYPE", choices = tuple(Adaptivity.Type.getValues()))
+        self.addArg(parser, "condition", metavar = "CONDITION")
+    
+    def readArgs(self, args):
+        self.type = self.readArg(args, "type")
+        self.condition = self.readArg(args, "condition")
+        self.integral = self.type != Adaptivity.Type.FORAGING
     
     def getKey(self):
-        return "adaptivity"
+        return "adaptivity-{0}-{1}".format(self.type, self.condition)
+    
+    def getDataFileName(self):
+        return "adaptivity-{0}.txt".format(self.condition)
     
     def getLabel(self):
-        return "Adaptivity"
+        return "{0} adaptivity".format(self.type.title())
     
     def read(self):
         values = collections.defaultdict(list)
         for line in self.readLines():
-            agent, value = line.split()
-            values[int(agent)].append(int(value))
+            chunks = line.split()
+            agent = int(chunks[0])
+            if self.type == Adaptivity.Type.SURVIVAL:
+                value = int(chunks[1])
+            elif self.type == Adaptivity.Type.FORAGING:
+                value = float(chunks[2])
+            elif self.type == Adaptivity.Type.REPRODUCTIVE:
+                value = int(chunks[3])
+            else:
+                assert False
+            values[agent].append(value)
         return {agent: numpy.median(values[agent]) for agent in utility.getAgents(self.run)}
 
 class BirthTimestep(LifespanMetric):
