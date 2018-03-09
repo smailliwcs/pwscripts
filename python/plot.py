@@ -5,6 +5,7 @@ import matplotlib
 import matplotlib.gridspec
 import matplotlib.patheffects
 import matplotlib.pyplot
+import matplotlib.texmanager
 import metrics as metrics_mod
 import numpy
 import scipy.stats
@@ -26,6 +27,13 @@ BIN_COUNT = 100
 OFFSET_HIST = 0.1
 STROKE = matplotlib.patheffects.withStroke(linewidth = 3.0, foreground = "1.0")
 RASTERIZE = False
+
+class BareTexManager(matplotlib.texmanager.TexManager):
+    def __init__(self):
+        super(BareTexManager, self).__init__()
+        self._font_preamble = ""
+
+matplotlib.texmanager.TexManager = BareTexManager
 
 class HistNorm(matplotlib.colors.LogNorm):
     def __init__(self, offset = OFFSET_HIST, vmin = None, vmax = None, clip = True):
