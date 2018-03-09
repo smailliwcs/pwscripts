@@ -116,6 +116,7 @@ class Plot(object):
         parser.add_argument("--ymax", metavar = "YMAX", type = float)
         parser.add_argument("--hmax", metavar = "HMAX", type = float)
         parser.add_argument("--htmin", metavar = "HTMIN", type = int, default = 1)
+        parser.add_argument("--bins", metavar = "BINS", type = int, default = BIN_COUNT)
         parser.add_argument("--legend", metavar = "LOC", default = "upper left")
         parser.add_argument("runs", metavar = "RUNS")
         if len(metrics) != 2:
@@ -197,7 +198,7 @@ class Data:
         return result
     
     @staticmethod
-    def bin(metric, ax, xmin, xmax):
+    def bin(metric, ax, xmin, xmax, count):
         bins = metric.getBins()
         if bins is not None:
             return bins
@@ -205,7 +206,6 @@ class Data:
             xmin = min(ax)
         if xmax is None:
             xmax = max(ax)
-        count = BIN_COUNT
         if metric.integral:
             xrng = float(xmax - xmin)
             if count > xrng:
@@ -291,8 +291,8 @@ if plot.args.line:
 # Plot histogram
 if plot.args.hist:
     axy = Data.flatten(map(lambda data: data.axy_hist, driven.itervalues()))
-    xbins = Data.bin(plot.xMetric, axy[0], plot.args.xmin, plot.args.xmax)
-    ybins = Data.bin(plot.yMetric, axy[1], plot.args.ymin, plot.args.ymax)
+    xbins = Data.bin(plot.xMetric, axy[0], plot.args.xmin, plot.args.xmax, plot.args.bins)
+    ybins = Data.bin(plot.yMetric, axy[1], plot.args.ymin, plot.args.ymax, plot.args.bins)
     alpha = ALPHA_HIST if plot.args.line else 1.0
     image = axes1.hist2d(axy[0], axy[1], bins = [xbins, ybins], norm = HistNorm(vmax = plot.args.hmax), alpha = alpha, zorder = -4)[3]
     if not plot.sig:
