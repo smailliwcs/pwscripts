@@ -562,7 +562,7 @@ class FoodEnergy(TimeBasedMetric):
         return "{0}-energy".format(self.type.lower())
     
     def getLabel(self):
-        return "{0} energy".format(self.type)
+        return r"{0} energy ($\times 10^3$)".format(self.type)
     
     def read(self):
         values = {}
@@ -570,6 +570,9 @@ class FoodEnergy(TimeBasedMetric):
         for row in utility.getDataTable(path, "FoodEnergy").rows():
             values[row["Timestep"]] = row[self.type]
         return values
+    
+    def formatAxis(self, axis):
+        axis.set_major_formatter(THOUSANDS)
 
 class Gene(AgentBasedMetric):
     integral = True
