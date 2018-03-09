@@ -3,7 +3,7 @@ import collections
 import graph as graph_mod
 import gzip
 import math
-import matplotlib
+import matplotlib.ticker
 import numpy
 import os
 import sys
