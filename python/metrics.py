@@ -46,6 +46,7 @@ class Metric(object):
     
     def initialize(self, run, passive = False, args = None, start = None):
         self.run = utility.getRun(run, passive)
+        self.passive = passive
         if args is not None:
             self.readArgs(args)
         self.start = start
@@ -313,6 +314,23 @@ class Adaptivity(AgentBasedMetric):
                 assert False
             values[agent].append(value)
         return {agent: numpy.median(values[agent]) for agent in utility.getAgents(self.run)}
+
+class BirthCount(TimeBasedMetric):
+    integral = True
+    
+    def getKey(self):
+        return "birth-count"
+    
+    def getLabel(self):
+        return "Birth count"
+    
+    def read(self):
+        values = dict.fromkeys(xrange(1, utility.getFinalTimestep(self.run) + 1), 0)
+        eventType = utility.EventType.VIRTUAL if self.passive else utility.EventType.BIRTH
+        for event in utility.Event.read(self.run):
+            if event.eventType == eventType:
+                values[event.timestep] += 1
+        return values
 
 class BirthTimestep(LifespanMetric):
     def getKey(self):
