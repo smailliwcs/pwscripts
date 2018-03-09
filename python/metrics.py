@@ -519,13 +519,22 @@ class FoodConsumption(TimeBasedMetric):
     def getLabel(self):
         return "{0} consumption".format(self.getType())
     
-    def read(self):
-        values = dict.fromkeys(xrange(1, utility.getFinalTimestep(self.run) + 1), 0.0)
+    def calculate(self):
+        timestep = 1
+        value = 0.0
         path = os.path.join(self.run, "energy", "consumption.txt")
         for row in utility.getDataTable(path, "FoodConsumption").rows():
+            while row["Timestep"] > timestep:
+                yield timestep, value
+                timestep += 1
+                value = 0.0
             if self.type is None or row["FoodType"] == self.type:
-                values[row["Timestep"]] += row["EnergyRaw"]
-        return values
+                value += row["EnergyRaw"]
+        yield timestep, value
+        end = utility.getFinalTimestep(self.run)
+        while timestep < end:
+            timestep += 1
+            yield timestep, 0.0
 
 class FoodConsumptionRate(AgentBasedMetric):
     def addArgs(self, parser):
