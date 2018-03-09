@@ -10,6 +10,7 @@ import sys
 import utility
 
 NAN = float("nan")
+THOUSANDS = matplotlib.ticker.FuncFormatter(lambda tick, position: format(tick / 1e3, "g"))
 
 def getBin(timestep, tstep):
     index = timestep / tstep
@@ -990,7 +991,10 @@ class Timestep(TimeBasedMetric):
         return "time"
     
     def getLabel(self):
-        return "Timestep"
+        if self.thousands:
+            return r"Timestep ($\times 10^3$)"
+        else:
+            return "Timestep"
     
     def read(self):
         values = {}
@@ -1000,6 +1004,11 @@ class Timestep(TimeBasedMetric):
     
     def aggregate(self, values):
         return max(values)
+    
+    def formatAxis(self, axis):
+        self.thousands = axis.get_view_interval()[1] >= 1000
+        if self.thousands:
+            axis.set_major_formatter(THOUSANDS)
 
 class Weight(WeightMetric):
     def getKey(self):

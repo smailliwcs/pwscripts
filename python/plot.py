@@ -321,10 +321,10 @@ if plot.sig:
     axes2.plot(axy[0], axy[1], rasterized = RASTERIZE, color = COLOR[0])
 
 # Post-configure plot
-plot.xMetric.formatAxis(axes1.xaxis)
-plot.yMetric.formatAxis(axes1.yaxis)
 axes1.set_xlim(plot.args.xmin, plot.args.xmax)
 axes1.set_ylim(plot.args.ymin, plot.args.ymax)
+plot.xMetric.formatAxis(axes1.xaxis)
+plot.yMetric.formatAxis(axes1.yaxis)
 if plot.sig:
     axes1.tick_params(labelbottom = False)
     axes2.set_xlabel(plot.xMetric.getLabel())
