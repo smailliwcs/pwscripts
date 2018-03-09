@@ -109,6 +109,7 @@ class Plot(object):
         parser.add_argument("--htmin", metavar = "HTMIN", type = int, default = 1)
         parser.add_argument("--bins", metavar = "BINS", type = int, default = BIN_COUNT)
         parser.add_argument("--legend", metavar = "LOC", default = "upper left")
+        parser.add_argument("--simplify", metavar = "THRESHOLD", type = float, default = 0.1)
         parser.add_argument("runs", metavar = "RUNS")
         if len(metrics) != 2:
             parser.add_argument("xmetric", metavar = "XMETRIC")
@@ -123,6 +124,7 @@ class Plot(object):
     def __init__(self):
         self.metrics = Plot.getMetrics()
         self.args = Plot.parseArgs(self.metrics)
+        matplotlib.rc("path", simplify_threshold = self.args.simplify)
         self.runs = list(utility.getRuns(self.args.runs))
         assert len(self.runs) > 0
         self.xMetric = self.metrics[0]
