@@ -505,37 +505,43 @@ class Expansion(AgentBasedMetric):
 
 class FoodConsumption(TimeBasedMetric):
     def addArgs(self, parser):
-        self.addArg(parser, "type", metavar = "TYPE")
+        self.addArg(parser, "type", metavar = "TYPE", nargs = "?")
     
     def readArgs(self, args):
         self.type = self.readArg(args, "type")
     
+    def getType(self):
+        return "Food" if self.type is None else self.type
+    
     def getKey(self):
-        return "{0}-consumption".format(self.type.lower())
+        return "{0}-consumption".format(self.getType().lower())
     
     def getLabel(self):
-        return "{0} consumption".format(self.type)
+        return "{0} consumption".format(self.getType())
     
     def read(self):
         values = dict.fromkeys(xrange(1, utility.getFinalTimestep(self.run) + 1), 0.0)
         path = os.path.join(self.run, "energy", "consumption.txt")
         for row in utility.getDataTable(path, "FoodConsumption").rows():
-            if row["FoodType"] == self.type:
+            if self.type is None or row["FoodType"] == self.type:
                 values[row["Timestep"]] += row["EnergyRaw"]
         return values
 
 class FoodConsumptionRate(AgentBasedMetric):
     def addArgs(self, parser):
-        self.addArg(parser, "type", metavar = "TYPE")
+        self.addArg(parser, "type", metavar = "TYPE", nargs = "?")
     
     def readArgs(self, args):
         self.type = self.readArg(args, "type")
     
+    def getType(self):
+        return "Food" if self.type is None else self.type
+    
     def getKey(self):
-        return "{0}-consumption-rate".format(self.type.lower())
+        return "{0}-consumption-rate".format(self.getType().lower())
     
     def getLabel(self):
-        return "{0} consumption rate".format(self.type)
+        return "{0} consumption rate".format(self.getType())
     
     def getLifespans(self):
         metric = Lifespan()
@@ -546,29 +552,34 @@ class FoodConsumptionRate(AgentBasedMetric):
         values = collections.defaultdict(float)
         path = os.path.join(self.run, "energy", "consumption.txt")
         for row in utility.getDataTable(path, "FoodConsumption").rows():
-            if row["FoodType"] == self.type:
+            if self.type is None or row["FoodType"] == self.type:
                 values[row["Agent"]] += row["EnergyRaw"]
         for agent, lifespan in self.getLifespans().iteritems():
             yield agent, float(values[agent]) / lifespan if lifespan > 0 else 0.0
 
 class FoodEnergy(TimeBasedMetric):
     def addArgs(self, parser):
-        self.addArg(parser, "type", metavar = "TYPE")
+        self.addArg(parser, "type", metavar = "TYPE", nargs = "?")
     
     def readArgs(self, args):
         self.type = self.readArg(args, "type")
     
+    def getType(self):
+        return "Food" if self.type is None else self.type
+    
     def getKey(self):
-        return "{0}-energy".format(self.type.lower())
+        return "{0}-energy".format(self.getType().lower())
     
     def getLabel(self):
-        return r"{0} energy ($\times 10^3$)".format(self.type)
+        return r"{0} energy ($\times 10^3$)".format(self.getType())
     
     def read(self):
         values = {}
         path = os.path.join(self.run, "energy", "food.txt")
+        table = utility.getDataTable(path, "FoodEnergy")
+        columnName = table.columns()[1].name if self.type is None else self.type
         for row in utility.getDataTable(path, "FoodEnergy").rows():
-            values[row["Timestep"]] = row[self.type]
+            values[row["Timestep"]] = row[columnName]
         return values
     
     def formatAxis(self, axis):
