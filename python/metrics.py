@@ -275,7 +275,7 @@ class Adaptivity(AgentBasedMetric):
     
     def addArgs(self, parser):
         self.addArg(parser, "type", metavar = "TYPE", choices = tuple(Adaptivity.Type.getValues()))
-        self.addArg(parser, "condition", metavar = "CONDITION")
+        self.addArg(parser, "condition", metavar = "CONDITION", nargs = "?")
     
     def readArgs(self, args):
         self.type = self.readArg(args, "type")
@@ -283,10 +283,16 @@ class Adaptivity(AgentBasedMetric):
         self.integral = self.type != Adaptivity.Type.FORAGING
     
     def getKey(self):
-        return "adaptivity-{0}-{1}".format(self.type, self.condition)
+        if self.condition is None:
+            return "adaptivity-{0}".format(self.type)
+        else:
+            return "adaptivity-{0}-{1}".format(self.type, self.condition)
     
     def getDataFileName(self):
-        return "adaptivity-{0}.txt".format(self.condition)
+        if self.condition is None:
+            return "adaptivity.txt"
+        else:
+            return "adaptivity-{0}.txt".format(self.condition)
     
     def getLabel(self):
         return "{0} adaptivity".format(self.type.title())
