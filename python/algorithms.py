@@ -55,6 +55,7 @@ class Efficiency(object):
 
 # https://arxiv.org/abs/0803.0476
 class Modularity(object):
+    NAN = float("nan")
     DQ_MIN = 1e-6
     
     class State(object):
@@ -133,7 +134,7 @@ class Modularity(object):
     def calculate(W):
         state = Modularity.State(Modularity.clean(W))
         if state.N <= 1 or state.S == 0.0:
-            return 0.0
+            return Modularity.NAN
         Q_prev = 0.0
         while True:
             while True:
