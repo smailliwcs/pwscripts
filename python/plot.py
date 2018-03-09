@@ -129,8 +129,8 @@ class Plot(object):
         assert len(self.runs) > 0
         self.xMetric = self.metrics[0]
         self.yMetric = self.metrics[1]
-        if isinstance(self.xMetric, metrics_mod.AgentBasedMetric):
-            assert isinstance(self.yMetric, metrics_mod.AgentBasedMetric)
+        if self.isXAgent():
+            assert self.isYAgent()
         assert self.args.line or self.args.hist
         if self.args.regress:
             assert not self.args.line and self.args.hist
@@ -139,10 +139,16 @@ class Plot(object):
             assert isinstance(self.xMetric, metrics_mod.Timestep)
         self.sig = self.args.passive and len(self.runs) > 1
         if self.args.tstep is None:
-            if all(map(lambda metric: isinstance(metric, metrics_mod.TimeBasedMetric), self.metrics)):
-                self.args.tstep = 0
-            else:
+            if self.isXAgent() or self.isYAgent():
                 self.args.tstep = TSTEP
+            else:
+                self.args.tstep = 0
+    
+    def isXAgent(self):
+        return isinstance(self.xMetric, metrics_mod.AgentBasedMetric)
+    
+    def isYAgent(self):
+        return isinstance(self.yMetric, metrics_mod.AgentBasedMetric)
 
 class Data:
     @staticmethod
@@ -221,7 +227,7 @@ class Data:
         if plot.args.hist:
             if plot.args.tmin is None or plot.args.htmin > plot.args.tmin:
                 tival[0] = plot.args.htmin
-            if all(map(lambda metric: isinstance(metric, metrics_mod.AgentBasedMetric), plot.metrics)):
+            if plot.isXAgent() and plot.isYAgent():
                 self.dx_hist = plot.xMetric.getInterval(self.dx, tival)
                 self.dy_hist = plot.yMetric.getInterval(self.dy, tival)
             else:
