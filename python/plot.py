@@ -2,10 +2,14 @@ import argparse
 import itertools
 import math
 import matplotlib
+import matplotlib.backends.backend_pdf
+import matplotlib.cm
+import matplotlib.colors
+import matplotlib.figure
 import matplotlib.gridspec
 import matplotlib.patheffects
-import matplotlib.pyplot
 import matplotlib.texmanager
+import matplotlib.ticker
 import metrics as metrics_mod
 import numpy
 import scipy.stats
@@ -21,6 +25,7 @@ COLOR = [
 CMAP_NAME = "YlGnBu"
 CMAP = matplotlib.cm.get_cmap(CMAP_NAME)
 CMAP.set_bad("1.0")
+matplotlib.rc("image", cmap = CMAP_NAME)
 ALPHA_RUN = [0.1, 0.2]
 ALPHA_HIST = 0.5
 BIN_COUNT = 100
@@ -76,28 +81,6 @@ class ColorbarFormatter(matplotlib.ticker.Formatter):
 
 class Plot(object):
     @staticmethod
-    def configure():
-        matplotlib.rcParams["axes.autolimit_mode"] = "round_numbers"
-        matplotlib.rcParams["axes.axisbelow"] = False
-        matplotlib.rcParams["axes.grid"] = True
-        matplotlib.rcParams["axes.xmargin"] = 0.0
-        matplotlib.rcParams["axes.ymargin"] = 0.0
-        matplotlib.rcParams["figure.figsize"] = (3.25, 2.75)
-        matplotlib.rcParams["font.family"] = "serif"
-        matplotlib.rcParams["font.serif"] = ["Times"]
-        matplotlib.rcParams["font.size"] = 8.0
-        matplotlib.rcParams["grid.alpha"] = 0.1
-        matplotlib.rcParams["grid.color"] = "0.0"
-        matplotlib.rcParams["image.cmap"] = CMAP_NAME
-        matplotlib.rcParams["legend.edgecolor"] = "inherit"
-        matplotlib.rcParams["legend.fancybox"] = False
-        matplotlib.rcParams["legend.fontsize"] = 6.0
-        matplotlib.rcParams["legend.framealpha"] = None
-        matplotlib.rcParams["savefig.dpi"] = 300
-        matplotlib.rcParams["savefig.format"] = "pdf"
-        matplotlib.rcParams["text.usetex"] = True
-    
-    @staticmethod
     def getMetrics():
         metrics = []
         for arg in sys.argv:
@@ -138,7 +121,6 @@ class Plot(object):
         return parser.parse_args()
     
     def __init__(self):
-        Plot.configure()
         self.metrics = Plot.getMetrics()
         self.args = Plot.parseArgs(self.metrics)
         self.runs = list(utility.getRuns(self.args.runs))
@@ -156,7 +138,7 @@ class Plot(object):
         self.sig = self.args.passive and len(self.runs) > 1
         if self.args.tstep is None:
             if all(map(lambda metric: isinstance(metric, metrics_mod.TimeBasedMetric), self.metrics)):
-                self.args.tstep = TSTEP / 10
+                self.args.tstep = 0
             else:
                 self.args.tstep = TSTEP
 
@@ -247,7 +229,8 @@ class Data:
 
 # Pre-configure plot
 plot = Plot()
-figure = matplotlib.pyplot.figure()
+figure = matplotlib.figure.Figure()
+matplotlib.backends.backend_pdf.FigureCanvasPdf(figure)
 if plot.sig:
     size = figure.get_size_inches()
     size[1] *= 4.0 / 3.0
@@ -353,5 +336,4 @@ else:
 if plot.args.regress or plot.args.passive:
     axes1.legend(loc = plot.args.legend)
 axes1.set_ylabel(plot.yMetric.getLabel())
-matplotlib.pyplot.tight_layout()
 figure.savefig("{0}-vs-{1}".format(plot.yMetric.getKey(), plot.xMetric.getKey()))
