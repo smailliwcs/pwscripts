@@ -13,7 +13,6 @@ legend.edgecolor: inherit
 legend.fancybox: False
 legend.fontsize: 6
 legend.framealpha: None
-path.simplify_threshold: 1
 savefig.bbox: tight
 savefig.dpi: 300
 text.latex.preamble: \usepackage[T1]{fontenc},\usepackage{newtxtext},\usepackage[varqu]{inconsolata},\usepackage{newtxmath}
