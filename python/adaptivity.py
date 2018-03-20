@@ -5,6 +5,7 @@ import os
 import random
 import shutil
 import sys
+import time
 import utility
 
 def getSurvival():
@@ -102,7 +103,11 @@ for trialIndex in xrange(args.trials):
             pwargs.append("--AgeEnergyMultiplier {0}".format(args.multiplier))
         pwargs.append("\"{0}\"".format(args.worldfile))
         os.system("./Polyworld {0}".format(" ".join(pwargs)))
-        assert os.path.exists(os.path.join("run", "endStep.txt"))
+        for retry in xrange(10):
+            if os.path.exists(os.path.join("run", "endStep.txt")):
+                break
+            else:
+                time.sleep(1.0)
         survival = getSurvival()
         foraging = getForaging()
         reproductive = getReproductive()
@@ -110,5 +115,10 @@ for trialIndex in xrange(args.trials):
             for agent in xrange(1, len(batch) + 1):
                 f.write("{0} {1} {2} {3}\n".format(batch[agent - 1], survival[agent], foraging[agent], reproductive[agent]))
         shutil.rmtree("run")
+        for retry in xrange(10):
+            if os.path.exists("run"):
+                time.sleep(1.0)
+            else:
+                break
 os.remove("genomeSeeds.txt")
 os.remove("synapseSeeds.txt")
