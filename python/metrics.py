@@ -407,9 +407,11 @@ class DeathTimestep(LifespanMetric):
 
 class Degree(AgentBasedMetric):
     def addArgs(self, parser):
+        self.addArg(parser, "stage", metavar = "STAGE", nargs = "?", choices = tuple(Stage.getValues()), default = Stage.BIRTH)
         self.addArg(parser, "graph-type", metavar = "GRAPH_TYPE", choices = tuple(graph_mod.GraphType.getNonInputValues()))
     
     def readArgs(self, args):
+        self.stage = self.readArg(args, "stage")
         self.graphType = self.readArg(args, "graph-type")
     
     def getKey(self):
@@ -420,15 +422,17 @@ class Degree(AgentBasedMetric):
     
     def calculate(self):
         for agent in utility.getAgents(self.run, self.start):
-            graph = graph_mod.Graph.read(self.run, agent, Stage.INCEPT, self.graphType)
+            graph = graph_mod.Graph.read(self.run, agent, self.stage, self.graphType)
             value = 2.0 * graph.getLinkCount() / graph.size if graph.size > 0 else 0.0
             yield agent, value
 
 class Density(AgentBasedMetric):
     def addArgs(self, parser):
+        self.addArg(parser, "stage", metavar = "STAGE", nargs = "?", choices = tuple(Stage.getValues()), default = Stage.BIRTH)
         self.addArg(parser, "graph-type", metavar = "GRAPH_TYPE", choices = tuple(graph_mod.GraphType.getNonInputValues()))
     
     def readArgs(self, args):
+        self.stage = self.readArg(args, "stage")
         self.graphType = self.readArg(args, "graph-type")
     
     def getKey(self):
@@ -439,7 +443,7 @@ class Density(AgentBasedMetric):
     
     def calculate(self):
         for agent in utility.getAgents(self.run, self.start):
-            graph = graph_mod.Graph.read(self.run, agent, Stage.INCEPT, self.graphType)
+            graph = graph_mod.Graph.read(self.run, agent, self.stage, self.graphType)
             if self.graphType == graph_mod.GraphType.ALL:
                 countMax = graph.size * (graph.size - graph.nodeTypes.count(graph_mod.NodeType.INPUT) - 1)
             else:
@@ -777,6 +781,12 @@ class Integration(AgentBasedMetric):
         return values
 
 class LearningRate(AgentBasedMetric):
+    def addArgs(self, parser):
+        self.addArg(parser, "stage", metavar = "STAGE", nargs = "?", choices = tuple(Stage.getValues()), default = Stage.BIRTH)
+    
+    def readArgs(self, args):
+        self.stage = self.readArg(args, "stage")
+    
     def getKey(self):
         return "learning-rate"
     
@@ -785,7 +795,7 @@ class LearningRate(AgentBasedMetric):
     
     def calculate(self):
         for agent in utility.getAgents(self.run, self.start):
-            path = os.path.join(self.run, "brain", "synapses", "synapses_{0}_{1}.txt.gz".format(agent, Stage.INCEPT))
+            path = os.path.join(self.run, "brain", "synapses", "synapses_{0}_{1}.txt.gz".format(agent, self.stage))
             with gzip.open(path) as f:
                 f.readline()
                 values = []
@@ -835,9 +845,11 @@ class NeuronCount(AgentBasedMetric):
     integral = True
     
     def addArgs(self, parser):
+        self.addArg(parser, "stage", metavar = "STAGE", nargs = "?", choices = tuple(Stage.getValues()), default = Stage.BIRTH)
         self.addArg(parser, "graph-type", metavar = "GRAPH_TYPE", choices = tuple(graph_mod.GraphType.getValues()))
     
     def readArgs(self, args):
+        self.stage = self.readArg(args, "stage")
         self.graphType = self.readArg(args, "graph-type")
     
     def getKey(self):
@@ -851,7 +863,7 @@ class NeuronCount(AgentBasedMetric):
     
     def calculate(self):
         for agent in utility.getAgents(self.run, self.start):
-            graph = graph_mod.Graph.read(self.run, agent, Stage.INCEPT, self.graphType)
+            graph = graph_mod.Graph.read(self.run, agent, self.stage, self.graphType)
             if graph is None:
                 yield agent, NAN
                 continue
@@ -995,9 +1007,11 @@ class SynapseCount(AgentBasedMetric):
     integral = True
     
     def addArgs(self, parser):
+        self.addArg(parser, "stage", metavar = "STAGE", nargs = "?", choices = tuple(Stage.getValues()), default = Stage.BIRTH)
         self.addArg(parser, "graph-type", metavar = "GRAPH_TYPE", choices = tuple(graph_mod.GraphType.getValues()))
     
     def readArgs(self, args):
+        self.stage = self.readArg(args, "stage")
         self.graphType = self.readArg(args, "graph-type")
     
     def getKey(self):
@@ -1008,7 +1022,7 @@ class SynapseCount(AgentBasedMetric):
     
     def calculate(self):
         for agent in utility.getAgents(self.run, self.start):
-            graph = graph_mod.Graph.read(self.run, agent, Stage.INCEPT, self.graphType)
+            graph = graph_mod.Graph.read(self.run, agent, self.stage, self.graphType)
             if graph is None:
                 yield agent, NAN
                 continue
