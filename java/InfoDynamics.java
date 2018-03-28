@@ -17,11 +17,8 @@ public class InfoDynamics {
         transferCalculator = new ConditionalMutualInfoCalculatorMultiVariateKraskov1();
         if (gpu) {
             String useGpu = Boolean.TRUE.toString();
-            String gpuLibraryPath = System.getenv("JIDT_GPU_LIBRARY_PATH");
             storageCalculator.setProperty(MutualInfoCalculatorMultiVariateKraskov.PROP_USE_GPU, useGpu);
-            storageCalculator.setProperty(MutualInfoCalculatorMultiVariateKraskov.PROP_GPU_LIBRARY_PATH, gpuLibraryPath);
             transferCalculator.setProperty(ConditionalMutualInfoCalculatorMultiVariateKraskov.PROP_USE_GPU, useGpu);
-            transferCalculator.setProperty(ConditionalMutualInfoCalculatorMultiVariateKraskov.PROP_GPU_LIBRARY_PATH, gpuLibraryPath);
         }
         try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(System.in)) {
             reader.readArguments(System.out);
