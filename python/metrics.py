@@ -900,6 +900,19 @@ class OffspringRate(OffspringMetric):
             values[agent] = float(counts[agent]) / lifespan if lifespan > 0 else 0.0
         return values
 
+class Onset(AgentBasedMetric):
+    def addArgs(self, parser):
+        self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
+    
+    def readArgs(self, args):
+        self.stage = self.readArg(args, "stage")
+    
+    def getKey(self):
+        return "onset-{0}".format(self.stage)
+    
+    def getLabel(self):
+        return "Onset of criticality"
+
 class Population(TimeBasedMetric):
     integral = True
     
