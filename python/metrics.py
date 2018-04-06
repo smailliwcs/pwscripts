@@ -912,6 +912,9 @@ class Onset(AgentBasedMetric):
     
     def getLabel(self):
         return "Onset of criticality"
+    
+    def aggregate(self, values):
+        return numpy.nanmedian(values)
 
 class Population(TimeBasedMetric):
     integral = True
