@@ -903,12 +903,14 @@ class OffspringRate(OffspringMetric):
 class Onset(AgentBasedMetric):
     def addArgs(self, parser):
         self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
+        self.addArg(parser, "threshold", metavar = "THRESHOLD", type = int)
     
     def readArgs(self, args):
         self.stage = self.readArg(args, "stage")
+        self.threshold = self.readArg(args, "threshold")
     
     def getKey(self):
-        return "onset-{0}".format(self.stage)
+        return "onset-{0}-{1}".format(self.stage, self.threshold)
     
     def getLabel(self):
         return "Onset of criticality"
