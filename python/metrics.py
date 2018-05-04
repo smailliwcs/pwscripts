@@ -322,7 +322,7 @@ class BirthCount(TimeBasedMetric):
         return "birth-count"
     
     def getLabel(self):
-        return "Birth count"
+        return "Birth rate"
     
     def read(self):
         values = dict.fromkeys(xrange(1, utility.getFinalTimestep(self.run) + 1), 0)
@@ -539,7 +539,7 @@ class FoodConsumption(TimeBasedMetric):
         return "{0}-consumption".format(self.getType().lower())
     
     def getLabel(self):
-        return "{0} consumption".format(self.getType())
+        return "{0} consumption rate".format(self.getType())
     
     def calculate(self):
         values = collections.defaultdict(float)
@@ -876,7 +876,7 @@ class OffspringCount(OffspringMetric):
         return "offspring-count"
     
     def getLabel(self):
-        return "Offspring count"
+        return "Offspring rate"
     
     def read(self):
         return self.getCounts()
