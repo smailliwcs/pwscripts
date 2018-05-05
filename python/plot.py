@@ -107,8 +107,10 @@ class Plot(object):
         parser.add_argument("--tstep", metavar = "TSTEP", type = int)
         parser.add_argument("--xmin", metavar = "XMIN", type = float)
         parser.add_argument("--xmax", metavar = "XMAX", type = float)
+        parser.add_argument("--xstep", metavar = "XSTEP", type = float)
         parser.add_argument("--ymin", metavar = "YMIN", type = float)
         parser.add_argument("--ymax", metavar = "YMAX", type = float)
+        parser.add_argument("--ystep", metavar = "YSTEP", type = float)
         parser.add_argument("--hmax", metavar = "HMAX", type = float)
         parser.add_argument("--htmin", metavar = "HTMIN", type = int, default = 1)
         parser.add_argument("--bins", metavar = "BINS", type = int, default = BIN_COUNT)
@@ -336,12 +338,19 @@ if plot.sig:
 
 # Post-configure plot
 axes1.set_xlim(plot.args.xmin, plot.args.xmax)
+if plot.args.xstep is not None:
+    axes1.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(plot.args.xstep))
 axes1.set_ylim(plot.args.ymin, plot.args.ymax)
+if plot.args.ystep is not None:
+    axes1.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(plot.args.ystep))
 plot.xMetric.formatAxis(axes1.xaxis)
 plot.yMetric.formatAxis(axes1.yaxis)
 if plot.sig:
     axes1.tick_params(labelbottom = False)
     axes2.set_xlabel(plot.xMetric.getLabel())
+    axes2.set_xlim(plot.args.xmin, plot.args.xmax)
+    if plot.args.xstep is not None:
+        axes2.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(plot.args.xstep))
     axes2.set_ylabel("Significance")
     axes2.set_ylim(0.75, 1.05)
     axes2.set_yticks([0.8, 0.95, 1.0])
