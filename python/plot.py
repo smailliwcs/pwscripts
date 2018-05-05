@@ -17,21 +17,21 @@ import sys
 import textwrap
 import utility
 
-TSTEP = 250
+ALPHA_HIST = 0.5
+ALPHA_RUN = [0.1, 0.2]
+BIN_COUNT = 100
+CMAP_NAME = "YlGnBu"
+matplotlib.rc("image", cmap = CMAP_NAME)
+CMAP = matplotlib.cm.get_cmap(CMAP_NAME)
+CMAP.set_bad("1.0")
 COLOR = [
     matplotlib.cm.Blues(0.9),
     matplotlib.cm.Oranges(0.45)
 ]
-CMAP_NAME = "YlGnBu"
-CMAP = matplotlib.cm.get_cmap(CMAP_NAME)
-CMAP.set_bad("1.0")
-matplotlib.rc("image", cmap = CMAP_NAME)
-ALPHA_RUN = [0.1, 0.2]
-ALPHA_HIST = 0.5
-BIN_COUNT = 100
 OFFSET_HIST = 0.1
-STROKE = matplotlib.patheffects.withStroke(linewidth = 3.0, foreground = "1.0")
 RASTERIZE = False
+STROKE = matplotlib.patheffects.withStroke(linewidth = 3.0, foreground = "1.0")
+TSTEP = 500
 
 class BareTexManager(matplotlib.texmanager.TexManager):
     def __init__(self):
@@ -142,7 +142,7 @@ class Plot(object):
             if self.isXAgent() or self.isYAgent():
                 self.args.tstep = TSTEP
             else:
-                self.args.tstep = 0
+                self.args.tstep = TSTEP / 10
     
     def isXAgent(self):
         return isinstance(self.xMetric, metrics_mod.AgentBasedMetric)
@@ -263,9 +263,9 @@ for run in plot.runs:
     if plot.args.line:
         axy = driven[run].axy_line
         kwargs = lambda index: {
-            "rasterized": RASTERIZE,
-            "color": COLOR[index],
             "alpha": ALPHA_RUN[index],
+            "color": COLOR[index],
+            "rasterized": RASTERIZE,
             "zorder": -2 - index
         }
         axes1.plot(axy[0], axy[1], **kwargs(0))
@@ -277,9 +277,9 @@ for run in plot.runs:
 if plot.args.line:
     axy = numpy.nanmean(map(lambda data: data.axy_line, driven.itervalues()), 0)
     kwargs = lambda index: {
-        "rasterized": RASTERIZE,
         "color": COLOR[index],
         "path_effects": [STROKE],
+        "rasterized": RASTERIZE,
         "zorder": -index
     }
     axes1.plot(axy[0], axy[1], label = "Driven", **kwargs(0))
@@ -293,7 +293,7 @@ if plot.args.hist:
     xbins = Data.bin(plot.xMetric, axy[0], plot.args.xmin, plot.args.xmax, plot.args.bins)
     ybins = Data.bin(plot.yMetric, axy[1], plot.args.ymin, plot.args.ymax, plot.args.bins)
     alpha = ALPHA_HIST if plot.args.line else 1.0
-    image = axes1.hist2d(axy[0], axy[1], bins = [xbins, ybins], norm = HistNorm(vmax = plot.args.hmax), alpha = alpha, zorder = -4)[3]
+    image = axes1.hist2d(axy[0], axy[1], alpha = alpha, bins = [xbins, ybins], norm = HistNorm(vmax = plot.args.hmax), zorder = -4)[3]
     if not plot.sig:
         colorbar = figure.colorbar(image)
         colorbar.locator = ColorbarLocator()
@@ -306,10 +306,10 @@ if plot.args.regress:
     ax = [min(axy[0]), max(axy[0])]
     ay = map(lambda x: slope * x + intercept, ax)
     kwargs = {
-        "label": "$r = {0:.3f}$".format(correlation),
-        "rasterized": RASTERIZE,
         "color": COLOR[0],
-        "path_effects": [STROKE]
+        "label": "$r = {0:.3f}$".format(correlation),
+        "path_effects": [STROKE],
+        "rasterized": RASTERIZE
     }
     axes1.plot(ax, ay, **kwargs)
 
@@ -326,7 +326,7 @@ if plot.sig:
             sig = 0.0
         axy[0].append(timestep)
         axy[1].append(sig)
-    axes2.plot(axy[0], axy[1], rasterized = RASTERIZE, color = COLOR[0])
+    axes2.plot(axy[0], axy[1], color = COLOR[0], rasterized = RASTERIZE)
 
 # Post-configure plot
 axes1.set_xlim(plot.args.xmin, plot.args.xmax)
