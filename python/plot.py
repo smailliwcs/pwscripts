@@ -28,6 +28,10 @@ COLOR = [
     matplotlib.cm.Blues(0.9),
     matplotlib.cm.Oranges(0.45)
 ]
+DASHES = [
+    (None, None),
+    (None, None)
+]
 OFFSET_HIST = 0.1
 RASTERIZE = False
 STROKE = matplotlib.patheffects.withStroke(linewidth = 3.0, foreground = "1.0")
@@ -265,6 +269,7 @@ for run in plot.runs:
         kwargs = lambda index: {
             "alpha": ALPHA_RUN[index],
             "color": COLOR[index],
+            "dashes": DASHES[index],
             "rasterized": RASTERIZE,
             "zorder": -2 - index
         }
@@ -278,6 +283,7 @@ if plot.args.line:
     axy = numpy.nanmean(map(lambda data: data.axy_line, driven.itervalues()), 0)
     kwargs = lambda index: {
         "color": COLOR[index],
+        "dashes": DASHES[index],
         "path_effects": [STROKE],
         "rasterized": RASTERIZE,
         "zorder": -index
