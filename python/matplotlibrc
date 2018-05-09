@@ -4,7 +4,7 @@ axes.grid: True
 axes.xmargin: 0
 axes.ymargin: 0
 backend: pdf
-figure.figsize: 5, 4
+figure.autolayout: True
 font.family: serif
 font.size: 10
 grid.alpha: 0.1
@@ -13,7 +13,6 @@ legend.edgecolor: inherit
 legend.fancybox: False
 legend.fontsize: 8
 legend.framealpha: None
-savefig.bbox: tight
 savefig.dpi: 300
 text.latex.preamble: \usepackage[T1]{fontenc},\usepackage{newtxtext},\usepackage[varqu]{inconsolata},\usepackage{newtxmath}
 text.usetex: True

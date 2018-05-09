@@ -34,6 +34,10 @@ DASHES = [
 ]
 OFFSET_HIST = 0.1
 RASTERIZE = False
+SIZE = [
+    (5.0, 4.0),
+    (5.0, 5.0)
+]
 STROKE = matplotlib.patheffects.withStroke(linewidth = 3.0, foreground = "1.0")
 TSTEP = 500
 
@@ -246,13 +250,12 @@ plot = Plot()
 figure = matplotlib.figure.Figure()
 matplotlib.backends.backend_pdf.FigureCanvasPdf(figure)
 if plot.sig:
-    size = figure.get_size_inches()
-    size[1] *= 4.0 / 3.0
-    figure.set_size_inches(size)
+    figure.set_size_inches(SIZE[1])
     grid = matplotlib.gridspec.GridSpec(4, 1)
     axes1 = figure.add_subplot(grid[0:-1, :])
     axes2 = figure.add_subplot(grid[-1, :])
 else:
+    figure.set_size_inches(SIZE[0])
     axes1 = figure.gca()
 
 # Iterate runs
