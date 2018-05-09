@@ -343,8 +343,6 @@ if plot.args.xstep is not None:
 axes1.set_ylim(plot.args.ymin, plot.args.ymax)
 if plot.args.ystep is not None:
     axes1.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(plot.args.ystep))
-plot.xMetric.formatAxis(axes1.xaxis)
-plot.yMetric.formatAxis(axes1.yaxis)
 if plot.sig:
     axes1.tick_params(labelbottom = False)
     axes2.set_xlabel(plot.xMetric.getLabel())

@@ -3,14 +3,12 @@ import collections
 import graph as graph_mod
 import gzip
 import math
-import matplotlib.ticker
 import numpy
 import os
 import sys
 import utility
 
 NAN = float("nan")
-THOUSANDS = matplotlib.ticker.FuncFormatter(lambda tick, position: format(tick / 1e3, "g"))
 
 def getBin(timestep, tstep):
     index = timestep / tstep
@@ -99,9 +97,6 @@ class Metric(object):
         return numpy.nanmean(values)
     
     def getBins(self):
-        pass
-    
-    def formatAxis(self, axis):
         pass
 
 class TimeBasedMetric(Metric):
@@ -648,10 +643,6 @@ class Gene(AgentBasedMetric):
     
     def getBins(self):
         return numpy.linspace(0, 256, 65)
-    
-    def formatAxis(self, axis):
-        axis.set_view_interval(0, 256, True)
-        axis.set_major_locator(matplotlib.ticker.MultipleLocator(64))
 
 class InfoModification(AgentBasedMetric):
     class Type(utility.Enum):
