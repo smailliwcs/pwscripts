@@ -39,7 +39,10 @@ SIZE = [
     (5.0, 5.0)
 ]
 STROKE = matplotlib.patheffects.withStroke(linewidth = 3.0, foreground = "1.0")
-TSTEP = 500
+TSTEP = [
+    10,
+    500
+]
 
 class BareTexManager(matplotlib.texmanager.TexManager):
     def __init__(self):
@@ -150,9 +153,9 @@ class Plot(object):
         self.sig = self.args.passive and len(self.runs) > 1
         if self.args.tstep is None:
             if self.isXAgent() or self.isYAgent():
-                self.args.tstep = TSTEP
+                self.args.tstep = TSTEP[1]
             else:
-                self.args.tstep = TSTEP / 10
+                self.args.tstep = TSTEP[0]
     
     def isXAgent(self):
         return isinstance(self.xMetric, metrics_mod.AgentBasedMetric)
