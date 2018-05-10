@@ -35,8 +35,8 @@ DASHES = [
 OFFSET_HIST = 0.1
 RASTERIZE = False
 SIZE = [
-    (5.0, 4.0),
-    (5.0, 5.0)
+    (4.0, 3.0),
+    (4.0, 4.0)
 ]
 STROKE = matplotlib.patheffects.withStroke(linewidth = 3.0, foreground = "1.0")
 TSTEP = [
