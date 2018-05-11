@@ -388,7 +388,7 @@ class Consistency(TimeBasedMetric):
         return "consistency-{0}".format(self.groupSize)
     
     def getLabel(self):
-        return "Consistency"
+        return "Genetic consistency"
 
 class DeathTimestep(LifespanMetric):
     def getKey(self):
