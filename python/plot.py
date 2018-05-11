@@ -39,10 +39,7 @@ SIZE = [
     (4.0, 4.0)
 ]
 STROKE = matplotlib.patheffects.withStroke(linewidth = 3.0, foreground = "1.0")
-TSTEP = [
-    10,
-    500
-]
+TSTEP = [5, 500]
 
 class BareTexManager(matplotlib.texmanager.TexManager):
     def __init__(self):
