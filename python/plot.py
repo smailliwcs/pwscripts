@@ -2,12 +2,12 @@ import argparse
 import itertools
 import math
 import matplotlib
-import matplotlib.backends.backend_pdf
 import matplotlib.cm
 import matplotlib.colors
 import matplotlib.figure
 import matplotlib.gridspec
 import matplotlib.patheffects
+import matplotlib.pyplot
 import matplotlib.texmanager
 import matplotlib.ticker
 import metrics as metrics_mod
@@ -250,8 +250,7 @@ class Data:
 
 # Pre-configure plot
 plot = Plot()
-figure = matplotlib.figure.Figure()
-matplotlib.backends.backend_pdf.FigureCanvasPdf(figure)
+figure = matplotlib.pyplot.figure()
 if plot.sig:
     figure.set_size_inches(SIZE[1])
     grid = matplotlib.gridspec.GridSpec(4, 1)
