@@ -8,6 +8,16 @@ import sys
 import time
 import utility
 
+def wait(predicate, delay = 1.0, attempts = 10):
+    attempt = 0
+    while True:
+        if predicate():
+            return True
+        attempt += 1
+        if attempt == attempts:
+            return False
+        time.sleep(delay)
+
 def getSurvival():
     values = {}
     path = os.path.join("run", "lifespans.txt")
@@ -103,11 +113,7 @@ for trialIndex in xrange(args.trials):
             pwargs.append("--AgeEnergyMultiplier {0}".format(args.multiplier))
         pwargs.append("\"{0}\"".format(args.worldfile))
         os.system("./Polyworld {0}".format(" ".join(pwargs)))
-        for retry in xrange(10):
-            if os.path.exists(os.path.join("run", "endStep.txt")):
-                break
-            else:
-                time.sleep(1.0)
+        wait(lambda: os.path.exists(os.path.join("run", "endStep.txt")))
         survival = getSurvival()
         foraging = getForaging()
         reproductive = getReproductive()
@@ -115,10 +121,6 @@ for trialIndex in xrange(args.trials):
             for agent in xrange(1, len(batch) + 1):
                 f.write("{0} {1} {2} {3}\n".format(batch[agent - 1], survival[agent], foraging[agent], reproductive[agent]))
         shutil.rmtree("run")
-        for retry in xrange(10):
-            if os.path.exists("run"):
-                time.sleep(1.0)
-            else:
-                break
+        wait(lambda: not os.path.exists("run"))
 os.remove("genomeSeeds.txt")
 os.remove("synapseSeeds.txt")
