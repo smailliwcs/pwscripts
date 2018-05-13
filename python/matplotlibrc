@@ -3,7 +3,7 @@ axes.axisbelow: False
 axes.grid: True
 axes.xmargin: 0
 axes.ymargin: 0
-backend: cairo
+backend: pdf
 figure.autolayout: True
 font.family: serif
 font.size: 8
@@ -13,6 +13,5 @@ legend.edgecolor: inherit
 legend.fancybox: False
 legend.framealpha: None
 savefig.dpi: 300
-savefig.format: pdf
 text.latex.preamble: \usepackage[T1]{fontenc},\usepackage{newtxtext},\usepackage[varqu]{inconsolata},\usepackage{newtxmath}
 text.usetex: True

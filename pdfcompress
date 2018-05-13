@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+if [[ $# -ne 1 ]]; then
+    echo "Usage: $(basename "$0") INPUT"
+    exit 1
+fi
+input=$1
+shift
+if [[ ! -e "$input" ]]; then
+    echo "INPUT '$input' does not exist."
+    exit 1
+fi
+output=$(tempfile -s .pdf)
+gs -dBATCH -dNOPAUSE -dQUIET -dSAFER -sDEVICE=pdfwrite -sOutputFile="$output" "$input"
+mv "$input" "$input.bak"
+mv "$output" "$input"
