@@ -101,6 +101,9 @@ def getRuns(path):
 def getRun(run, passive):
     return run.replace("driven", "passive") if passive else run
 
+def getKey(run):
+    return os.path.basename(os.path.realpath(run))
+
 def getParameter(run, name):
     with open(os.path.join(run, "normalized.wf")) as f:
         for line in f:
