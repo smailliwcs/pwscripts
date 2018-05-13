@@ -17,7 +17,6 @@ import sys
 import textwrap
 import utility
 
-ALPHA_HIST = 0.5
 ALPHA_RUN = [0.1, 0.2]
 BIN_COUNT = 100
 CMAP_NAME = "YlGnBu"
@@ -268,7 +267,7 @@ for run in plot.runs:
         passive[run] = Data(plot, run, True)
     
     # Plot line
-    if plot.args.line:
+    if plot.args.line and not plot.args.hist:
         axy = driven[run].axy_line
         kwargs = lambda index: {
             "alpha": ALPHA_RUN[index],
@@ -302,8 +301,7 @@ if plot.args.hist:
     axy = Data.flatten(map(lambda data: data.axy_hist, driven.itervalues()))
     xbins = Data.bin(plot.xMetric, axy[0], plot.args.xmin, plot.args.xmax, plot.args.bins)
     ybins = Data.bin(plot.yMetric, axy[1], plot.args.ymin, plot.args.ymax, plot.args.bins)
-    alpha = ALPHA_HIST if plot.args.line else 1.0
-    image = axes1.hist2d(axy[0], axy[1], alpha = alpha, bins = [xbins, ybins], norm = HistNorm(vmax = plot.args.hmax), zorder = -4)[3]
+    image = axes1.hist2d(axy[0], axy[1], bins = [xbins, ybins], norm = HistNorm(vmax = plot.args.hmax), zorder = -4)[3]
     if not plot.sig:
         colorbar = figure.colorbar(image)
         colorbar.locator = ColorbarLocator()
