@@ -222,20 +222,31 @@ if __name__ == "__main__":
     parser.add_argument("metric", metavar = "METRIC", choices = ("Efficiency", "Modularity"))
     parser.add_argument("--N", metavar = "N", type = int, default = 500)
     parser.add_argument("--k", metavar = "K", type = int, default = 5)
-    parser.add_argument("--samples", metavar = "SAMPLES", type = int, default = 10)
+    parser.add_argument("--points", metavar = "POINTS", type = int, default = 10)
+    parser.add_argument("--samples", metavar = "SAMPLES", type = int, default = 1)
     args = parser.parse_args()
     assert args.k < args.N
     if args.metric == "Efficiency":
         sys.stdout.write("# p E_local E_global\n")
-        for p in numpy.logspace(-3, 0, args.samples):
-            G = get_G_lattice(args.N, args.k)
-            rewire(G, p)
-            sys.stdout.write("{0} {1} {2}\n".format(p, get_E_local(G), get_E_global(G)))
+        for p in numpy.logspace(-3, 0, args.points):
+            values = {
+                "local": [],
+                "global": []
+            }
+            for sample in xrange(args.samples):
+                G = get_G_lattice(args.N, args.k)
+                rewire(G, p)
+                values["local"].append(get_E_local(G))
+                values["global"].append(get_E_global(G))
+            sys.stdout.write("{0} {1} {2}\n".format(p, numpy.mean(values["local"]), numpy.mean(values["global"])))
     elif args.metric == "Modularity":
         sys.stdout.write("# p Q\n")
-        for p in numpy.linspace(0, 1, args.samples):
-            G = get_G_modular(args.N, args.k)
-            rewire(G, p)
-            sys.stdout.write("{0} {1}\n".format(p, Modularity.calculate(G.weights)))
+        for p in numpy.linspace(0, 1, args.points):
+            values = []
+            for sample in xrange(args.samples):
+                G = get_G_modular(args.N, args.k)
+                rewire(G, p)
+                values.append(Modularity.calculate(G.weights))
+            sys.stdout.write("{0} {1}\n".format(p, numpy.mean(values)))
     else:
         assert False
