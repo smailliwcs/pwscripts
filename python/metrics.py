@@ -313,6 +313,12 @@ class Adaptivity(AgentBasedMetric):
 class BirthCount(TimeBasedMetric):
     integral = True
     
+    def addArgs(self, parser):
+        self.addArg(parser, "type", metavar = "TYPE", nargs = "?", choices = (utility.EventType.BIRTH, utility.EventType.VIRTUAL), default = utility.EventType.BIRTH)
+    
+    def readArgs(self, args):
+        self.type = self.readArg(args, "type")
+    
     def getKey(self):
         return "birth-count"
     
@@ -321,9 +327,8 @@ class BirthCount(TimeBasedMetric):
     
     def read(self):
         values = dict.fromkeys(xrange(1, utility.getFinalTimestep(self.run) + 1), 0)
-        eventType = utility.EventType.VIRTUAL if self.passive else utility.EventType.BIRTH
         for event in utility.Event.read(self.run):
-            if event.eventType == eventType:
+            if event.eventType == self.type:
                 values[event.timestep] += 1
         return values
 
