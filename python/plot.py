@@ -33,10 +33,6 @@ DASHES = [
 ]
 OFFSET_HIST = 0.1
 RASTERIZE = False
-SIZE = [
-    (4.0, 3.0),
-    (4.0, 4.0)
-]
 STROKE = matplotlib.patheffects.withStroke(linewidth = 3.0, foreground = "1.0")
 TSTEP = [5, 500]
 
@@ -117,6 +113,7 @@ class Plot(object):
         parser.add_argument("--hmax", metavar = "HMAX", type = float)
         parser.add_argument("--htmin", metavar = "HTMIN", type = int, default = 1)
         parser.add_argument("--bins", metavar = "BINS", type = int, default = BIN_COUNT)
+        parser.add_argument("--size", metavar = "SIZE", type = float, default = 4.0)
         parser.add_argument("--legend", metavar = "LOC", default = "upper left")
         parser.add_argument("--simplify", metavar = "THRESHOLD", type = float, default = 0.1)
         parser.add_argument("runs", metavar = "RUNS")
@@ -248,12 +245,12 @@ class Data:
 plot = Plot()
 figure = matplotlib.pyplot.figure()
 if plot.sig:
-    figure.set_size_inches(SIZE[1])
+    figure.set_size_inches(plot.args.size, plot.args.size)
     grid = matplotlib.gridspec.GridSpec(4, 1)
     axes1 = figure.add_subplot(grid[0:-1, :])
     axes2 = figure.add_subplot(grid[-1, :])
 else:
-    figure.set_size_inches(SIZE[0])
+    figure.set_size_inches(plot.args.size, 0.75 * plot.args.size)
     axes1 = figure.gca()
 
 # Iterate runs
