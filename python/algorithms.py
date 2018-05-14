@@ -213,7 +213,7 @@ if __name__ == "__main__":
         return sum(values) / len(values) if len(values) > 0 else 0.0
     
     def get_E_global(G):
-        return Efficiency.calculate(G)
+        return Efficiency.calculate(G.weights)
     
     parser = argparse.ArgumentParser()
     parser.add_argument("metric", metavar = "METRIC", choices = ("Efficiency", "Modularity"))
