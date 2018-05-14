@@ -314,10 +314,12 @@ class BirthCount(TimeBasedMetric):
     integral = True
     
     def addArgs(self, parser):
-        self.addArg(parser, "type", metavar = "TYPE", nargs = "?", choices = (utility.EventType.BIRTH, utility.EventType.VIRTUAL), default = utility.EventType.BIRTH)
+        self.addArg(parser, "type", metavar = "TYPE", nargs = "?", choices = (utility.EventType.BIRTH, utility.EventType.VIRTUAL))
     
     def readArgs(self, args):
         self.type = self.readArg(args, "type")
+        if self.type is None:
+            self.type = utility.EventType.VIRTUAL if self.passive else utility.EventType.BIRTH
     
     def getKey(self):
         return "birth-count"
