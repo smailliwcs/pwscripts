@@ -198,12 +198,15 @@ if __name__ == "__main__":
     def rewire(G, p):
         W = G.weights
         for i in xrange(G.size):
-            for j in xrange(G.size):
+            for j in xrange(i + 1, G.size):
                 if W[i][j] is None or random.random() >= p:
                     continue
                 choices = [j_new for j_new in xrange(G.size) if j_new != i and W[i][j_new] is None]
                 W[i][j] = None
-                W[i][random.choice(choices)] = 1
+                W[j][i] = None
+                j_new = random.choice(choices)
+                W[i][j_new] = 1
+                W[j_new][i] = 1
     
     def get_E_local(G):
         values = []
