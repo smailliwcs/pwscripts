@@ -108,9 +108,11 @@ class Plot(object):
         parser.add_argument("--xmin", metavar = "XMIN", type = float)
         parser.add_argument("--xmax", metavar = "XMAX", type = float)
         parser.add_argument("--xstep", metavar = "XSTEP", type = float)
+        parser.add_argument("--xlabel", metavar = "XLABEL")
         parser.add_argument("--ymin", metavar = "YMIN", type = float)
         parser.add_argument("--ymax", metavar = "YMAX", type = float)
         parser.add_argument("--ystep", metavar = "YSTEP", type = float)
+        parser.add_argument("--ylabel", metavar = "YLABEL")
         parser.add_argument("--hmax", metavar = "HMAX", type = float)
         parser.add_argument("--htmin", metavar = "HTMIN", type = int, default = 1)
         parser.add_argument("--bins", metavar = "BINS", type = int, default = BIN_COUNT)
@@ -344,9 +346,11 @@ if plot.args.xstep is not None:
 axes1.set_ylim(plot.args.ymin, plot.args.ymax)
 if plot.args.ystep is not None:
     axes1.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(plot.args.ystep))
+xlabel = plot.xMetric.getLabel() if plot.args.xlabel is None else plot.args.xlabel
+ylabel = plot.yMetric.getLabel() if plot.args.ylabel is None else plot.args.ylabel
 if plot.sig:
     axes1.tick_params(labelbottom = False)
-    axes2.set_xlabel(plot.xMetric.getLabel())
+    axes2.set_xlabel(xlabel)
     axes2.set_xlim(plot.args.xmin, plot.args.xmax)
     if plot.args.xstep is not None:
         axes2.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(plot.args.xstep))
@@ -357,8 +361,8 @@ if plot.sig:
         nudge(ticks[1].label, 0.0, -1.0)
         nudge(ticks[2].label, 0.0, 1.0)
 else:
-    axes1.set_xlabel(plot.xMetric.getLabel())
+    axes1.set_xlabel(xlabel)
 if plot.args.regress or plot.args.passive:
     axes1.legend(loc = plot.args.legend)
-axes1.set_ylabel(plot.yMetric.getLabel())
+axes1.set_ylabel(ylabel)
 figure.savefig("{0}-vs-{1}".format(plot.yMetric.getKey(), plot.xMetric.getKey()))
