@@ -115,6 +115,10 @@ class Plot(object):
         parser.add_argument("--ylabel", metavar = "YLABEL")
         parser.add_argument("--hmax", metavar = "HMAX", type = float)
         parser.add_argument("--htmin", metavar = "HTMIN", type = int, default = 1)
+        group = parser.add_mutually_exclusive_group()
+        group.add_argument("--logx", action = "store_true")
+        group.add_argument("--logy", action = "store_true")
+        group.add_argument("--logxy", action = "store_true")
         parser.add_argument("--bins", metavar = "BINS", type = int, default = BIN_COUNT)
         parser.add_argument("--size", metavar = "SIZE", type = float, default = 3.25)
         parser.add_argument("--legend", metavar = "LOC", default = "upper left")
@@ -258,6 +262,12 @@ if plot.sig:
 else:
     figure.set_size_inches(plot.args.size, 0.75 * plot.args.size)
     axes1 = figure.gca()
+if plot.args.logx:
+    axes1.semilogx()
+elif plot.args.logy:
+    axes1.semilogy()
+elif plot.args.logxy:
+    axes1.loglog()
 
 # Iterate runs
 driven = {}
