@@ -11,6 +11,7 @@ grid.alpha: 0.1
 grid.color: 0
 legend.edgecolor: inherit
 legend.fancybox: False
+legend.fontsize: 6
 legend.framealpha: None
 savefig.dpi: 300
 text.latex.preamble: \usepackage[T1]{fontenc},\usepackage{newtxtext},\usepackage[varqu]{inconsolata},\usepackage{newtxmath}
