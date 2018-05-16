@@ -10,6 +10,7 @@ import matplotlib.patheffects
 import matplotlib.pyplot
 import matplotlib.texmanager
 import matplotlib.ticker
+import matplotlib.transforms
 import metrics as metrics_mod
 import numpy
 import scipy.stats
@@ -113,7 +114,7 @@ class Plot(object):
         parser.add_argument("--hmax", metavar = "HMAX", type = float)
         parser.add_argument("--htmin", metavar = "HTMIN", type = int, default = 1)
         parser.add_argument("--bins", metavar = "BINS", type = int, default = BIN_COUNT)
-        parser.add_argument("--size", metavar = "SIZE", type = float, default = 4.0)
+        parser.add_argument("--size", metavar = "SIZE", type = float, default = 3.25)
         parser.add_argument("--legend", metavar = "LOC", default = "upper left")
         parser.add_argument("--simplify", metavar = "THRESHOLD", type = float, default = 0.1)
         parser.add_argument("runs", metavar = "RUNS")
@@ -241,6 +242,9 @@ class Data:
                 self.dy_hist = plot.yMetric.toTimeBased(self.dy, tival)
             self.axy_hist = Data.zip(self.dx_hist, self.dy_hist)
 
+def nudge(text, x, y):
+    text.set_transform(text.get_transform() + matplotlib.transforms.Affine2D().translate(x, y))
+
 # Pre-configure plot
 plot = Plot()
 figure = matplotlib.pyplot.figure()
@@ -348,7 +352,10 @@ if plot.sig:
         axes2.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(plot.args.xstep))
     axes2.set_ylabel("Significance")
     axes2.set_ylim(0.75, 1.05)
-    axes2.set_yticks([0.8, 0.95, 1.0])
+    ticks = axes2.set_yticks([0.8, 0.95, 1.0])
+    if plot.args.size < 4.0:
+        nudge(ticks[1].label, 0.0, -1.0)
+        nudge(ticks[2].label, 0.0, 1.0)
 else:
     axes1.set_xlabel(plot.xMetric.getLabel())
 if plot.args.regress or plot.args.passive:
