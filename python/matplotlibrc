@@ -1,6 +1,7 @@
 axes.autolimit_mode: round_numbers
 axes.axisbelow: False
 axes.grid: True
+axes.grid.which: both
 axes.xmargin: 0
 axes.ymargin: 0
 backend: pdf
