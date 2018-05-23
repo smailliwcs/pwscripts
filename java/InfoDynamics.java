@@ -2,6 +2,20 @@ import infodynamics.measures.continuous.kraskov.*;
 import infodynamics.utils.*;
 
 public class InfoDynamics {
+    private static class Result {
+        public int count;
+        public double sum;
+        
+        public void add(Result result) {
+            count += result.count;
+            sum += result.sum;
+        }
+        
+        public double getMean() {
+            return count == 0 ? 0.0 : sum / count;
+        }
+    }
+    
     private static boolean gpu;
     private static int embedding;
     private static String mode;
@@ -28,56 +42,15 @@ public class InfoDynamics {
                 if (ensemble == null) {
                     break;
                 }
-                int agentIndex = ensemble.getAgentIndex();
-                int[] processingNeuronIndices = ensemble.getProcessingNeuronIndices();
-                double[][] locals = new double[processingNeuronIndices.length][];
-                {
-                    double sum = 0.0;
-                    int count = 0;
-                    for (int neuronIndex : processingNeuronIndices) {
-                        sum += getStorage(ensemble, neuronIndex, locals);
-                        count++;
-                    }
-                    if (mode == null || mode.equals("S")) {
-                        double storage = sum / count;
-                        System.out.printf("%d S %g%n", agentIndex, storage);
-                    }
+                double[][] locals = new double[ensemble.getProcessingNeuronCount()][];
+                if (mode == null || mode.equals("S")) {
+                    getStorage(ensemble, locals);
                 }
                 if (mode == null || mode.equals("T")) {
-                    double sum = 0.0;
-                    int count = 0;
-                    for (Nerve nerve : ensemble.getInputNerves()) {
-                        double nerveSum = 0.0;
-                        int nerveCount = 0;
-                        for (int preNeuronIndex : nerve.getNeuronIndices()) {
-                            for (int postNeuronIndex : ensemble.getPostNeuronIndices(preNeuronIndex)) {
-                                double value = getTransfer(ensemble, preNeuronIndex, postNeuronIndex, locals);
-                                sum += value;
-                                count++;
-                                nerveSum += value;
-                                nerveCount++;
-                            }
-                        }
-                        double nerveTransfer = nerveCount > 0 ? nerveSum / nerveCount : 0.0;
-                        System.out.printf("%d T %s %g%n", agentIndex, nerve.getName(), nerveTransfer);
-                    }
-                    double transfer = count > 0 ? sum / count : 0.0;
-                    System.out.printf("%d T Total %g%n", agentIndex, transfer);
+                    getTransfer(ensemble, locals);
                 }
                 if (mode == null) {
-                    double positiveSum = 0.0;
-                    double negativeSum = 0.0;
-                    int count = 0;
-                    for (double[] local : locals) {
-                        for (double value : local) {
-                            positiveSum += Math.max(value, 0.0);
-                            negativeSum += Math.min(value, 0.0);
-                            count++;
-                        }
-                    }
-                    double trivialModification = positiveSum / count;
-                    double nontrivialModification = negativeSum / count;
-                    System.out.printf("%d M %g %g%n", agentIndex, trivialModification, nontrivialModification);
+                    getModification(ensemble, locals);
                 }
             }
         }
@@ -98,6 +71,20 @@ public class InfoDynamics {
         }
     }
     
+    private static void getStorage(TimeSeriesEnsemble ensemble, double[][] locals) throws Exception {
+        Result result = getStorage(ensemble, ensemble.getProcessingNeuronIndices(), locals);
+        System.out.printf("%d S %g%n", ensemble.getAgentIndex(), result.getMean());
+    }
+    
+    private static Result getStorage(TimeSeriesEnsemble ensemble, int[] neuronIndices, double[][] locals) throws Exception {
+        Result result = new Result();
+        for (int neuronIndex : neuronIndices) {
+            result.count++;
+            result.sum += getStorage(ensemble, neuronIndex, locals);
+        }
+        return result;
+    }
+    
     private static double getStorage(TimeSeriesEnsemble ensemble, int neuronIndex, double[][] locals) throws Exception {
         storageCalculator.initialise(embedding, 1);
         storageCalculator.startAddObservations();
@@ -111,6 +98,27 @@ public class InfoDynamics {
         double[] local = storageCalculator.computeLocalOfPreviousObservations();
         locals[ensemble.getProcessingNeuronOffset(neuronIndex)] = local;
         return MatrixUtils.mean(local);
+    }
+    
+    private static void getTransfer(TimeSeriesEnsemble ensemble, double[][] locals) throws Exception {
+        Result result = new Result();
+        for (Nerve nerve : ensemble.getInputNerves()) {
+            result.add(getTransfer(ensemble, nerve.getName(), nerve.getNeuronIndices(), locals));
+        }
+        result.add(getTransfer(ensemble, "Internal", ensemble.getProcessingNeuronIndices(), locals));
+        System.out.printf("%d T Total %g%n", ensemble.getAgentIndex(), result.getMean());
+    }
+    
+    private static Result getTransfer(TimeSeriesEnsemble ensemble, String label, int[] preNeuronIndices, double[][] locals) throws Exception {
+        Result result = new Result();
+        for (int preNeuronIndex : preNeuronIndices) {
+            for (int postNeuronIndex : ensemble.getPostNeuronIndices(preNeuronIndex)) {
+                result.count++;
+                result.sum += getTransfer(ensemble, preNeuronIndex, postNeuronIndex, locals);
+            }
+        }
+        System.out.printf("%d T %s %g%n", ensemble.getAgentIndex(), label, result.getMean());
+        return result;
     }
     
     private static double getTransfer(TimeSeriesEnsemble ensemble, int preNeuronIndex, int postNeuronIndex, double[][] locals) throws Exception {
@@ -128,5 +136,19 @@ public class InfoDynamics {
         double[] local = transferCalculator.computeLocalOfPreviousObservations();
         MatrixUtils.addInPlace(locals[ensemble.getProcessingNeuronOffset(postNeuronIndex)], local);
         return MatrixUtils.mean(local);
+    }
+    
+    private static void getModification(TimeSeriesEnsemble ensemble, double[][] locals) {
+        int count = 0;
+        double positiveSum = 0.0;
+        double negativeSum = 0.0;
+        for (double[] local : locals) {
+            for (double value : local) {
+                count++;
+                positiveSum += Math.max(value, 0.0);
+                negativeSum += Math.min(value, 0.0);
+            }
+        }
+        System.out.printf("%d M %g %g%n", ensemble.getAgentIndex(), positiveSum / count, negativeSum / count);
     }
 }

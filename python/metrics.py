@@ -737,10 +737,7 @@ class InfoTransfer(AgentBasedMetric):
         return "info-dynamics-{0}-{1}.txt".format(self.embedding, self.stage)
     
     def getLabel(self):
-        if self.source == "Total":
-            return "Total information transfer"
-        else:
-            return "\\texttt{{{0}}} information transfer".format(self.source)
+        return "{0} information transfer".format(self.source)
     
     def read(self):
         values = dict.fromkeys(utility.getAgents(self.run), NAN)
