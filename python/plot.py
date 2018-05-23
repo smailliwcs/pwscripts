@@ -265,7 +265,7 @@ if plot.sig:
     axes1 = figure.add_subplot(grid[0:-1, :])
     axes2 = figure.add_subplot(grid[-1, :])
 else:
-    figure.set_size_inches(plot.args.size, 0.75 * plot.args.size)
+    figure.set_size_inches(plot.args.size, 0.8 * plot.args.size)
     axes1 = figure.gca()
 if plot.args.logx:
     axes1.semilogx()
