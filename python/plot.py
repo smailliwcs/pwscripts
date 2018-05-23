@@ -119,6 +119,7 @@ class Plot(object):
         group.add_argument("--logx", action = "store_true")
         group.add_argument("--logy", action = "store_true")
         group.add_argument("--logxy", action = "store_true")
+        parser.add_argument("--diag", action = "store_true")
         parser.add_argument("--bins", metavar = "BINS", type = int, default = BIN_COUNT)
         parser.add_argument("--size", metavar = "SIZE", type = float, default = 3.25)
         parser.add_argument("--legend", metavar = "LOC", default = "upper left")
@@ -248,6 +249,10 @@ class Data:
                 self.dy_hist = plot.yMetric.toTimeBased(self.dy, tival)
             self.axy_hist = Data.zip(self.dx_hist, self.dy_hist)
 
+def getGridKwargs():
+    props = ["alpha", "color", "linestyle", "linewidth"]
+    return dict(map(lambda prop: (prop, matplotlib.rcParams["grid.{0}".format(prop)]), props))
+
 def nudge(text, x, y):
     text.set_transform(text.get_transform() + matplotlib.transforms.Affine2D().translate(x, y))
 
@@ -375,4 +380,6 @@ else:
 if plot.args.regress or plot.args.passive:
     axes1.legend(loc = plot.args.legend)
 axes1.set_ylabel(ylabel)
+if plot.args.diag:
+    axes1.plot([0.0, 1.0], [0.0, 1.0], transform = axes1.transAxes, **getGridKwargs())
 figure.savefig("{0}-vs-{1}".format(plot.yMetric.getKey(), plot.xMetric.getKey()))
