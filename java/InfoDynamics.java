@@ -10,10 +10,6 @@ public class InfoDynamics {
             count += result.count;
             sum += result.sum;
         }
-        
-        public double getMean() {
-            return count == 0 ? 0.0 : sum / count;
-        }
     }
     
     private static boolean gpu;
@@ -73,7 +69,7 @@ public class InfoDynamics {
     
     private static void getStorage(TimeSeriesEnsemble ensemble, double[][] locals) throws Exception {
         Result result = getStorage(ensemble, ensemble.getProcessingNeuronIndices(), locals);
-        System.out.printf("%d S %g%n", ensemble.getAgentIndex(), result.getMean());
+        System.out.printf("%d S %d %g%n", ensemble.getAgentIndex(), result.count, result.sum);
     }
     
     private static Result getStorage(TimeSeriesEnsemble ensemble, int[] neuronIndices, double[][] locals) throws Exception {
@@ -106,7 +102,7 @@ public class InfoDynamics {
             result.add(getTransfer(ensemble, nerve.getName(), nerve.getNeuronIndices(), locals));
         }
         result.add(getTransfer(ensemble, "Internal", ensemble.getProcessingNeuronIndices(), locals));
-        System.out.printf("%d T Total %g%n", ensemble.getAgentIndex(), result.getMean());
+        System.out.printf("%d T Total %d %g%n", ensemble.getAgentIndex(), result.count, result.sum);
     }
     
     private static Result getTransfer(TimeSeriesEnsemble ensemble, String label, int[] preNeuronIndices, double[][] locals) throws Exception {
@@ -117,7 +113,7 @@ public class InfoDynamics {
                 result.sum += getTransfer(ensemble, preNeuronIndex, postNeuronIndex, locals);
             }
         }
-        System.out.printf("%d T %s %g%n", ensemble.getAgentIndex(), label, result.getMean());
+        System.out.printf("%d T %s %d %g%n", ensemble.getAgentIndex(), label, result.count, result.sum);
         return result;
     }
     
@@ -139,16 +135,23 @@ public class InfoDynamics {
     }
     
     private static void getModification(TimeSeriesEnsemble ensemble, double[][] locals) {
-        int count = 0;
-        double positiveSum = 0.0;
-        double negativeSum = 0.0;
+        getModification(ensemble, "Trivial", true, false, locals);
+        getModification(ensemble, "Nontrivial", false, true, locals);
+        getModification(ensemble, "Total", true, true, locals);
+    }
+    
+    private static void getModification(TimeSeriesEnsemble ensemble, String label, boolean positive, boolean negative, double[][] locals) {
+        Result result = new Result();
         for (double[] local : locals) {
+            double sum = 0.0;
             for (double value : local) {
-                count++;
-                positiveSum += Math.max(value, 0.0);
-                negativeSum += Math.min(value, 0.0);
+                if ((value > 0.0 && positive) || (value < 0.0 && negative)) {
+                    sum += value;
+                }
             }
+            result.count++;
+            result.sum += sum / local.length;
         }
-        System.out.printf("%d M %g %g%n", ensemble.getAgentIndex(), positiveSum / count, negativeSum / count);
+        System.out.printf("%d M %s %d %g%n", ensemble.getAgentIndex(), label, result.count, result.sum);
     }
 }

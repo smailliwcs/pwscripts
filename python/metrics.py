@@ -653,9 +653,9 @@ class Gene(AgentBasedMetric):
 
 class InfoModification(AgentBasedMetric):
     class Type(utility.Enum):
-        TRIVIAL = "trivial"
-        NONTRIVIAL = "nontrivial"
-        TOTAL = "total"
+        TRIVIAL = "Trivial"
+        NONTRIVIAL = "Nontrivial"
+        TOTAL = "Total"
     
     def addArgs(self, parser):
         self.addArg(parser, "type", metavar = "TYPE", choices = tuple(InfoModification.Type.getValues()))
@@ -668,29 +668,22 @@ class InfoModification(AgentBasedMetric):
         self.stage = self.readArg(args, "stage")
     
     def getKey(self):
-        return "info-modification-{0}-{1}-{2}".format(self.type, self.embedding, self.stage)
+        return "info-modification-{0}-{1}-{2}".format(self.type.lower(), self.embedding, self.stage)
     
     def getDataFileName(self):
         return "info-dynamics-{0}-{1}.txt".format(self.embedding, self.stage)
     
     def getLabel(self):
-        return "{0} information modification".format(self.type.capitalize())
+        return "{0} information modification".format(self.type)
     
     def read(self):
         values = dict.fromkeys(utility.getAgents(self.run), NAN)
         for line in self.readLines():
-            agent, flag, value = line.split(None, 2)
+            agent, flag, chunks = line.split(None, 2)
             if flag == "M":
-                trivialValue, nontrivialValue = map(float, value.split())
-                if self.type == InfoModification.Type.TRIVIAL:
-                    value = trivialValue
-                elif self.type == InfoModification.Type.NONTRIVIAL:
-                    value = nontrivialValue
-                elif self.type == InfoModification.Type.TOTAL:
-                    value = trivialValue + nontrivialValue
-                else:
-                    assert False
-                values[int(agent)] = value
+                type, count, value = chunks.split()
+                if type == self.type:
+                    values[int(agent)] = float(value)
         return values
 
 class InfoStorage(AgentBasedMetric):
@@ -714,8 +707,9 @@ class InfoStorage(AgentBasedMetric):
     def read(self):
         values = dict.fromkeys(utility.getAgents(self.run), NAN)
         for line in self.readLines():
-            agent, flag, value = line.split(None, 2)
+            agent, flag, chunks = line.split(None, 2)
             if flag == "S":
+                count, value = chunks.split()
                 values[int(agent)] = float(value)
         return values
 
@@ -742,9 +736,9 @@ class InfoTransfer(AgentBasedMetric):
     def read(self):
         values = dict.fromkeys(utility.getAgents(self.run), NAN)
         for line in self.readLines():
-            agent, flag, value = line.split(None, 2)
+            agent, flag, chunks = line.split(None, 2)
             if flag == "T":
-                source, value = value.split()
+                source, count, value = chunks.split()
                 if source == self.source:
                     values[int(agent)] = float(value)
         return values
