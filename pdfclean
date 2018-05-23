@@ -17,8 +17,12 @@ if [[ ! -e "$input" ]]; then
     exit 1
 fi
 output=$(tempfile -s .pdf)
-gs -dBATCH -dNOPAUSE -dQUIET -dSAFER -sDEVICE=pdfwrite -sOutputFile="$output" "$input"
+gs -dBATCH -dNOPAUSE -dQUIET -dSAFER -sDEVICE=pdfwrite -sOutputFile=- "$input" | \
+exiftool -m -q -all:all= -o "$input.tmp" -
+qpdf --linearize --deterministic-id "$input.tmp" - | \
+sed -E 's/\/ID \[<[[:xdigit:]]{32}><([[:xdigit:]]{32})>\]/\/ID [<\1><\1>]/g' > "$output"
 if [[ $inPlace -eq 0 ]]; then
     mv "$input" "$input.bak"
 fi
+rm "$input.tmp"
 mv "$output" "$input"
