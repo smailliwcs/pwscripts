@@ -34,6 +34,7 @@ DASHES = [
 ]
 OFFSET_HIST = 0.1
 RASTERIZE = False
+SIZE = 3.25
 STROKE = matplotlib.patheffects.withStroke(linewidth = 3.0, foreground = "1.0")
 TSTEP = [5, 500]
 
@@ -121,7 +122,7 @@ class Plot(object):
         group.add_argument("--logxy", action = "store_true")
         parser.add_argument("--diag", action = "store_true")
         parser.add_argument("--bins", metavar = "BINS", type = int, default = BIN_COUNT)
-        parser.add_argument("--size", metavar = "SIZE", type = float, default = 3.25)
+        parser.add_argument("--size", metavar = "SIZE", type = float, default = SIZE)
         parser.add_argument("--legend", metavar = "LOC", default = "upper left")
         parser.add_argument("--simplify", metavar = "THRESHOLD", type = float, default = 0.1)
         parser.add_argument("runs", metavar = "RUNS")
@@ -256,130 +257,132 @@ def getGridKwargs():
 def nudge(text, x, y):
     text.set_transform(text.get_transform() + matplotlib.transforms.Affine2D().translate(x, y))
 
-# Pre-configure plot
-plot = Plot()
-figure = matplotlib.pyplot.figure()
-if plot.sig:
-    figure.set_size_inches(plot.args.size, plot.args.size)
-    grid = matplotlib.gridspec.GridSpec(4, 1)
-    axes1 = figure.add_subplot(grid[0:-1, :])
-    axes2 = figure.add_subplot(grid[-1, :])
-else:
-    figure.set_size_inches(plot.args.size, 0.8 * plot.args.size)
-    axes1 = figure.gca()
-if plot.args.logx:
-    axes1.semilogx()
-elif plot.args.logy:
-    axes1.semilogy()
-elif plot.args.logxy:
-    axes1.loglog()
-
-# Iterate runs
-driven = {}
-passive = {}
-for run in plot.runs:
+if __name__ == "__main__":
     
-    # Calculate data
-    driven[run] = Data(plot, run, False)
-    if plot.args.passive:
-        passive[run] = Data(plot, run, True)
+    # Pre-configure plot
+    plot = Plot()
+    figure = matplotlib.pyplot.figure()
+    if plot.sig:
+        figure.set_size_inches(plot.args.size, plot.args.size)
+        grid = matplotlib.gridspec.GridSpec(4, 1)
+        axes1 = figure.add_subplot(grid[0:-1, :])
+        axes2 = figure.add_subplot(grid[-1, :])
+    else:
+        figure.set_size_inches(plot.args.size, 0.8 * plot.args.size)
+        axes1 = figure.gca()
+    if plot.args.logx:
+        axes1.semilogx()
+    elif plot.args.logy:
+        axes1.semilogy()
+    elif plot.args.logxy:
+        axes1.loglog()
+    
+    # Iterate runs
+    driven = {}
+    passive = {}
+    for run in plot.runs:
+        
+        # Calculate data
+        driven[run] = Data(plot, run, False)
+        if plot.args.passive:
+            passive[run] = Data(plot, run, True)
+        
+        # Plot line
+        if plot.args.line and not plot.args.hist:
+            axy = driven[run].axy_line
+            kwargs = lambda index: {
+                "alpha": ALPHA_RUN[index],
+                "color": COLOR[index],
+                "dashes": DASHES[index],
+                "rasterized": RASTERIZE,
+                "zorder": -2 - index
+            }
+            axes1.plot(axy[0], axy[1], **kwargs(0))
+            if plot.args.passive:
+                axy = passive[run].axy_line
+                axes1.plot(axy[0], axy[1], **kwargs(1))
     
     # Plot line
-    if plot.args.line and not plot.args.hist:
-        axy = driven[run].axy_line
+    if plot.args.line:
+        axy = numpy.nanmean(map(lambda data: data.axy_line, driven.itervalues()), 0)
         kwargs = lambda index: {
-            "alpha": ALPHA_RUN[index],
             "color": COLOR[index],
             "dashes": DASHES[index],
+            "path_effects": [STROKE],
             "rasterized": RASTERIZE,
-            "zorder": -2 - index
+            "zorder": -index
         }
-        axes1.plot(axy[0], axy[1], **kwargs(0))
+        axes1.plot(axy[0], axy[1], label = "Driven", **kwargs(0))
         if plot.args.passive:
-            axy = passive[run].axy_line
-            axes1.plot(axy[0], axy[1], **kwargs(1))
-
-# Plot line
-if plot.args.line:
-    axy = numpy.nanmean(map(lambda data: data.axy_line, driven.itervalues()), 0)
-    kwargs = lambda index: {
-        "color": COLOR[index],
-        "dashes": DASHES[index],
-        "path_effects": [STROKE],
-        "rasterized": RASTERIZE,
-        "zorder": -index
-    }
-    axes1.plot(axy[0], axy[1], label = "Driven", **kwargs(0))
-    if plot.args.passive:
-        axy = numpy.nanmean(map(lambda data: data.axy_line, passive.itervalues()), 0)
-        axes1.plot(axy[0], axy[1], label = "Passive", **kwargs(1))
-
-# Plot histogram
-if plot.args.hist:
-    axy = Data.flatten(map(lambda data: data.axy_hist, driven.itervalues()))
-    xbins = Data.bin(plot.xMetric, axy[0], plot.args.xmin, plot.args.xmax, plot.args.bins)
-    ybins = Data.bin(plot.yMetric, axy[1], plot.args.ymin, plot.args.ymax, plot.args.bins)
-    image = axes1.hist2d(axy[0], axy[1], bins = [xbins, ybins], norm = HistNorm(vmax = plot.args.hmax), zorder = -4)[3]
-    if not plot.sig:
-        colorbar = figure.colorbar(image)
-        colorbar.locator = ColorbarLocator()
-        colorbar.formatter = ColorbarFormatter()
-        colorbar.update_ticks()
-
-# Plot regression
-if plot.args.regress:
-    slope, intercept, correlation = scipy.stats.linregress(axy[0], axy[1])[:3]
-    ax = [min(axy[0]), max(axy[0])]
-    ay = map(lambda x: slope * x + intercept, ax)
-    kwargs = {
-        "color": COLOR[0],
-        "label": "$r = {0:.3f}$".format(correlation),
-        "path_effects": [STROKE],
-        "rasterized": RASTERIZE
-    }
-    axes1.plot(ax, ay, **kwargs)
-
-# Plot significance
-if plot.sig:
-    axy = [[], []]
-    ax = driven.itervalues().next().axy_line[0]
-    ays_d = numpy.transpose(map(lambda data: data.axy_line[1], driven.itervalues()))
-    ays_p = numpy.transpose(map(lambda data: data.axy_line[1], passive.itervalues()))
-    for index in xrange(len(ax)):
-        timestep = ax[index]
-        sig = 1.0 - scipy.stats.ttest_rel(ays_d[index], ays_p[index])[1]
-        if math.isnan(sig):
-            sig = 0.0
-        axy[0].append(timestep)
-        axy[1].append(sig)
-    axes2.plot(axy[0], axy[1], color = COLOR[0], rasterized = RASTERIZE)
-
-# Post-configure plot
-axes1.set_xlim(plot.args.xmin, plot.args.xmax)
-if plot.args.xstep is not None:
-    axes1.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(plot.args.xstep))
-axes1.set_ylim(plot.args.ymin, plot.args.ymax)
-if plot.args.ystep is not None:
-    axes1.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(plot.args.ystep))
-xlabel = plot.xMetric.getLabel() if plot.args.xlabel is None else plot.args.xlabel
-ylabel = plot.yMetric.getLabel() if plot.args.ylabel is None else plot.args.ylabel
-if plot.sig:
-    axes1.tick_params(labelbottom = False)
-    axes2.set_xlabel(xlabel)
-    axes2.set_xlim(plot.args.xmin, plot.args.xmax)
+            axy = numpy.nanmean(map(lambda data: data.axy_line, passive.itervalues()), 0)
+            axes1.plot(axy[0], axy[1], label = "Passive", **kwargs(1))
+    
+    # Plot histogram
+    if plot.args.hist:
+        axy = Data.flatten(map(lambda data: data.axy_hist, driven.itervalues()))
+        xbins = Data.bin(plot.xMetric, axy[0], plot.args.xmin, plot.args.xmax, plot.args.bins)
+        ybins = Data.bin(plot.yMetric, axy[1], plot.args.ymin, plot.args.ymax, plot.args.bins)
+        image = axes1.hist2d(axy[0], axy[1], bins = [xbins, ybins], norm = HistNorm(vmax = plot.args.hmax), zorder = -4)[3]
+        if not plot.sig:
+            colorbar = figure.colorbar(image)
+            colorbar.locator = ColorbarLocator()
+            colorbar.formatter = ColorbarFormatter()
+            colorbar.update_ticks()
+    
+    # Plot regression
+    if plot.args.regress:
+        slope, intercept, correlation = scipy.stats.linregress(axy[0], axy[1])[:3]
+        ax = [min(axy[0]), max(axy[0])]
+        ay = map(lambda x: slope * x + intercept, ax)
+        kwargs = {
+            "color": COLOR[0],
+            "label": "$r = {0:.3f}$".format(correlation),
+            "path_effects": [STROKE],
+            "rasterized": RASTERIZE
+        }
+        axes1.plot(ax, ay, **kwargs)
+    
+    # Plot significance
+    if plot.sig:
+        axy = [[], []]
+        ax = driven.itervalues().next().axy_line[0]
+        ays_d = numpy.transpose(map(lambda data: data.axy_line[1], driven.itervalues()))
+        ays_p = numpy.transpose(map(lambda data: data.axy_line[1], passive.itervalues()))
+        for index in xrange(len(ax)):
+            timestep = ax[index]
+            sig = 1.0 - scipy.stats.ttest_rel(ays_d[index], ays_p[index])[1]
+            if math.isnan(sig):
+                sig = 0.0
+            axy[0].append(timestep)
+            axy[1].append(sig)
+        axes2.plot(axy[0], axy[1], color = COLOR[0], rasterized = RASTERIZE)
+    
+    # Post-configure plot
+    axes1.set_xlim(plot.args.xmin, plot.args.xmax)
     if plot.args.xstep is not None:
-        axes2.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(plot.args.xstep))
-    axes2.set_ylabel("Significance")
-    axes2.set_ylim(0.75, 1.05)
-    ticks = axes2.set_yticks([0.8, 0.95, 1.0])
-    if plot.args.size < 4.0:
-        nudge(ticks[1].label, 0.0, -1.0)
-        nudge(ticks[2].label, 0.0, 1.0)
-else:
-    axes1.set_xlabel(xlabel)
-if plot.args.regress or plot.args.passive:
-    axes1.legend(loc = plot.args.legend)
-axes1.set_ylabel(ylabel)
-if plot.args.diag:
-    axes1.plot([0.0, 1.0], [0.0, 1.0], transform = axes1.transAxes, **getGridKwargs())
-figure.savefig("{0}-vs-{1}".format(plot.yMetric.getKey(), plot.xMetric.getKey()))
+        axes1.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(plot.args.xstep))
+    axes1.set_ylim(plot.args.ymin, plot.args.ymax)
+    if plot.args.ystep is not None:
+        axes1.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(plot.args.ystep))
+    xlabel = plot.xMetric.getLabel() if plot.args.xlabel is None else plot.args.xlabel
+    ylabel = plot.yMetric.getLabel() if plot.args.ylabel is None else plot.args.ylabel
+    if plot.sig:
+        axes1.tick_params(labelbottom = False)
+        axes2.set_xlabel(xlabel)
+        axes2.set_xlim(plot.args.xmin, plot.args.xmax)
+        if plot.args.xstep is not None:
+            axes2.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(plot.args.xstep))
+        axes2.set_ylabel("Significance")
+        axes2.set_ylim(0.75, 1.05)
+        ticks = axes2.set_yticks([0.8, 0.95, 1.0])
+        if plot.args.size < 4.0:
+            nudge(ticks[1].label, 0.0, -1.0)
+            nudge(ticks[2].label, 0.0, 1.0)
+    else:
+        axes1.set_xlabel(xlabel)
+    if plot.args.regress or plot.args.passive:
+        axes1.legend(loc = plot.args.legend)
+    axes1.set_ylabel(ylabel)
+    if plot.args.diag:
+        axes1.plot([0.0, 1.0], [0.0, 1.0], transform = axes1.transAxes, **getGridKwargs())
+    figure.savefig("{0}-vs-{1}".format(plot.yMetric.getKey(), plot.xMetric.getKey()))
