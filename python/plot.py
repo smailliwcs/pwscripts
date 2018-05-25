@@ -331,12 +331,12 @@ if __name__ == "__main__":
     
     # Plot regression
     if plot.args.regress:
-        slope, intercept, correlation = scipy.stats.linregress(axy[0], axy[1])[:3]
+        m, b, r = scipy.stats.linregress(axy[0], axy[1])[:3]
         ax = [min(axy[0]), max(axy[0])]
-        ay = map(lambda x: slope * x + intercept, ax)
+        ay = map(lambda x: m * x + b, ax)
         kwargs = {
             "color": COLOR[0],
-            "label": "$r = {0:.3f}$".format(correlation),
+            "label": "$r = {0:.3f}$".format(r),
             "path_effects": [STROKE],
             "rasterized": RASTERIZE
         }
@@ -350,11 +350,11 @@ if __name__ == "__main__":
         ays_p = numpy.transpose(map(lambda data: data.axy_line[1], passive.itervalues()))
         for index in xrange(len(ax)):
             timestep = ax[index]
-            sig = 1.0 - scipy.stats.ttest_rel(ays_d[index], ays_p[index])[1]
-            if math.isnan(sig):
-                sig = 0.0
+            p = scipy.stats.ttest_rel(ays_d[index], ays_p[index])[1]
+            if math.isnan(p):
+                p = 1.0
             axy[0].append(timestep)
-            axy[1].append(sig)
+            axy[1].append(1.0 - p)
         axes2.plot(axy[0], axy[1], color = COLOR[0], rasterized = RASTERIZE)
     
     # Post-configure plot
