@@ -9,9 +9,12 @@ import plot
 import scipy.stats
 import utility
 
+ANGLE = 5.0
 CMAP = matplotlib.colors.LinearSegmentedColormap.from_list("boxplot", ["1.0", plot.COLOR[0]])
 FONT_SIZE = matplotlib.rcParams["font.size"]
 LINEWIDTH = matplotlib.rcParams["lines.linewidth"]
+SHRINK = 10.0
+YTEXT = 0.9
 
 def parseArgs():
     global metric
@@ -87,35 +90,35 @@ for body in bodies:
 means = map(lambda ax: numpy.mean(ax), data)
 percentiles = map(lambda ax: numpy.percentile(ax, [10, 25, 75, 90]), data)
 for index, ax in enumerate(data):
-    axes.vlines(index, percentiles[index][0], percentiles[index][3], color = CMAP(1.0))
-    axes.vlines(index, percentiles[index][1], percentiles[index][2], color = CMAP(1.0), linewidth = LINEWIDTH * 4.0)
+    axes.vlines(index, percentiles[index][0], percentiles[index][-1], color = CMAP(1.0))
+    axes.vlines(index, percentiles[index][1], percentiles[index][-2], color = CMAP(1.0), linewidth = LINEWIDTH * 4.0)
     axes.scatter(index, means[index], color = "1.0", edgecolors = CMAP(1.0), linewidth = LINEWIDTH, zorder = 2)
 
 # Label significance
 for index1 in xrange(len(data) - 1):
     index2 = index1 + 1
-    xymid = (float(index2) / len(data), 0.875)
+    xytext = (float(index2) / len(data), YTEXT)
     p = scipy.stats.ttest_ind(data[index1], data[index2], equal_var = False)[1]
     kwargs = {
         "arrowprops": {
             "arrowstyle": "-",
-            "connectionstyle": "angle, angleA=180, angleB=82.5",
+            "connectionstyle": "angle, angleA=180, angleB={0}".format(90.0 - ANGLE / 2.0),
             "shrinkA": 0.0,
-            "shrinkB": 10.0
+            "shrinkB": SHRINK
         },
         "textcoords": "axes fraction",
-        "xytext": xymid
+        "xytext": xytext
     }
-    patch = axes.annotate("", xy = (index1, percentiles[index1][3]), **kwargs).arrow_patch
+    patch = axes.annotate("", xy = (index1, percentiles[index1][-1]), **kwargs).arrow_patch
     patches.fix(patch)
-    kwargs["arrowprops"]["connectionstyle"] = "angle, angleA=180, angleB=97.5"
-    patch = axes.annotate("", xy = (index2, percentiles[index2][3]), **kwargs).arrow_patch
+    kwargs["arrowprops"]["connectionstyle"] = "angle, angleA=180, angleB={0}".format(90.0 + ANGLE / 2.0)
+    patch = axes.annotate("", xy = (index2, percentiles[index2][-1]), **kwargs).arrow_patch
     patches.fix(patch)
     kwargs = {
         "horizontalalignment": "center",
         "textcoords": "offset points",
         "verticalalignment": "baseline",
-        "xy": xymid,
+        "xy": xytext,
         "xycoords": "axes fraction",
         "xytext": [0.0, FONT_SIZE / 2.0]
     }
