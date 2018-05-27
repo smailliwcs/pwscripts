@@ -10,7 +10,7 @@ import scipy.stats
 import utility
 
 ANGLE = 5.0
-CMAP = matplotlib.colors.LinearSegmentedColormap.from_list("boxplot", ["1.0", plot.COLOR[0]])
+CMAP = matplotlib.colors.LinearSegmentedColormap.from_list("boxplot", ("1.0", plot.COLOR[0]))
 FONT_SIZE = matplotlib.rcParams["font.size"]
 LINEWIDTH = matplotlib.rcParams["lines.linewidth"]
 SHRINK = 10.0
@@ -35,15 +35,13 @@ def parseArgs():
     return parser.parse_args()
 
 def getData(args):
-    global metric
     data = []
     for runs in args.runs:
         ax = []
         for run in utility.getRuns(runs):
             metric.initialize(run, False, args)
-            dx = metric.toTimeBased(metric.read(), [args.tmin, args.tmax])
-            for values in dx.values():
-                ax.extend(values)
+            dx = metric.constrain(metric.read(), (args.tmin, args.tmax))
+            ax.extend(dx.itervalues())
         data.append(ax)
     return data
 
@@ -66,7 +64,7 @@ def getSignificance(p):
 args = parseArgs()
 data = getData(args)
 figure = matplotlib.pyplot.figure()
-figure.set_size_inches(plot.SIZE, 0.8 * plot.SIZE)
+figure.set_size_inches(plot.SIZE, plot.SIZE_FACTOR * plot.SIZE)
 axes = figure.gca()
 axes.grid(False, "both", "x")
 axes.set_xticks(range(len(data)))
@@ -88,8 +86,8 @@ for body in bodies:
 
 # Plot boxes
 means = map(lambda ax: numpy.mean(ax), data)
-percentiles = map(lambda ax: numpy.percentile(ax, [10, 25, 75, 90]), data)
-for index, ax in enumerate(data):
+percentiles = map(lambda ax: numpy.percentile(ax, (10, 25, 75, 90)), data)
+for index in xrange(len(data)):
     axes.vlines(index, percentiles[index][0], percentiles[index][-1], color = CMAP(1.0))
     axes.vlines(index, percentiles[index][1], percentiles[index][-2], color = CMAP(1.0), linewidth = LINEWIDTH * 4.0)
     axes.scatter(index, means[index], color = "1.0", edgecolors = CMAP(1.0), linewidth = LINEWIDTH, zorder = 2)

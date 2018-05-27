@@ -10,11 +10,11 @@ import utility
 
 NAN = float("nan")
 
-def getBin(timestep, tstep):
-    index = timestep / tstep
-    if timestep % tstep > 0:
+def digitize(value, step):
+    index = value / step
+    if value % step > 0:
         index += 1
-    return index * tstep
+    return index * step
 
 class Stage(utility.Enum):
     INCEPT = "incept"
@@ -87,35 +87,38 @@ class Metric(object):
     def calculate(self):
         raise NotImplementedError
     
-    def getInterval(self, values, tival):
-        raise NotImplementedError
-    
-    def toTimeBased(self, values, tival, tstep = 0):
-        raise NotImplementedError
-    
     def aggregate(self, values):
         return numpy.nanmean(values)
+    
+    def constrain(self, values, interval):
+        raise NotImplementedError
+    
+    def toTimeBased(self, values, interval):
+        raise NotImplementedError
+    
+    def toSeries(self, values, interval, step):
+        raise NotImplementedError
     
     def getBins(self):
         pass
 
 class TimeBasedMetric(Metric):
-    def getInterval(self, values, tival):
+    def constrain(self, values, interval):
         result = {}
         for timestep, value in values.iteritems():
-            if utility.contains(tival, timestep):
+            if utility.contains(interval, timestep):
                 result[timestep] = value
         return result
     
-    def toTimeBased(self, values, tival, tstep = 0):
-        if tstep == 0:
-            return self.getInterval(values, tival)
-        else:
-            result = collections.defaultdict(list)
-            for timestep, value in values.iteritems():
-                if utility.contains(tival, timestep):
-                    result[getBin(timestep, tstep)].append(value)
-            return {timestep: self.aggregate(vals) for timestep, vals in result.iteritems()}
+    def toTimeBased(self, values, interval):
+        return self.constrain(values, interval)
+    
+    def toSeries(self, values, interval, step):
+        result = collections.defaultdict(list)
+        for timestep, value in values.iteritems():
+            if utility.contains(interval, timestep):
+                result[digitize(timestep, step)].append(value)
+        return {timestep: self.aggregate(result[timestep]) for timestep in result}
 
 class AgentBasedMetric(Metric):
     def read(self):
@@ -128,27 +131,32 @@ class AgentBasedMetric(Metric):
         metric.initialize(self.run, start = self.start)
         return metric.read()
     
-    def getInterval(self, values, tival):
+    def constrain(self, values, interval):
         result = {}
         for agent, timestep in self.getTimesteps().iteritems():
-            if utility.contains(tival, timestep):
+            if utility.contains(interval, timestep):
+                value = values[agent]
+                if math.isnan(value):
+                    continue
                 result[agent] = values[agent]
         return result
     
-    def toTimeBased(self, values, tival, tstep = 0):
+    def toTimeBased(self, values, interval):
         result = collections.defaultdict(list)
         for agent, timestep in self.getTimesteps().iteritems():
-            if utility.contains(tival, timestep):
+            if utility.contains(interval, timestep):
                 value = values[agent]
-                if value is not NAN:
-                    if tstep == 0:
-                        result[timestep].append(value)
-                    else:
-                        result[getBin(timestep, tstep)].append(value)
-        if tstep == 0:
-            return result
-        else:
-            return {timestep: self.aggregate(vals) for timestep, vals in result.iteritems()}
+                if math.isnan(value):
+                    continue
+                result[timestep].append(value)
+        return result
+    
+    def toSeries(self, values, interval, step):
+        result = collections.defaultdict(list)
+        for timestep, agents in utility.getPopulations(self.run):
+            if utility.contains(interval, timestep):
+                result[digitize(timestep, step)].extend(map(lambda agent: values[agent], agents))
+        return {timestep: self.aggregate(result[timestep]) for timestep in result}
 
 class LifespanMetric(AgentBasedMetric):
     integral = True
@@ -328,7 +336,7 @@ class BirthCount(TimeBasedMetric):
         return "Birth rate"
     
     def read(self):
-        values = dict.fromkeys(xrange(1, utility.getFinalTimestep(self.run) + 1), 0)
+        values = dict.fromkeys(xrange(utility.getFinalTimestep(self.run) + 1), 0)
         for event in utility.Event.read(self.run):
             if event.eventType == self.type:
                 values[event.timestep] += 1
@@ -844,9 +852,6 @@ class NeuronCount(AgentBasedMetric):
     def calculate(self):
         for agent in utility.getAgents(self.run, self.start):
             graph = graph_mod.Graph.read(self.run, agent, Stage.BIRTH, self.graphType)
-            if graph is None:
-                yield agent, NAN
-                continue
             yield agent, graph.size
 
 class OffspringCount(OffspringMetric):
@@ -1019,9 +1024,6 @@ class SynapseCount(AgentBasedMetric):
     def calculate(self):
         for agent in utility.getAgents(self.run, self.start):
             graph = graph_mod.Graph.read(self.run, agent, Stage.BIRTH, self.graphType)
-            if graph is None:
-                yield agent, NAN
-                continue
             yield agent, graph.getLinkCount()
 
 class Timestep(TimeBasedMetric):
@@ -1035,7 +1037,7 @@ class Timestep(TimeBasedMetric):
     
     def read(self):
         values = {}
-        for timestep in xrange(0, utility.getFinalTimestep(self.run) + 1):
+        for timestep in xrange(utility.getFinalTimestep(self.run) + 1):
             values[timestep] = timestep
         return values
     

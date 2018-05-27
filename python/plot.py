@@ -18,25 +18,21 @@ import sys
 import textwrap
 import utility
 
-ALPHA_RUN = [0.1, 0.2]
+ALPHA_RUN = (0.1, 0.2)
 BIN_COUNT = 100
 CMAP_NAME = "YlGnBu"
 matplotlib.rc("image", cmap = CMAP_NAME)
 CMAP = matplotlib.cm.get_cmap(CMAP_NAME)
 CMAP.set_bad("1.0")
-COLOR = [
+COLOR = (
     matplotlib.cm.Blues(0.9),
     matplotlib.cm.Oranges(0.45)
-]
-DASHES = [
-    (None, None),
-    (None, None)
-]
+)
 OFFSET_HIST = 0.1
-RASTERIZE = False
 SIZE = 3.25
+SIZE_FACTOR = 0.8
 STROKE = matplotlib.patheffects.withStroke(linewidth = 3.0, foreground = "1.0")
-TSTEP = [5, 500]
+TSTEP = (10, 100)
 
 class BareTexManager(matplotlib.texmanager.TexManager):
     def __init__(self):
@@ -114,8 +110,8 @@ class Plot(object):
         parser.add_argument("--ymax", metavar = "YMAX", type = float)
         parser.add_argument("--ystep", metavar = "YSTEP", type = float)
         parser.add_argument("--ylabel", metavar = "YLABEL")
+        parser.add_argument("--htmin", metavar = "HTMIN", type = int, default = 0)
         parser.add_argument("--hmax", metavar = "HMAX", type = float)
-        parser.add_argument("--htmin", metavar = "HTMIN", type = int, default = 1)
         group = parser.add_mutually_exclusive_group()
         group.add_argument("--logx", action = "store_true")
         group.add_argument("--logy", action = "store_true")
@@ -124,7 +120,6 @@ class Plot(object):
         parser.add_argument("--bins", metavar = "BINS", type = int, default = BIN_COUNT)
         parser.add_argument("--size", metavar = "SIZE", type = float, default = SIZE)
         parser.add_argument("--legend", metavar = "LOC", default = "upper left")
-        parser.add_argument("--simplify", metavar = "THRESHOLD", type = float, default = 0.1)
         parser.add_argument("runs", metavar = "RUNS")
         if len(metrics) != 2:
             parser.add_argument("xmetric", metavar = "XMETRIC")
@@ -139,13 +134,10 @@ class Plot(object):
     def __init__(self):
         self.metrics = Plot.getMetrics()
         self.args = Plot.parseArgs(self.metrics)
-        matplotlib.rc("path", simplify_threshold = self.args.simplify)
         self.runs = list(utility.getRuns(self.args.runs))
         assert len(self.runs) > 0
         self.xMetric = self.metrics[0]
         self.yMetric = self.metrics[1]
-        if self.isXAgent():
-            assert self.isYAgent()
         assert self.args.line or self.args.hist
         if self.args.regress:
             assert not self.args.line and self.args.hist
@@ -154,29 +146,23 @@ class Plot(object):
             assert isinstance(self.xMetric, metrics_mod.Timestep)
         self.sig = self.args.passive and len(self.runs) > 1
         if self.args.tstep is None:
-            if self.isXAgent() or self.isYAgent():
-                self.args.tstep = TSTEP[1]
-            else:
+            if all(map(lambda metric: isinstance(metric, metrics_mod.TimeBasedMetric), self.metrics)):
                 self.args.tstep = TSTEP[0]
-    
-    def isXAgent(self):
-        return isinstance(self.xMetric, metrics_mod.AgentBasedMetric)
-    
-    def isYAgent(self):
-        return isinstance(self.yMetric, metrics_mod.AgentBasedMetric)
+            else:
+                self.args.tstep = TSTEP[1]
 
 class Data:
     @staticmethod
-    def get(plot, run, passive, metric):
-        metric.initialize(run, passive, plot.args)
+    def get(metric, run, passive, args):
+        metric.initialize(run, passive, args)
         try:
             return metric.read()
         except IOError:
             pass
         count = 0
         values = {}
-        spinner = itertools.cycle(["|", "/", "-", "\\"])
-        sys.stderr.write("{0}: {1} ... {2}".format(metric.run, metric.getName(), spinner.next()))
+        spinner = itertools.cycle(("|", "/", "-", "\\"))
+        sys.stderr.write("{0} ... {1}".format(metric.getName(), spinner.next()))
         sys.stderr.flush()
         for key, value in metric.calculate():
             count += 1
@@ -192,11 +178,7 @@ class Data:
     def zip(dx, dy):
         result = [[], []]
         for key, x in sorted(dx.iteritems()):
-            if math.isnan(x):
-                continue
             for y in utility.iterate(dy.get(key)):
-                if math.isnan(y):
-                    continue
                 result[0].append(x)
                 result[1].append(y)
         return result
@@ -232,26 +214,30 @@ class Data:
             return numpy.linspace(xmin, xmax, count + 1)
     
     def __init__(self, plot, run, passive):
-        self.dx = Data.get(plot, run, passive, plot.xMetric)
-        self.dy = Data.get(plot, run, passive, plot.yMetric)
-        tival = [plot.args.tmin, plot.args.tmax]
+        sys.stderr.write("{0}\n".format(utility.getRun(run, passive)))
+        dx = Data.get(plot.xMetric, run, passive, plot.args)
+        dy = Data.get(plot.yMetric, run, passive, plot.args)
+        interval = [plot.args.tmin, plot.args.tmax]
         if plot.args.line:
-            self.dx_line = plot.xMetric.toTimeBased(self.dx, tival, plot.args.tstep)
-            self.dy_line = plot.yMetric.toTimeBased(self.dy, tival, plot.args.tstep)
-            self.axy_line = Data.zip(self.dx_line, self.dy_line)
-        if plot.args.hist:
+            dx_line = plot.xMetric.toSeries(dx, interval, plot.args.tstep)
+            dy_line = plot.yMetric.toSeries(dy, interval, plot.args.tstep)
+            self.line = Data.zip(dx_line, dy_line)
+        if plot.args.hist and not passive:
             if plot.args.tmin is None or plot.args.htmin > plot.args.tmin:
-                tival[0] = plot.args.htmin
-            if plot.isXAgent() and plot.isYAgent():
-                self.dx_hist = plot.xMetric.getInterval(self.dx, tival)
-                self.dy_hist = plot.yMetric.getInterval(self.dy, tival)
+                interval[0] = plot.args.htmin
+            if all(map(lambda metric: isinstance(metric, metrics_mod.AgentBasedMetric), plot.metrics)):
+                dx_hist = plot.xMetric.constrain(dx, interval)
+                dy_hist = plot.yMetric.constrain(dy, interval)
             else:
-                self.dx_hist = plot.xMetric.toTimeBased(self.dx, tival)
-                self.dy_hist = plot.yMetric.toTimeBased(self.dy, tival)
-            self.axy_hist = Data.zip(self.dx_hist, self.dy_hist)
+                dx_hist = plot.xMetric.toTimeBased(dx, interval)
+                dy_hist = plot.yMetric.toTimeBased(dy, interval)
+            self.hist = Data.zip(dx_hist, dy_hist)
+
+def plotLine(axes, axy, kwargs):
+    axes.plot(axy[0], axy[1], **kwargs)
 
 def getGridKwargs():
-    props = ["alpha", "color", "linestyle", "linewidth"]
+    props = ("alpha", "color", "linestyle", "linewidth")
     return dict(map(lambda prop: (prop, matplotlib.rcParams["grid.{0}".format(prop)]), props))
 
 def nudge(text, x, y):
@@ -268,7 +254,7 @@ if __name__ == "__main__":
         axes1 = figure.add_subplot(grid[0:-1, :])
         axes2 = figure.add_subplot(grid[-1, :])
     else:
-        figure.set_size_inches(plot.args.size, 0.8 * plot.args.size)
+        figure.set_size_inches(plot.args.size, SIZE_FACTOR * plot.args.size)
         axes1 = figure.gca()
     if plot.args.logx:
         axes1.semilogx()
@@ -289,40 +275,35 @@ if __name__ == "__main__":
         
         # Plot line
         if plot.args.line and not plot.args.hist:
-            axy = driven[run].axy_line
             kwargs = lambda index: {
                 "alpha": ALPHA_RUN[index],
                 "color": COLOR[index],
-                "dashes": DASHES[index],
-                "rasterized": RASTERIZE,
                 "zorder": -2 - index
             }
-            axes1.plot(axy[0], axy[1], **kwargs(0))
+            plotLine(axes1, driven[run].line, kwargs(0))
             if plot.args.passive:
-                axy = passive[run].axy_line
-                axes1.plot(axy[0], axy[1], **kwargs(1))
+                plotLine(axes1, passive[run].line, kwargs(1))
     
     # Plot line
     if plot.args.line:
-        axy = numpy.nanmean(map(lambda data: data.axy_line, driven.itervalues()), 0)
         kwargs = lambda index: {
             "color": COLOR[index],
-            "dashes": DASHES[index],
+            "label": ("Driven", "Passive")[index],
             "path_effects": [STROKE],
-            "rasterized": RASTERIZE,
             "zorder": -index
         }
-        axes1.plot(axy[0], axy[1], label = "Driven", **kwargs(0))
+        axy = numpy.mean(map(lambda data: data.line, driven.itervalues()), axis = 0)
+        plotLine(axes1, axy, kwargs(0))
         if plot.args.passive:
-            axy = numpy.nanmean(map(lambda data: data.axy_line, passive.itervalues()), 0)
-            axes1.plot(axy[0], axy[1], label = "Passive", **kwargs(1))
+            axy = numpy.mean(map(lambda data: data.line, passive.itervalues()), axis = 0)
+            plotLine(axes1, axy, kwargs(1))
     
     # Plot histogram
     if plot.args.hist:
-        axy = Data.flatten(map(lambda data: data.axy_hist, driven.itervalues()))
+        axy = Data.flatten(map(lambda data: data.hist, driven.itervalues()))
         xbins = Data.bin(plot.xMetric, axy[0], plot.args.xmin, plot.args.xmax, plot.args.bins)
         ybins = Data.bin(plot.yMetric, axy[1], plot.args.ymin, plot.args.ymax, plot.args.bins)
-        image = axes1.hist2d(axy[0], axy[1], bins = [xbins, ybins], norm = HistNorm(vmax = plot.args.hmax), zorder = -4)[3]
+        image = axes1.hist2d(axy[0], axy[1], bins = (xbins, ybins), norm = HistNorm(vmax = plot.args.hmax), zorder = -4)[3]
         if not plot.sig:
             colorbar = figure.colorbar(image)
             colorbar.locator = ColorbarLocator()
@@ -331,31 +312,32 @@ if __name__ == "__main__":
     
     # Plot regression
     if plot.args.regress:
-        m, b, r = scipy.stats.linregress(axy[0], axy[1])[:3]
-        ax = [min(axy[0]), max(axy[0])]
+        m, b, r = scipy.stats.linregress(axy)[:3]
+        ax = (min(axy[0]), max(axy[0]))
         ay = map(lambda x: m * x + b, ax)
         kwargs = {
             "color": COLOR[0],
             "label": "$r = {0:.3f}$".format(r),
-            "path_effects": [STROKE],
-            "rasterized": RASTERIZE
+            "path_effects": (STROKE,),
         }
         axes1.plot(ax, ay, **kwargs)
     
     # Plot significance
     if plot.sig:
+        ax = driven.itervalues().next().line[0]
+        ay = {
+            "driven": numpy.transpose(map(lambda data: data.line[1], driven.itervalues())),
+            "passive": numpy.transpose(map(lambda data: data.line[1], passive.itervalues()))
+        }
         axy = [[], []]
-        ax = driven.itervalues().next().axy_line[0]
-        ays_d = numpy.transpose(map(lambda data: data.axy_line[1], driven.itervalues()))
-        ays_p = numpy.transpose(map(lambda data: data.axy_line[1], passive.itervalues()))
         for index in xrange(len(ax)):
             timestep = ax[index]
-            p = scipy.stats.ttest_rel(ays_d[index], ays_p[index])[1]
+            p = scipy.stats.ttest_rel(ay["driven"][index], ay["passive"][index])[1]
             if math.isnan(p):
                 p = 1.0
             axy[0].append(timestep)
             axy[1].append(1.0 - p)
-        axes2.plot(axy[0], axy[1], color = COLOR[0], rasterized = RASTERIZE)
+        axes2.plot(axy[0], axy[1], color = COLOR[0])
     
     # Post-configure plot
     axes1.set_xlim(plot.args.xmin, plot.args.xmax)
@@ -374,7 +356,7 @@ if __name__ == "__main__":
             axes2.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(plot.args.xstep))
         axes2.set_ylabel("Significance")
         axes2.set_ylim(0.75, 1.05)
-        ticks = axes2.set_yticks([0.8, 0.95, 1.0])
+        ticks = axes2.set_yticks((0.8, 0.95, 1.0))
         if plot.args.size < 4.0:
             nudge(ticks[1].label, 0.0, -1.0)
             nudge(ticks[2].label, 0.0, 1.0)
