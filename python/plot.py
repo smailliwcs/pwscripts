@@ -366,5 +366,6 @@ if __name__ == "__main__":
         axes1.legend(loc = plot.args.legend)
     axes1.set_ylabel(ylabel)
     if plot.args.diag:
-        axes1.plot([0.0, 1.0], [0.0, 1.0], transform = axes1.transAxes, **getGridKwargs())
+        xlim = axes1.get_xlim()
+        axes1.plot(xlim, xlim, **getGridKwargs())
     figure.savefig("{0}-vs-{1}".format(plot.yMetric.getKey(), plot.xMetric.getKey()))
