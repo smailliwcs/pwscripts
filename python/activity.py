@@ -60,7 +60,7 @@ with getFile(args.run, "diversity.txt") as d, getFile(args.run, "activity.txt.gz
                     gene2 = genome2[index]
                     if gene1.value == value:
                         if gene2.value == value:
-                            gene = random.choice([gene1, gene2])
+                            gene = random.choice((gene1, gene2))
                         else:
                             gene = gene1
                     elif gene2.value == value:

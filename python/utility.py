@@ -114,7 +114,7 @@ def getParameter(run, name):
                 return chunks[1]
 
 def getDataTable(path, name):
-    return datalib.parse(path, [name], True)[name]
+    return datalib.parse(path, (name,), True)[name]
 
 def getFinalTimestep(run):
     with open(os.path.join(run, "endStep.txt")) as f:

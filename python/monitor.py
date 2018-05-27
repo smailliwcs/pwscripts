@@ -25,7 +25,7 @@ def population():
 def food():
     x = []
     ys = []
-    cs = ["g", "r"]
+    cs = ("g", "r")
     with open(os.path.join(args.run, "energy/food.txt")) as f:
         for line in f:
             if line.startswith("#@L"):
@@ -51,7 +51,7 @@ def lifespans():
             chunks = line.split()
             y.append(int(chunks[3]) - int(chunks[1]))
     subplot(3, 1, 3)
-    hist(y, bins = 40, range = [0, 1000])
+    hist(y, bins = 40, range = (0, 1000))
 
 def _plot(fn):
     try:
