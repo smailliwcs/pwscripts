@@ -7,6 +7,7 @@ import os
 import patches
 import plot
 import scipy.stats
+import sys
 import utility
 
 ANGLE = 5.0
@@ -37,6 +38,7 @@ def parseArgs():
 def getData(args):
     data = []
     for runs in args.runs:
+        sys.stderr.write("{0}\n".format(runs))
         ax = []
         for run in utility.getRuns(runs):
             metric.initialize(run, False, args)
