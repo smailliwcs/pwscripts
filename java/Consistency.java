@@ -29,6 +29,7 @@ public class Consistency {
     private static String run;
     private static int groupSize;
     private static EntropyCalculatorDiscrete calculator;
+    private static Map<Integer, Double> geneSums;
     
     public static void main(String[] args) throws Exception {
         if (!tryParseArgs(args)) {
@@ -39,6 +40,7 @@ public class Consistency {
         calculator = new EntropyCalculatorDiscrete(256 >> groupSize);
         Map<Integer, Collection<Event>> events = readEvents();
         Map<Integer, List<Integer>> genomes = new HashMap<Integer, List<Integer>>();
+        geneSums = new HashMap<Integer, Double>();
         int initAgentCount = getInitAgentCount();
         for (int agentIndex = 1; agentIndex <= initAgentCount; agentIndex++) {
             genomes.put(agentIndex, readGenome(agentIndex));
@@ -62,6 +64,10 @@ public class Consistency {
                 }
             }
             System.out.printf("%d %g%n", timestep, getConsistency(genomes.values()));
+        }
+        System.out.println();
+        for (Map.Entry<Integer, Double> geneSum : geneSums.entrySet()) {
+            System.out.printf("%d %g%n", geneSum.getKey(), geneSum.getValue() / (maxTimestep + 1));
         }
     }
     
@@ -147,7 +153,7 @@ public class Consistency {
     }
     
     private static double getConsistency(Collection<List<Integer>> genomes) {
-        double entropy = 0.0;
+        double sum = 0.0;
         int[] genes = new int[genomes.size()];
         int geneCount = genomes.iterator().next().size();
         for (int geneIndex = 0; geneIndex < geneCount; geneIndex++) {
@@ -156,14 +162,19 @@ public class Consistency {
                 genes[genomeIndex] = genome.get(geneIndex) >> groupSize;
                 genomeIndex++;
             }
-            entropy += getEntropy(genes);
+            double consistency = getConsistency(genes);
+            if (!geneSums.containsKey(geneIndex)) {
+                geneSums.put(geneIndex, 0.0);
+            }
+            geneSums.put(geneIndex, geneSums.get(geneIndex) + consistency);
+            sum += consistency;
         }
-        return 1.0 - entropy / geneCount;
+        return sum / geneCount;
     }
     
-    private static double getEntropy(int[] genes) {
+    private static double getConsistency(int[] genes) {
         calculator.initialise();
         calculator.addObservations(genes);
-        return calculator.computeAverageLocalOfObservations() / (8 - groupSize);
+        return 1.0 - calculator.computeAverageLocalOfObservations() / (8 - groupSize);
     }
 }

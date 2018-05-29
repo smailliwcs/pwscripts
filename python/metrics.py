@@ -68,6 +68,8 @@ class Metric(object):
             for line in f:
                 if line.startswith("#"):
                     continue
+                if line == "\n":
+                    break
                 yield line
     
     def read(self):
