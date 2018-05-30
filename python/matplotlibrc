@@ -10,6 +10,7 @@ font.family: serif
 font.size: 8
 grid.alpha: 0.1
 grid.color: 0
+legend.borderaxespad: 1
 legend.edgecolor: inherit
 legend.fancybox: False
 legend.fontsize: 6
