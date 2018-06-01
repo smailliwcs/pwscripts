@@ -143,3 +143,27 @@ def getPopulations(run):
             elif event.eventType == EventType.DEATH:
                 agents.remove(event.agent)
         yield timestep, agents
+
+def getGeneTitles(run):
+    titles = {}
+    path = os.path.join(run, "genome", "meta", "geneindex.txt")
+    with open(path) as f:
+        for line in f:
+            index, name = line.split()
+            titles[int(index)] = name
+    path = os.path.join(run, "genome", "meta", "genetitle.txt")
+    with open(path) as f:
+        for index, line in enumerate(f):
+            title = line.split(" :: ")[0]
+            titles[index] = title
+    replacements = {
+        "_": "\\_{}",
+        ">": "\\textgreater{}",
+        "InternalNeurGroup ": ""
+    }
+    for index, title in titles.iteritems():
+        for old, new in replacements.iteritems():
+            title = title.replace(old, new)
+        title = "\\texttt{{{0}}}".format(title)
+        titles[index] = title
+    return titles

@@ -396,10 +396,10 @@ class Complexity(AgentBasedMetric):
 
 class Consistency(TimeBasedMetric):
     def addArgs(self, parser):
-        self.addArg(parser, "group-size", metavar = "GROUP_SIZE", type = int, choices = tuple(xrange(8)))
+        self.addArg(parser, "group_size", metavar = "GROUP_SIZE", type = int, choices = tuple(xrange(8)))
     
     def readArgs(self, args):
-        self.groupSize = self.readArg(args, "group-size")
+        self.groupSize = self.readArg(args, "group_size")
     
     def getKey(self):
         return "consistency-{0}".format(self.groupSize)
@@ -626,26 +626,7 @@ class Gene(AgentBasedMetric):
         return "gene-{0}".format(self.index)
     
     def getLabel(self):
-        path = os.path.join(self.run, "genome", "meta", "geneindex.txt")
-        with open(path) as f:
-            for index in xrange(self.index):
-                f.readline()
-            title = f.readline().split()[1]
-        path = os.path.join(self.run, "genome", "meta", "genetitle.txt")
-        with open(path) as f:
-            for index in xrange(self.index):
-                f.readline()
-            line = f.readline()
-            if line != "":
-                title = line.split(" :: ")[0]
-        replacements = {
-            "_": "\\_",
-            ">": "\\textgreater",
-            "InternalNeurGroup ": ""
-        }
-        for old, new in replacements.iteritems():
-            title = title.replace(old, new)
-        return "\\texttt{{{0}}} gene".format(title)
+        return "{0} gene".format(utility.getGeneTitles(self.run)[self.index])
     
     def calculate(self):
         for agent in utility.getAgents(self.run, self.start):
