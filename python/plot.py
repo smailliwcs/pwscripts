@@ -116,6 +116,8 @@ class Plot(object):
         group.add_argument("--logx", action = "store_true")
         group.add_argument("--logy", action = "store_true")
         group.add_argument("--logxy", action = "store_true")
+        parser.add_argument("--invx", action = "store_true")
+        parser.add_argument("--invy", action = "store_true")
         parser.add_argument("--diag", action = "store_true")
         parser.add_argument("--bins", metavar = "BINS", type = int, default = BIN_COUNT)
         parser.add_argument("--size", metavar = "SIZE", type = float, default = SIZE)
@@ -340,6 +342,10 @@ if __name__ == "__main__":
         axes2.plot(axy[0], axy[1], color = COLOR[0])
     
     # Post-configure plot
+    if plot.args.invx:
+        axes1.invert_xaxis()
+    if plot.args.invy:
+        axes1.invert_yaxis()
     axes1.set_xlim(plot.args.xmin, plot.args.xmax)
     if plot.args.xstep is not None:
         axes1.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(plot.args.xstep))
