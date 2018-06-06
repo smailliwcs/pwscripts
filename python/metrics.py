@@ -671,7 +671,8 @@ class InfoModification(AgentBasedMetric):
             if flag == "M":
                 type, count, value = chunks.split()
                 if type == self.type:
-                    values[int(agent)] = float(value)
+                    count = int(count)
+                    values[int(agent)] = 0.0 if count == 0 else float(value) / count
         return values
 
 class InfoStorage(AgentBasedMetric):
@@ -698,7 +699,8 @@ class InfoStorage(AgentBasedMetric):
             agent, flag, chunks = line.split(None, 2)
             if flag == "S":
                 count, value = chunks.split()
-                values[int(agent)] = float(value)
+                count = int(count)
+                values[int(agent)] = 0.0 if count == 0 else float(value) / count
         return values
 
 class InfoTransfer(AgentBasedMetric):
@@ -728,7 +730,8 @@ class InfoTransfer(AgentBasedMetric):
             if flag == "T":
                 source, count, value = chunks.split()
                 if source == self.source:
-                    values[int(agent)] = float(value)
+                    count = int(count)
+                    values[int(agent)] = 0.0 if count == 0 else float(value) / count
         return values
 
 class Integration(AgentBasedMetric):
