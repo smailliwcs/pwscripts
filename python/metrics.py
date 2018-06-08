@@ -740,14 +740,24 @@ class InfoTransfer(InfoDynamicsMetric):
     def getLabel(self):
         return "{0} information transfer".format(self.source)
     
+    def getSynapseCount(self, neuronCounts, source):
+        if source == "Internal":
+            return neuronCounts["Processing"] * (neuronCounts["Processing"] - 1)
+        elif source == "Total":
+            return neuronCounts["Input"] * neuronCounts["Processing"] + neuronCounts["Processing"] * (neuronCounts["Processing"] - 1)
+        else:
+            return neuronCounts[source] * neuronCounts["Processing"]
+    
     def read(self):
+        neuronCounts = utility.getNeuronCounts(self.run)
         values = dict.fromkeys(utility.getAgents(self.run), NAN)
         for line in self.readLines():
             agent, flag, chunks = line.split(None, 2)
+            agent = int(agent)
             if flag == "T":
                 source, count, value = chunks.split()
                 if source == self.source:
-                    values[int(agent)] = self.apply(self.statistic, int(count), float(value))
+                    values[agent] = self.apply(self.statistic, self.getSynapseCount(neuronCounts[agent], source), float(value))
         return values
 
 class Integration(AgentBasedMetric):
