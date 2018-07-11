@@ -48,7 +48,7 @@ def getData(args):
     return data
 
 def getKey(runs):
-    return "\\texttt{{{0}}}".format(os.path.basename(os.path.realpath(runs)))
+    return "\\texttt{{{0}}}".format(os.path.basename(os.path.realpath(runs)).capitalize())
 
 def getDirection(mean1, mean2, p):
     if p < 0.05:
