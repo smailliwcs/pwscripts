@@ -686,7 +686,10 @@ class InfoModification(InfoDynamicsMetric):
             if flag == "M":
                 type, count, value = chunks.split()
                 if type == self.type:
-                    values[int(agent)] = self.apply(self.statistic, int(count), float(value))
+                    value = float(value)
+                    if self.type == InfoModification.Type.NONTRIVIAL:
+                        value = -value
+                    values[int(agent)] = self.apply(self.statistic, int(count), value)
         return values
 
 class InfoStorage(InfoDynamicsMetric):
