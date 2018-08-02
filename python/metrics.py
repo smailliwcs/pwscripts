@@ -142,7 +142,7 @@ class AgentBasedMetric(Metric):
         for agent, timestep in self.getTimesteps().iteritems():
             if utility.contains(interval, timestep):
                 value = values[agent]
-                if math.isnan(value):
+                if math.isnan(value) or math.isinf(value):
                     continue
                 result[agent] = values[agent]
         return result
