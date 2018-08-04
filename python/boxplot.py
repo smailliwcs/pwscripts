@@ -25,6 +25,7 @@ def parseArgs():
     parser.add_argument("--tmax", metavar = "TMAX", type = int)
     parser.add_argument("--ymin", metavar = "YMIN", type = float)
     parser.add_argument("--ymax", metavar = "YMAX", type = float)
+    parser.add_argument("--ylabel", metavar = "YLABEL")
     parser.add_argument("runs", metavar = "RUNS", nargs = "+")
     if len(metrics) != 1:
         parser.add_argument("metric", metavar = "METRIC")
@@ -84,7 +85,9 @@ axes.grid(False, "both", "x")
 axes.set_xticks(range(len(data)))
 axes.set_xticklabels(map(getKey, args.runs))
 axes.set_xlim(-0.5, len(data) - 0.5)
-axes.set_ylabel(metric.getLabel())
+if args.ylabel is None:
+    args.ylabel = metric.getLabel()
+axes.set_ylabel(args.ylabel)
 if args.ymin is not None:
     axes.set_ylim(bottom = args.ymin)
 if args.ymax is None:
