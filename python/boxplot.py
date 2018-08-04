@@ -47,6 +47,18 @@ def getData(args):
         data.append(ax)
     return data
 
+def getYMax(ymin, data):
+    figure = matplotlib.pyplot.figure()
+    axes = figure.gca()
+    if ymin is not None:
+        axes.set_ylim(bottom = ymin)
+    percentiles = map(lambda ax: numpy.percentile(ax, (10, 90)), data)
+    for index in xrange(len(data)):
+        axes.vlines(index, percentiles[index][0], percentiles[index][-1])
+    yticks = axes.get_yticks()
+    axes.set_ylim(top = 3 * yticks[-1] - 2 * yticks[-2])
+    return axes.get_yticks()[-1]
+
 def getKey(runs):
     return "\\texttt{{{0}}}".format(os.path.basename(os.path.realpath(runs)).capitalize())
 
@@ -75,8 +87,9 @@ axes.set_xlim(-0.5, len(data) - 0.5)
 axes.set_ylabel(metric.getLabel())
 if args.ymin is not None:
     axes.set_ylim(bottom = args.ymin)
-if args.ymax is not None:
-    axes.set_ylim(top = args.ymax)
+if args.ymax is None:
+    args.ymax = getYMax(args.ymin, data)
+axes.set_ylim(top = args.ymax)
 
 # Plot violins
 bodies = axes.violinplot(data, positions = range(len(data)), showextrema = False)["bodies"]
