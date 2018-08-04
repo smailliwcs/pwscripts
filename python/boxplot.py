@@ -92,7 +92,7 @@ if args.ymax is None:
 axes.set_ylim(top = args.ymax)
 
 # Plot violins
-bodies = axes.violinplot(data, positions = range(len(data)), showextrema = False)["bodies"]
+bodies = axes.violinplot(data, points = 1000, positions = range(len(data)), showextrema = False)["bodies"]
 for body in bodies:
     body.set_alpha(1.0)
     body.set_edgecolor(CMAP(0.1))
