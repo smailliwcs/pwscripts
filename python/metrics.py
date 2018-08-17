@@ -188,9 +188,10 @@ class LifespanMetric(AgentBasedMetric):
 
 class OffspringMetric(AgentBasedMetric):
     def getCounts(self):
+        self.type = utility.EventType.VIRTUAL if self.passive else utility.EventType.BIRTH
         values = collections.defaultdict(int)
         for event in utility.Event.read(self.run):
-            if event.eventType != utility.EventType.BIRTH:
+            if event.eventType != self.type:
                 continue
             values[event.parent1] += 1
             values[event.parent2] += 1
@@ -336,14 +337,6 @@ class Adaptivity(AgentBasedMetric):
 class BirthCount(TimeBasedMetric):
     integral = True
     
-    def addArgs(self, parser):
-        self.addArg(parser, "type", metavar = "TYPE", nargs = "?", choices = (utility.EventType.BIRTH, utility.EventType.VIRTUAL))
-    
-    def readArgs(self, args):
-        self.type = self.readArg(args, "type")
-        if self.type is None:
-            self.type = utility.EventType.VIRTUAL if self.passive else utility.EventType.BIRTH
-    
     def getKey(self):
         return "birth-count"
     
@@ -351,6 +344,7 @@ class BirthCount(TimeBasedMetric):
         return "Birth rate"
     
     def read(self):
+        self.type = utility.EventType.VIRTUAL if self.passive else utility.EventType.BIRTH
         values = dict.fromkeys(xrange(utility.getFinalTimestep(self.run) + 1), 0)
         for event in utility.Event.read(self.run):
             if event.eventType == self.type:
@@ -873,7 +867,7 @@ class OffspringCount(OffspringMetric):
         return "offspring-count"
     
     def getLabel(self):
-        return "Offspring rate"
+        return "Offspring count"
     
     def read(self):
         return self.getCounts()
