@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 if [[ $# -lt 2 ]]; then
-    echo "Usage: $(basename "$0") INPUT OUTPUT [PARAMETER]..."
+    echo "Usage: $(basename "$0") INPUT OUTPUT [-d DELTA] [PARAMETER]..."
     exit 1
 fi
 input=$1
@@ -13,14 +13,19 @@ fi
 output=$1
 shift
 start=1
+delta=1
 for (( index=1; index <= $#; index++ )); do
-    if [[ ${!index} == "-s" ]]; then
-        next_index=$((index + 1))
-        start=${!next_index}
-        break
-    fi
+    next_index=$((index + 1))
+    case "${!index}" in
+        -s)
+            start=${!next_index}
+            ;;
+        -d)
+            delta=${!next_index}
+            ;;
+    esac
 done
-vf="vflip, drawtext=text=%{n}: start_number=$start: x=10: y=10: fontcolor=white"
+vf="vflip, drawtext=text='%{eif\:$start+n*$delta\:d}':x=10:y=10:fontcolor=white"
 ./bin/PwMoviePlayer -f "$input" "$@" -w | ffmpeg \
     -f rawvideo -pix_fmt rgba -s 640x480 -r 60 -i pipe:0 \
     -vcodec libx264 -crf 18 -movflags faststart -bf 2 -flags +cgop -g 30 -pix_fmt yuv420p -vf "$vf" -y "$output"
