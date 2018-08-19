@@ -23,6 +23,8 @@ def parseArgs():
     parser = argparse.ArgumentParser(add_help = False)
     parser.add_argument("--tmin", metavar = "TMIN", type = int)
     parser.add_argument("--tmax", metavar = "TMAX", type = int)
+    parser.add_argument("--xmin", metavar = "XMIN", type = int)
+    parser.add_argument("--xmax", metavar = "XMAX", type = int)
     parser.add_argument("--ymin", metavar = "YMIN", type = float)
     parser.add_argument("--ymax", metavar = "YMAX", type = float)
     parser.add_argument("--ylabel", metavar = "YLABEL")
@@ -44,7 +46,8 @@ def getData(args):
         for run in utility.getRuns(runs):
             metric.initialize(run, False, args)
             dx = metric.constrain(metric.read(), (args.tmin, args.tmax))
-            ax.extend(dx.itervalues())
+            interval = (args.xmin, args.xmax)
+            ax.extend([y for x, y in dx.iteritems() if utility.contains(interval, x)])
         data.append(ax)
     return data
 
