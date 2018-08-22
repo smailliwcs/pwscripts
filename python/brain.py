@@ -1,10 +1,8 @@
 import argparse
 import graph as graph_mod
-import matplotlib.pyplot
+import matplotlib
 import numpy
 
-matplotlib.rcParams["figure.figsize"] = (5.0, 5.0)
-matplotlib.rcParams["savefig.format"] = "pdf"
 parser = argparse.ArgumentParser()
 parser.add_argument("run", metavar = "RUN")
 parser.add_argument("agent", metavar = "AGENT", type = int)
@@ -23,6 +21,9 @@ for nodeOut in xrange(graph.size):
         elif weight is None:
             weight = 0.0
         weights[nodeOut][nodeIn] = weight
+if not args.save:
+    matplotlib.use("TkAgg")
+import matplotlib.pyplot
 figure = matplotlib.pyplot.figure()
 axes = figure.gca()
 cmap = matplotlib.cm.get_cmap("bwr")
@@ -41,7 +42,6 @@ for node in xrange(graph.size):
 axline(inputCount - 0.5, 0.5)
 axline(inputCount + outputCount - 0.5, 0.5)
 if args.save:
-    matplotlib.pyplot.tight_layout()
     figure.savefig("brain-{0}-{1}".format(args.agent, args.stage))
 else:
     matplotlib.pyplot.show()
