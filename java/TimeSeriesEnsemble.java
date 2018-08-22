@@ -66,11 +66,14 @@ public class TimeSeriesEnsemble extends ArrayList<TimeSeries> {
         return neuronIndex - inputNeuronCount;
     }
     
-    public int[] getPreNeuronIndices(int postNeuronIndex) {
+    public int[] getPreNeuronIndices(int postNeuronIndex, int preNeuronIndexToSkip) {
         Collection<Integer> preNeuronIndices = new LinkedList<Integer>();
         for (Synapse synapse : synapses) {
             if (synapse.getPostNeuronIndex() == postNeuronIndex) {
-                preNeuronIndices.add(synapse.getPreNeuronIndex());
+                int preNeuronIndex = synapse.getPreNeuronIndex();
+                if (preNeuronIndex != preNeuronIndexToSkip) {
+                    preNeuronIndices.add(preNeuronIndex);
+                }
             }
         }
         return Utility.toPrimitive(preNeuronIndices);

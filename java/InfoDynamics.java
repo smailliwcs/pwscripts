@@ -39,13 +39,14 @@ public class InfoDynamics {
                     break;
                 }
                 double[][] locals = new double[ensemble.getProcessingNeuronCount()][];
-                if (mode == null || mode.equals("S")) {
+                if (mode == null || mode.equals("S") || mode.equals("M")) {
                     getStorage(ensemble, locals);
                 }
                 if (mode == null || mode.equals("T")) {
-                    getTransfer(ensemble, locals);
+                    getCompleteTransfer(ensemble);
                 }
-                if (mode == null) {
+                if (mode == null || mode.equals("M")) {
+                    getApparentTransfer(ensemble, locals);
                     getModification(ensemble, locals);
                 }
             }
@@ -85,10 +86,11 @@ public class InfoDynamics {
         storageCalculator.initialise(embedding, 1);
         storageCalculator.startAddObservations();
         for (TimeSeries timeSeries : ensemble) {
+            int length = timeSeries.size() - embedding;
             double[][] data = timeSeries.getColumns(new int[] { neuronIndex });
             storageCalculator.addObservations(
-                MatrixUtils.makeDelayEmbeddingVector(data, embedding, embedding - 1, timeSeries.size() - embedding),
-                MatrixUtils.selectRows(data, embedding, timeSeries.size() - embedding));
+                MatrixUtils.makeDelayEmbeddingVector(data, embedding, embedding - 1, length),
+                MatrixUtils.selectRows(data, embedding, length));
         }
         storageCalculator.finaliseAddObservations();
         double[] local = storageCalculator.computeLocalOfPreviousObservations();
@@ -96,37 +98,64 @@ public class InfoDynamics {
         return MatrixUtils.mean(local);
     }
     
-    private static void getTransfer(TimeSeriesEnsemble ensemble, double[][] locals) throws Exception {
+    private static void getCompleteTransfer(TimeSeriesEnsemble ensemble) throws Exception {
         Result result = new Result();
         for (Nerve nerve : ensemble.getInputNerves()) {
-            result.add(getTransfer(ensemble, nerve.getName(), nerve.getNeuronIndices(), locals));
+            result.add(getCompleteTransfer(ensemble, nerve.getName(), nerve.getNeuronIndices()));
         }
-        result.add(getTransfer(ensemble, "Internal", ensemble.getProcessingNeuronIndices(), locals));
+        result.add(getCompleteTransfer(ensemble, "Internal", ensemble.getProcessingNeuronIndices()));
         System.out.printf("%d T Total %d %g%n", ensemble.getAgentIndex(), result.count, result.sum);
     }
     
-    private static Result getTransfer(TimeSeriesEnsemble ensemble, String label, int[] preNeuronIndices, double[][] locals) throws Exception {
+    private static Result getCompleteTransfer(TimeSeriesEnsemble ensemble, String label, int[] preNeuronIndices) throws Exception {
         Result result = new Result();
         for (int preNeuronIndex : preNeuronIndices) {
             for (int postNeuronIndex : ensemble.getPostNeuronIndices(preNeuronIndex)) {
                 result.count++;
-                result.sum += getTransfer(ensemble, preNeuronIndex, postNeuronIndex, locals);
+                result.sum += getCompleteTransfer(ensemble, preNeuronIndex, postNeuronIndex);
             }
         }
         System.out.printf("%d T %s %d %g%n", ensemble.getAgentIndex(), label, result.count, result.sum);
         return result;
     }
     
-    private static double getTransfer(TimeSeriesEnsemble ensemble, int preNeuronIndex, int postNeuronIndex, double[][] locals) throws Exception {
+    private static double getCompleteTransfer(TimeSeriesEnsemble ensemble, int preNeuronIndex, int postNeuronIndex) throws Exception {
+        int[] conditionalNeuronIndices = ensemble.getPreNeuronIndices(postNeuronIndex, preNeuronIndex);
+        transferCalculator.initialise(1, 1, embedding + conditionalNeuronIndices.length);
+        transferCalculator.startAddObservations();
+        for (TimeSeries timeSeries : ensemble) {
+            int length = timeSeries.size() - embedding;
+            double[][] source = timeSeries.getColumns(new int[] { preNeuronIndex });
+            double[][] target = timeSeries.getColumns(new int[] { postNeuronIndex });
+            double[][] conditional = timeSeries.getColumns(conditionalNeuronIndices);
+            transferCalculator.addObservations(
+                MatrixUtils.selectRows(source, embedding - 1, length),
+                MatrixUtils.selectRows(target, embedding, length),
+                MatrixUtils.appendColumns(
+                    MatrixUtils.makeDelayEmbeddingVector(target, embedding, embedding - 1, length),
+                    MatrixUtils.selectRows(conditional, embedding - 1, length)));
+        }
+        transferCalculator.finaliseAddObservations();
+        return MatrixUtils.mean(transferCalculator.computeLocalOfPreviousObservations());
+    }
+    
+    private static void getApparentTransfer(TimeSeriesEnsemble ensemble, double[][] locals) throws Exception {
+        for (Synapse synapse : ensemble.getSynapses()) {
+            getApparentTransfer(ensemble, synapse.getPreNeuronIndex(), synapse.getPostNeuronIndex(), locals);
+        }
+    }
+    
+    private static double getApparentTransfer(TimeSeriesEnsemble ensemble, int preNeuronIndex, int postNeuronIndex, double[][] locals) throws Exception {
         transferCalculator.initialise(1, 1, embedding);
         transferCalculator.startAddObservations();
         for (TimeSeries timeSeries : ensemble) {
+            int length = timeSeries.size() - embedding;
             double[][] source = timeSeries.getColumns(new int[] { preNeuronIndex });
             double[][] target = timeSeries.getColumns(new int[] { postNeuronIndex });
             transferCalculator.addObservations(
-                MatrixUtils.selectRows(source, embedding - 1, timeSeries.size() - embedding),
-                MatrixUtils.selectRows(target, embedding, timeSeries.size() - embedding),
-                MatrixUtils.makeDelayEmbeddingVector(target, embedding, embedding - 1, timeSeries.size() - embedding));
+                MatrixUtils.selectRows(source, embedding - 1, length),
+                MatrixUtils.selectRows(target, embedding, length),
+                MatrixUtils.makeDelayEmbeddingVector(target, embedding, embedding - 1, length));
         }
         transferCalculator.finaliseAddObservations();
         double[] local = transferCalculator.computeLocalOfPreviousObservations();
