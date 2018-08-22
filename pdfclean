@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-if [[ $# -lt 1 || $# -gt 2 ]]; then
-    echo "Usage: $(basename "$0") [-i] INPUT"
+if [[ $# -lt 1 ]]; then
+    echo "Usage: $(basename "$0") [-i] INPUT..."
     exit 1
 fi
 if [[ $1 == "-i" ]]; then
@@ -10,19 +10,19 @@ if [[ $1 == "-i" ]]; then
 else
     inPlace=0
 fi
-input=$1
-shift
-if [[ ! -e "$input" ]]; then
-    echo "INPUT '$input' does not exist."
-    exit 1
-fi
-output=$(tempfile -s .pdf)
-gs -dBATCH -dNOPAUSE -dQUIET -dSAFER -sDEVICE=pdfwrite -sOutputFile=- "$input" | \
-exiftool -m -q -all:all= -o "$input.tmp" -
-qpdf --linearize --deterministic-id "$input.tmp" - | \
-sed -E 's/\/ID \[<[[:xdigit:]]{32}><([[:xdigit:]]{32})>\]/\/ID [<\1><\1>]/g' > "$output"
-if [[ $inPlace -eq 0 ]]; then
-    mv "$input" "$input.bak"
-fi
-rm "$input.tmp"
-mv "$output" "$input"
+for input in "$@"; do
+    if [[ ! -e "$input" ]]; then
+        echo "INPUT '$input' does not exist."
+        continue
+    fi
+    output=$(tempfile -s .pdf)
+    gs -dBATCH -dNOPAUSE -dQUIET -dSAFER -sDEVICE=pdfwrite -sOutputFile=- "$input" | \
+    exiftool -m -q -all:all= -o "$input.tmp" -
+    qpdf --linearize --deterministic-id "$input.tmp" - | \
+    sed -E 's/\/ID \[<[[:xdigit:]]{32}><([[:xdigit:]]{32})>\]/\/ID [<\1><\1>]/g' > "$output"
+    if [[ $inPlace -eq 0 ]]; then
+        mv "$input" "$input.bak"
+    fi
+    rm "$input.tmp"
+    mv "$output" "$input"
+done
