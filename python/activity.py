@@ -18,10 +18,7 @@ class Gene(object):
 def getGenome(run, agent):
     path = os.path.join(run, "genome", "agents", "genome_{0}.txt.gz".format(agent))
     with gzip.open(path) as f:
-        while True:
-            line = f.readline()
-            if line == "":
-                break
+        for line in f:
             yield int(line)
 
 def getFile(run, name):

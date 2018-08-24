@@ -909,6 +909,53 @@ class Onset(AgentBasedMetric):
     def aggregate(self, values):
         return numpy.nanmedian(values)
 
+class Polymorphism(TimeBasedMetric):
+    def addArgs(self, parser):
+        self.addArg(parser, "group_size", metavar = "GROUP_SIZE", type = int, choices = tuple(xrange(8)))
+    
+    def readArgs(self, args):
+        self.groupSize = self.readArg(args, "group_size")
+    
+    def getKey(self):
+        return "polymorphism-{0}".format(self.groupSize)
+    
+    def getLabel(self):
+        return "Polymorphism"
+    
+    def getGenome(self, agent):
+        genome = self.genomes.get(agent)
+        if genome is None:
+            genome = []
+            path = os.path.join(self.run, "genome", "agents", "genome_{0}.txt.gz".format(agent))
+            with gzip.open(path) as f:
+                for line in f:
+                    genome.append(int(line) >> self.groupSize)
+            self.genomes[agent] = genome
+        return genome
+    
+    def calculate(self):
+        self.genomes = {}
+        n = len(self.getGenome(1))
+        cache = {}
+        for timestep, agents in utility.getPopulations(self.run):
+            N = len(agents)
+            k = 0
+            for index1 in range(len(agents)):
+                agent1 = agents[index1]
+                genome1 = self.getGenome(agent1)
+                for index2 in range(index1 + 1, len(agents)):
+                    agent2 = agents[index2]
+                    genome2 = self.getGenome(agent2)
+                    k_ij = cache.get((agent1, agent2))
+                    if k_ij is None:
+                        k_ij = 0
+                        for gene in range(n):
+                            if genome1[gene] != genome2[gene]:
+                                k_ij += 1
+                        cache[(agent1, agent2)] = k_ij
+                    k += k_ij
+            yield timestep, float(k) / n / (N * (N - 1) / 2)
+
 class Population(TimeBasedMetric):
     integral = True
     
@@ -924,6 +971,35 @@ class Population(TimeBasedMetric):
         path = os.path.join(self.run, "population.txt")
         for row in utility.getDataTable(path, "Population").rows():
             values[row["T"]] = row["Population"]
+        return values
+
+class Pressure(AgentBasedMetric):
+    def addArgs(self, parser):
+        self.addArg(parser, "group_size", metavar = "GROUP_SIZE", type = int, choices = tuple(xrange(8)))
+    
+    def readArgs(self, args):
+        self.groupSize = self.readArg(args, "group_size")
+    
+    def getKey(self):
+        return "pressure-{0}".format(self.groupSize)
+    
+    def getLabel(self):
+        return "Selection pressure"
+    
+    def getPolymorphisms(self, passive):
+        metric = Polymorphism()
+        metric.groupSize = self.groupSize
+        metric.initialize(self.run, passive)
+        return metric.read()
+    
+    def read(self):
+        values = {}
+        drivenValues = self.getPolymorphisms(False)
+        passiveValues = self.getPolymorphisms(True)
+        for timestep in xrange(utility.getFinalTimestep(self.run) + 1):
+            drivenValue = drivenValues.get(timestep)
+            passiveValue = passiveValues.get(timestep)
+            values[timestep] = 0.0 if passiveValue == 0.0 else drivenValue / passiveValue
         return values
 
 class ProgenyRate(AgentBasedMetric):
