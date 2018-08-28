@@ -973,7 +973,7 @@ class Population(TimeBasedMetric):
             values[row["T"]] = row["Population"]
         return values
 
-class Pressure(AgentBasedMetric):
+class Pressure(TimeBasedMetric):
     def addArgs(self, parser):
         self.addArg(parser, "group_size", metavar = "GROUP_SIZE", type = int, choices = tuple(xrange(8)))
     
