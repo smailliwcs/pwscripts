@@ -1,4 +1,5 @@
 import algorithms
+import argparse
 import collections
 import graph as graph_mod
 import gzip
@@ -9,6 +10,18 @@ import sys
 import utility
 
 NAN = float("nan")
+
+class OptionalStoreAction(argparse.Action):
+    def __init__(self, type = None, **kwargs):
+        super(OptionalStoreAction, self).__init__(**kwargs)
+        self.__type = type
+    
+    def __call__(self, parser, namespace, values, option_string = None):
+        if values == "None":
+            values = None
+        elif self.__type is not None:
+            values = self.__type(values)
+        setattr(namespace, self.dest, values)
 
 def digitize(value, step):
     index = value / step
@@ -245,8 +258,8 @@ class Activity(TimeBasedMetric):
     
     def addArgs(self, parser):
         self.addArg(parser, "type", metavar = "TYPE", choices = tuple(Activity.Type.getValues()))
-        self.addArg(parser, "amin", metavar = "AMIN", nargs = "?", type = float)
-        self.addArg(parser, "amax", metavar = "AMAX", nargs = "?", type = float)
+        self.addArg(parser, "amin", metavar = "AMIN", action = OptionalStoreAction, type = float)
+        self.addArg(parser, "amax", metavar = "AMAX", action = OptionalStoreAction, type = float)
     
     def readArgs(self, args):
         self.type = self.readArg(args, "type")
@@ -296,7 +309,7 @@ class Adaptivity(AgentBasedMetric):
     
     def addArgs(self, parser):
         self.addArg(parser, "type", metavar = "TYPE", choices = tuple(Adaptivity.Type.getValues()))
-        self.addArg(parser, "condition", metavar = "CONDITION", nargs = "?")
+        self.addArg(parser, "condition", metavar = "CONDITION", action = OptionalStoreAction)
     
     def readArgs(self, args):
         self.type = self.readArg(args, "type")
@@ -542,7 +555,7 @@ class Expansion(AgentBasedMetric):
 
 class FoodConsumption(TimeBasedMetric):
     def addArgs(self, parser):
-        self.addArg(parser, "type", metavar = "TYPE", nargs = "?")
+        self.addArg(parser, "type", metavar = "TYPE", action = OptionalStoreAction)
     
     def readArgs(self, args):
         self.type = self.readArg(args, "type")
@@ -567,7 +580,7 @@ class FoodConsumption(TimeBasedMetric):
 
 class FoodConsumptionRate(AgentBasedMetric):
     def addArgs(self, parser):
-        self.addArg(parser, "type", metavar = "TYPE", nargs = "?")
+        self.addArg(parser, "type", metavar = "TYPE", action = OptionalStoreAction)
     
     def readArgs(self, args):
         self.type = self.readArg(args, "type")
@@ -597,7 +610,7 @@ class FoodConsumptionRate(AgentBasedMetric):
 
 class FoodEnergy(TimeBasedMetric):
     def addArgs(self, parser):
-        self.addArg(parser, "type", metavar = "TYPE", nargs = "?")
+        self.addArg(parser, "type", metavar = "TYPE", action = OptionalStoreAction)
     
     def readArgs(self, args):
         self.type = self.readArg(args, "type")
