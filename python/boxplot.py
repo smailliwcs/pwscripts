@@ -28,14 +28,15 @@ def parseArgs():
     parser.add_argument("--ymin", metavar = "YMIN", type = float)
     parser.add_argument("--ymax", metavar = "YMAX", type = float)
     parser.add_argument("--ylabel", metavar = "YLABEL")
-    parser.add_argument("runs", metavar = "RUNS", nargs = "+")
     if len(metrics) != 1:
         parser.add_argument("metric", metavar = "METRIC")
+        parser.add_argument("runs", metavar = "RUNS", nargs = "+")
         parser.print_help()
         raise SystemExit
     metric = metrics[0]
     parser.add_argument("metric", metavar = metric.getName())
     metric.addArgs(parser)
+    parser.add_argument("runs", metavar = "RUNS", nargs = "+")
     return parser.parse_args()
 
 def getData(args):
