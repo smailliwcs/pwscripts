@@ -28,12 +28,16 @@ public class Consistency {
     
     private static String run;
     private static int groupSize;
+    private static boolean local;
+    private static int geneIndexMin;
+    private static int geneIndexMax;
     private static EntropyCalculatorDiscrete calculator;
     private static Map<Integer, Double> geneSums;
+    private static Map<Integer, Double> geneMinima;
     
     public static void main(String[] args) throws Exception {
         if (!tryParseArgs(args)) {
-            System.err.printf("Usage: %s RUN GROUP_SIZE%n", Consistency.class.getSimpleName());
+            System.err.printf("Usage: %s RUN GROUP_SIZE [INDEX_MIN INDEX_MAX]%n", Consistency.class.getSimpleName());
             return;
         }
         System.out.printf("# group_size = %d%n", groupSize);
@@ -41,11 +45,15 @@ public class Consistency {
         Map<Integer, Collection<Event>> events = readEvents();
         Map<Integer, List<Integer>> genomes = new HashMap<Integer, List<Integer>>();
         geneSums = new HashMap<Integer, Double>();
+        geneMinima = new HashMap<Integer, Double>();
         int initAgentCount = getInitAgentCount();
         for (int agentIndex = 1; agentIndex <= initAgentCount; agentIndex++) {
             genomes.put(agentIndex, readGenome(agentIndex));
         }
-        System.out.printf("0 %g%n", getConsistency(genomes.values()));
+        if (!local) {
+            geneIndexMax = genomes.get(1).size() - 1;
+        }
+        getConsistency(0, genomes.values());
         int maxTimestep = getMaxTimestep();
         for (int timestep = 1; timestep <= maxTimestep; timestep++) {
             for (Event event : events.get(timestep)) {
@@ -63,21 +71,29 @@ public class Consistency {
                         assert false;
                 }
             }
-            System.out.printf("%d %g%n", timestep, getConsistency(genomes.values()));
+            getConsistency(timestep, genomes.values());
         }
         System.out.println();
-        for (Map.Entry<Integer, Double> geneSum : geneSums.entrySet()) {
-            System.out.printf("%d %g%n", geneSum.getKey(), geneSum.getValue() / (maxTimestep + 1));
+        for (int geneIndex = geneIndexMin; geneIndex <= geneIndexMax; geneIndex++) {
+            double mean = geneSums.get(geneIndex) / (maxTimestep + 1);
+            double minimum = geneMinima.get(geneIndex);
+            System.out.printf("%d %g %g%n", geneIndex, mean, minimum);
         }
     }
     
     private static boolean tryParseArgs(String[] args) {
         try {
-            assert args.length == 2;
+            assert args.length == 2 || args.length == 4;
             run = args[0];
             assert hasValidRun();
             groupSize = Integer.parseInt(args[1]);
             assert groupSize >= 0 && groupSize <= 7;
+            if (args.length > 2) {
+                local = true;
+                geneIndexMin = Integer.parseInt(args[2]);
+                geneIndexMax = Integer.parseInt(args[3]);
+                assert geneIndexMax >= geneIndexMin;
+            }
             return true;
         } catch (Throwable ex) {
             return false;
@@ -152,24 +168,34 @@ public class Consistency {
         return genome;
     }
     
-    private static double getConsistency(Collection<List<Integer>> genomes) {
+    private static void getConsistency(int timestep, Collection<List<Integer>> genomes) {
         double sum = 0.0;
+        double minimum = 1.0;
         int[] genes = new int[genomes.size()];
-        int geneCount = genomes.iterator().next().size();
-        for (int geneIndex = 0; geneIndex < geneCount; geneIndex++) {
+        for (int geneIndex = geneIndexMin; geneIndex <= geneIndexMax; geneIndex++) {
             int genomeIndex = 0;
             for (List<Integer> genome : genomes) {
                 genes[genomeIndex] = genome.get(geneIndex) >> groupSize;
                 genomeIndex++;
             }
             double consistency = getConsistency(genes);
+            sum += consistency;
+            if (consistency < minimum) {
+                minimum = consistency;
+            }
             if (!geneSums.containsKey(geneIndex)) {
                 geneSums.put(geneIndex, 0.0);
             }
             geneSums.put(geneIndex, geneSums.get(geneIndex) + consistency);
-            sum += consistency;
+            if (!geneMinima.containsKey(geneIndex)) {
+                geneMinima.put(geneIndex, 1.0);
+            }
+            if (consistency < geneMinima.get(geneIndex)) {
+                geneMinima.put(geneIndex, consistency);
+            }
         }
-        return sum / geneCount;
+        double mean = sum / (geneIndexMax - geneIndexMin + 1);
+        System.out.printf("%d %g %g%n", timestep, mean, minimum);
     }
     
     private static double getConsistency(int[] genes) {
