@@ -37,7 +37,7 @@ public class Consistency {
     
     public static void main(String[] args) throws Exception {
         if (!tryParseArgs(args)) {
-            System.err.printf("Usage: %s RUN GROUP_SIZE [INDEX_MIN INDEX_MAX]%n", Consistency.class.getSimpleName());
+            System.err.printf("Usage: %s RUN GROUP_SIZE [INDEX_MIN [INDEX_MAX]]%n", Consistency.class.getSimpleName());
             return;
         }
         System.out.printf("# group_size = %d%n", groupSize);
@@ -83,7 +83,7 @@ public class Consistency {
     
     private static boolean tryParseArgs(String[] args) {
         try {
-            assert args.length == 2 || args.length == 4;
+            assert args.length >= 2 && args.length <= 4;
             run = args[0];
             assert hasValidRun();
             groupSize = Integer.parseInt(args[1]);
@@ -91,8 +91,12 @@ public class Consistency {
             if (args.length > 2) {
                 local = true;
                 geneIndexMin = Integer.parseInt(args[2]);
-                geneIndexMax = Integer.parseInt(args[3]);
-                assert geneIndexMax >= geneIndexMin;
+                if (args.length > 3) {
+                    geneIndexMax = Integer.parseInt(args[3]);
+                    assert geneIndexMax >= geneIndexMin;
+                } else {
+                    geneIndexMax = geneIndexMin;
+                }
             }
             return true;
         } catch (Throwable ex) {
