@@ -34,10 +34,6 @@ class Stage(utility.Enum):
     BIRTH = "birth"
     DEATH = "death"
 
-class Statistic(utility.Enum):
-    MEAN = "mean"
-    SUM = "sum"
-
 class Metric(object):
     integral = False
     
@@ -178,10 +174,14 @@ class AgentBasedMetric(Metric):
         return {timestep: self.aggregate(result[timestep]) for timestep in result}
 
 class InfoDynamicsMetric(AgentBasedMetric):
+    class Statistic(utility.Enum):
+        MEAN = "mean"
+        SUM = "sum"
+    
     def apply(self, statistic, count, value):
-        if statistic == Statistic.MEAN:
+        if statistic == InfoDynamicsMetric.Statistic.MEAN:
             return 0.0 if count == 0 else value / count
-        elif statistic == Statistic.SUM:
+        elif statistic == InfoDynamicsMetric.Statistic.SUM:
             return value
         else:
             assert False
@@ -250,56 +250,6 @@ class WeightMetric(AgentBasedMetric):
                 weight = self.getWeight(graph, nodeOut, nodeIn)
                 if weight is not None:
                     yield nodeOut, nodeIn, weight
-
-class Activity(TimeBasedMetric):
-    class Type(utility.Enum):
-        MEAN = "mean"
-        NEW = "new"
-    
-    def addArgs(self, parser):
-        self.addArg(parser, "type", metavar = "TYPE", choices = tuple(Activity.Type.getValues()))
-        self.addArg(parser, "amin", metavar = "AMIN", action = OptionalStoreAction, type = float)
-        self.addArg(parser, "amax", metavar = "AMAX", action = OptionalStoreAction, type = float)
-    
-    def readArgs(self, args):
-        self.type = self.readArg(args, "type")
-        self.amin = self.readArg(args, "amin")
-        self.amax = self.readArg(args, "amax")
-        if self.type == Activity.Type.NEW:
-            assert self.amin is not None and self.amax is not None
-    
-    def getKey(self):
-        return "activity-{0}".format(self.type)
-    
-    def getDataFileName(self):
-        return "activity.txt.gz"
-    
-    def getLabel(self):
-        if self.type == Activity.Type.MEAN:
-            return "Mean cumulative evolutionary activity"
-        elif self.type == Activity.Type.NEW:
-            return "New evolutionary activity"
-        else:
-            assert False
-    
-    def getDiversities(self):
-        metric = Diversity()
-        metric.initialize(self.run)
-        return metric.read()
-    
-    def read(self):
-        activities = collections.defaultdict(int)
-        for line in self.readLines():
-            timestep, activity, count = line.split()
-            activity = int(activity)
-            if self.type == Activity.Type.NEW:
-                if activity < self.amin or activity > self.amax:
-                    continue
-            activities[int(timestep)] += activity * int(count)
-        values = {}
-        for timestep, diversity in self.getDiversities().iteritems():
-            values[timestep] = float(activities[timestep]) / diversity
-        return values
 
 class Adaptivity(AgentBasedMetric):
     class Type(utility.Enum):
@@ -414,19 +364,6 @@ class Complexity(AgentBasedMetric):
             values[int(agent)] = value
         return values
 
-class Consistency(TimeBasedMetric):
-    def addArgs(self, parser):
-        self.addArg(parser, "group_size", metavar = "GROUP_SIZE", type = int, choices = tuple(xrange(8)))
-    
-    def readArgs(self, args):
-        self.groupSize = self.readArg(args, "group_size")
-    
-    def getKey(self):
-        return "consistency-{0}".format(self.groupSize)
-    
-    def getLabel(self):
-        return "Genetic consistency"
-
 class DeathTimestep(LifespanMetric):
     def getKey(self):
         return "death"
@@ -480,13 +417,22 @@ class Density(AgentBasedMetric):
             yield agent, value
 
 class Diversity(TimeBasedMetric):
-    integral = True
+    def addArgs(self, parser):
+        self.addArg(parser, "group_size", metavar = "GROUP_SIZE", type = int, choices = tuple(xrange(8)))
+    
+    def readArgs(self, args):
+        self.groupSize = self.readArg(args, "group_size")
     
     def getKey(self):
-        return "diversity"
+        return "diversity-{0}".format(self.groupSize)
     
     def getLabel(self):
-        return "Diversity"
+        return "Genetic diversity"
+    
+    def read(self):
+        values = {}
+        # TODO
+        return values
 
 class Efficiency(AgentBasedMetric):
     class Type(utility.Enum):
@@ -669,7 +615,7 @@ class InfoModification(InfoDynamicsMetric):
         self.addArg(parser, "type", metavar = "TYPE", choices = tuple(InfoModification.Type.getValues()))
         self.addArg(parser, "embedding", metavar = "EMBEDDING", type = int)
         self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
-        self.addArg(parser, "statistic", metavar = "STATISTIC", choices = tuple(Statistic.getValues()))
+        self.addArg(parser, "statistic", metavar = "STATISTIC", choices = tuple(InfoDynamicsMetric.Statistic.getValues()))
     
     def readArgs(self, args):
         self.type = self.readArg(args, "type")
@@ -703,7 +649,7 @@ class InfoStorage(InfoDynamicsMetric):
     def addArgs(self, parser):
         self.addArg(parser, "embedding", metavar = "EMBEDDING", type = int)
         self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
-        self.addArg(parser, "statistic", metavar = "STATISTIC", choices = tuple(Statistic.getValues()))
+        self.addArg(parser, "statistic", metavar = "STATISTIC", choices = tuple(InfoDynamicsMetric.Statistic.getValues()))
     
     def readArgs(self, args):
         self.embedding = self.readArg(args, "embedding")
@@ -733,7 +679,7 @@ class InfoTransfer(InfoDynamicsMetric):
         self.addArg(parser, "source", metavar = "SOURCE")
         self.addArg(parser, "embedding", metavar = "EMBEDDING", type = int)
         self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
-        self.addArg(parser, "statistic", metavar = "STATISTIC", choices = tuple(Statistic.getValues()))
+        self.addArg(parser, "statistic", metavar = "STATISTIC", choices = tuple(InfoDynamicsMetric.Statistic.getValues()))
     
     def readArgs(self, args):
         self.source = self.readArg(args, "source")
@@ -922,53 +868,6 @@ class Onset(AgentBasedMetric):
     def aggregate(self, values):
         return numpy.nanmedian(values)
 
-class Polymorphism(TimeBasedMetric):
-    def addArgs(self, parser):
-        self.addArg(parser, "group_size", metavar = "GROUP_SIZE", type = int, choices = tuple(xrange(8)))
-    
-    def readArgs(self, args):
-        self.groupSize = self.readArg(args, "group_size")
-    
-    def getKey(self):
-        return "polymorphism-{0}".format(self.groupSize)
-    
-    def getLabel(self):
-        return "Polymorphism"
-    
-    def getGenome(self, agent):
-        genome = self.genomes.get(agent)
-        if genome is None:
-            genome = []
-            path = os.path.join(self.run, "genome", "agents", "genome_{0}.txt.gz".format(agent))
-            with gzip.open(path) as f:
-                for line in f:
-                    genome.append(int(line) >> self.groupSize)
-            self.genomes[agent] = genome
-        return genome
-    
-    def calculate(self):
-        self.genomes = {}
-        n = len(self.getGenome(1))
-        cache = {}
-        for timestep, agents in utility.getPopulations(self.run):
-            N = len(agents)
-            k = 0
-            for index1 in range(len(agents)):
-                agent1 = agents[index1]
-                genome1 = self.getGenome(agent1)
-                for index2 in range(index1 + 1, len(agents)):
-                    agent2 = agents[index2]
-                    genome2 = self.getGenome(agent2)
-                    k_ij = cache.get((agent1, agent2))
-                    if k_ij is None:
-                        k_ij = 0
-                        for gene in range(n):
-                            if genome1[gene] != genome2[gene]:
-                                k_ij += 1
-                        cache[(agent1, agent2)] = k_ij
-                    k += k_ij
-            yield timestep, float(k) / n / (N * (N - 1) / 2)
-
 class Population(TimeBasedMetric):
     integral = True
     
@@ -984,35 +883,6 @@ class Population(TimeBasedMetric):
         path = os.path.join(self.run, "population.txt")
         for row in utility.getDataTable(path, "Population").rows():
             values[row["T"]] = row["Population"]
-        return values
-
-class Pressure(TimeBasedMetric):
-    def addArgs(self, parser):
-        self.addArg(parser, "group_size", metavar = "GROUP_SIZE", type = int, choices = tuple(xrange(8)))
-    
-    def readArgs(self, args):
-        self.groupSize = self.readArg(args, "group_size")
-    
-    def getKey(self):
-        return "pressure-{0}".format(self.groupSize)
-    
-    def getLabel(self):
-        return "Selection pressure"
-    
-    def getPolymorphisms(self, passive):
-        metric = Polymorphism()
-        metric.groupSize = self.groupSize
-        metric.initialize(self.run, passive)
-        return metric.read()
-    
-    def read(self):
-        values = {}
-        drivenValues = self.getPolymorphisms(False)
-        passiveValues = self.getPolymorphisms(True)
-        for timestep in xrange(utility.getFinalTimestep(self.run) + 1):
-            drivenValue = drivenValues.get(timestep)
-            passiveValue = passiveValues.get(timestep)
-            values[timestep] = 0.0 if passiveValue == 0.0 else drivenValue / passiveValue
         return values
 
 class ProgenyRate(AgentBasedMetric):
@@ -1048,6 +918,10 @@ class ProgenyRate(AgentBasedMetric):
                         expanded.add(descendant)
                 value = float(len(expanded)) / (end - start)
             yield agent, value
+
+class Selection(TimeBasedMetric):
+    # TODO
+    pass
 
 class SmallWorldness(AgentBasedMetric):
     def addArgs(self, parser):

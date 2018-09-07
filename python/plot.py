@@ -311,6 +311,7 @@ if __name__ == "__main__":
             colorbar.locator = ColorbarLocator()
             colorbar.formatter = ColorbarFormatter()
             colorbar.update_ticks()
+            # TODO: Label colorbar
     
     # Plot regression
     if plot.args.regress:

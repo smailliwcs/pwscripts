@@ -5,7 +5,7 @@ import java.util.*;
 import java.util.regex.*;
 import java.util.zip.*;
 
-public class Consistency {
+public class Diversity {
     private static class Event {
         private String type;
         private int agentIndex;
@@ -28,41 +28,36 @@ public class Consistency {
     
     private static String run;
     private static int groupSize;
-    private static boolean local;
-    private static int geneIndexMin;
-    private static int geneIndexMax;
     private static EntropyCalculatorDiscrete calculator;
-    private static Map<Integer, Double> geneSums;
-    private static Map<Integer, Double> geneMinima;
+    private static int geneCount;
     
     public static void main(String[] args) throws Exception {
         if (!tryParseArgs(args)) {
-            System.err.printf("Usage: %s RUN GROUP_SIZE [INDEX_MIN [INDEX_MAX]]%n", Consistency.class.getSimpleName());
+            System.err.printf("Usage: %s RUN GROUP_SIZE%n", Diversity.class.getSimpleName());
             return;
         }
         System.out.printf("# group_size = %d%n", groupSize);
         calculator = new EntropyCalculatorDiscrete(256 >> groupSize);
         Map<Integer, Collection<Event>> events = readEvents();
         Map<Integer, List<Integer>> genomes = new HashMap<Integer, List<Integer>>();
-        geneSums = new HashMap<Integer, Double>();
-        geneMinima = new HashMap<Integer, Double>();
         int initAgentCount = getInitAgentCount();
         for (int agentIndex = 1; agentIndex <= initAgentCount; agentIndex++) {
             genomes.put(agentIndex, readGenome(agentIndex));
         }
-        if (!local) {
-            geneIndexMax = genomes.get(1).size() - 1;
-        }
-        getConsistency(0, genomes.values());
+        geneCount = genomes.get(1).size();
+        getDiversity(0, genomes.values());
         int maxTimestep = getMaxTimestep();
         for (int timestep = 1; timestep <= maxTimestep; timestep++) {
+            boolean same = true;
             for (Event event : events.get(timestep)) {
                 int agentIndex = event.getAgentIndex();
                 switch (event.getType()) {
                     case "BIRTH":
+                        same = false;
                         genomes.put(agentIndex, readGenome(agentIndex));
                         break;
                     case "DEATH":
+                        same = false;
                         genomes.remove(agentIndex);
                         break;
                     case "VIRTUAL":
@@ -71,33 +66,19 @@ public class Consistency {
                         assert false;
                 }
             }
-            getConsistency(timestep, genomes.values());
-        }
-        System.out.println();
-        for (int geneIndex = geneIndexMin; geneIndex <= geneIndexMax; geneIndex++) {
-            double mean = geneSums.get(geneIndex) / (maxTimestep + 1);
-            double minimum = geneMinima.get(geneIndex);
-            System.out.printf("%d %g %g%n", geneIndex, mean, minimum);
+            if (!same) {
+                getDiversity(timestep, genomes.values());
+            }
         }
     }
     
     private static boolean tryParseArgs(String[] args) {
         try {
-            assert args.length >= 2 && args.length <= 4;
+            assert args.length == 2;
             run = args[0];
             assert hasValidRun();
             groupSize = Integer.parseInt(args[1]);
             assert groupSize >= 0 && groupSize <= 7;
-            if (args.length > 2) {
-                local = true;
-                geneIndexMin = Integer.parseInt(args[2]);
-                if (args.length > 3) {
-                    geneIndexMax = Integer.parseInt(args[3]);
-                    assert geneIndexMax >= geneIndexMin;
-                } else {
-                    geneIndexMax = geneIndexMin;
-                }
-            }
             return true;
         } catch (Throwable ex) {
             return false;
@@ -172,39 +153,23 @@ public class Consistency {
         return genome;
     }
     
-    private static void getConsistency(int timestep, Collection<List<Integer>> genomes) {
-        double sum = 0.0;
-        double minimum = 1.0;
+    private static void getDiversity(int timestep, Collection<List<Integer>> genomes) {
+        System.out.print(timestep);
         int[] genes = new int[genomes.size()];
-        for (int geneIndex = geneIndexMin; geneIndex <= geneIndexMax; geneIndex++) {
+        for (int geneIndex = 0; geneIndex < geneCount; geneIndex++) {
             int genomeIndex = 0;
             for (List<Integer> genome : genomes) {
                 genes[genomeIndex] = genome.get(geneIndex) >> groupSize;
                 genomeIndex++;
             }
-            double consistency = getConsistency(genes);
-            sum += consistency;
-            if (consistency < minimum) {
-                minimum = consistency;
-            }
-            if (!geneSums.containsKey(geneIndex)) {
-                geneSums.put(geneIndex, 0.0);
-            }
-            geneSums.put(geneIndex, geneSums.get(geneIndex) + consistency);
-            if (!geneMinima.containsKey(geneIndex)) {
-                geneMinima.put(geneIndex, 1.0);
-            }
-            if (consistency < geneMinima.get(geneIndex)) {
-                geneMinima.put(geneIndex, consistency);
-            }
+            System.out.printf(" %.3f", getDiversity(genes));
         }
-        double mean = sum / (geneIndexMax - geneIndexMin + 1);
-        System.out.printf("%d %g %g%n", timestep, mean, minimum);
+        System.out.println();
     }
     
-    private static double getConsistency(int[] genes) {
+    private static double getDiversity(int[] genes) {
         calculator.initialise();
         calculator.addObservations(genes);
-        return 1.0 - calculator.computeAverageLocalOfObservations() / (8 - groupSize);
+        return calculator.computeAverageLocalOfObservations() / (8 - groupSize);
     }
 }
