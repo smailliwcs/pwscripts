@@ -48,16 +48,13 @@ public class Diversity {
         getDiversity(0, genomes.values());
         int maxTimestep = getMaxTimestep();
         for (int timestep = 1; timestep <= maxTimestep; timestep++) {
-            boolean same = true;
             for (Event event : events.get(timestep)) {
                 int agentIndex = event.getAgentIndex();
                 switch (event.getType()) {
                     case "BIRTH":
-                        same = false;
                         genomes.put(agentIndex, readGenome(agentIndex));
                         break;
                     case "DEATH":
-                        same = false;
                         genomes.remove(agentIndex);
                         break;
                     case "VIRTUAL":
@@ -66,9 +63,7 @@ public class Diversity {
                         assert false;
                 }
             }
-            if (!same) {
-                getDiversity(timestep, genomes.values());
-            }
+            getDiversity(timestep, genomes.values());
         }
     }
     
