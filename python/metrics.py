@@ -372,7 +372,7 @@ class Degree(AgentBasedMetric):
         return "degree-{0}".format(self.graphType)
     
     def getLabel(self):
-        return "Synaptic degree"
+        return "Degree"
     
     def calculate(self):
         for agent in utility.getAgents(self.run, self.start):
@@ -391,7 +391,7 @@ class Density(AgentBasedMetric):
         return "density-{0}".format(self.graphType)
     
     def getLabel(self):
-        return "Synaptic density"
+        return "Density"
     
     def calculate(self):
         for agent in utility.getAgents(self.run, self.start):
@@ -414,11 +414,18 @@ class Diversity(TimeBasedMetric):
         return "diversity-{0}".format(self.groupSize)
     
     def getLabel(self):
-        return "Genetic diversity"
+        return "Diversity"
+    
+    def getDataFileName(self):
+        return self.getKey() + ".txt.gz"
     
     def read(self):
         values = {}
-        # TODO
+        for line in self.readLines():
+            chunks = line.split()
+            timestep = chunks[0]
+            del chunks[0]
+            values[int(timestep)] = sum(map(float, chunks)) / len(chunks)
         return values
 
 class Efficiency(AgentBasedMetric):
@@ -471,7 +478,7 @@ class Entropy(AgentBasedMetric):
         return "entropy-{0}".format(self.stage)
     
     def getLabel(self):
-        return "Differential entropy"
+        return "Entropy"
 
 class Expansion(AgentBasedMetric):
     def addArgs(self, parser):
@@ -904,8 +911,33 @@ class ProgenyRate(AgentBasedMetric):
             yield agent, value
 
 class Selection(TimeBasedMetric):
-    # TODO
-    pass
+    def addArgs(self, parser):
+        self.addArg(parser, "group_size", metavar = "GROUP_SIZE", type = int, choices = tuple(xrange(8)))
+    
+    def readArgs(self, args):
+        self.groupSize = self.readArg(args, "group_size")
+    
+    def getKey(self):
+        return "selection-{0}".format(self.groupSize)
+    
+    def getLabel(self):
+        return "Selection"
+    
+    def getDiversities(self, passive):
+        metric = Diversity()
+        metric.groupSize = self.groupSize
+        metric.initialize(self.run, passive)
+        return metric.read()
+    
+    def read(self):
+        values = {}
+        drivenValues = self.getDiversities(False)
+        passiveValues = self.getDiversities(True)
+        for timestep in xrange(utility.getFinalTimestep(self.run) + 1):
+            drivenValue = drivenValues.get(timestep)
+            passiveValue = passiveValues.get(timestep)
+            values[timestep] = NAN if passiveValue == 0.0 else drivenValue / passiveValue - 1.0
+        return values
 
 class SmallWorldness(AgentBasedMetric):
     def addArgs(self, parser):
@@ -945,7 +977,7 @@ class Strength(WeightMetric):
         return "strength-{0}-{1}-{2}".format(self.stage, self.graphType, self.weightType)
     
     def getLabel(self):
-        return "{0} synaptic strength".format(self.weightType.capitalize())
+        return "{0} strength".format(self.weightType.capitalize())
     
     def calculate(self):
         for agent, graph in self.getGraphs():
@@ -1002,7 +1034,7 @@ class Weight(WeightMetric):
         return "weight-{0}-{1}-{2}".format(self.stage, self.graphType, self.weightType)
     
     def getLabel(self):
-        return "{0} synaptic weight".format(self.weightType.capitalize())
+        return "{0} weight".format(self.weightType.capitalize())
     
     def calculate(self):
         for agent, graph in self.getGraphs():
