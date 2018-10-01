@@ -173,19 +173,6 @@ class AgentBasedMetric(Metric):
                 result[digitize(timestep, step)].extend(map(lambda agent: values[agent], agents))
         return {timestep: self.aggregate(result[timestep]) for timestep in result}
 
-class InfoDynamicsMetric(AgentBasedMetric):
-    class Statistic(utility.Enum):
-        MEAN = "mean"
-        SUM = "sum"
-    
-    def apply(self, statistic, count, value):
-        if statistic == InfoDynamicsMetric.Statistic.MEAN:
-            return 0.0 if count == 0 else value / count
-        elif statistic == InfoDynamicsMetric.Statistic.SUM:
-            return value
-        else:
-            assert False
-
 class LifespanMetric(AgentBasedMetric):
     integral = True
     
@@ -605,7 +592,7 @@ class Gene(AgentBasedMetric):
     def getBins(self):
         return numpy.linspace(0, 256, 65)
 
-class InfoModification(InfoDynamicsMetric):
+class InfoModification(AgentBasedMetric):
     class Type(utility.Enum):
         TRIVIAL = "Trivial"
         NONTRIVIAL = "Nontrivial"
@@ -615,16 +602,14 @@ class InfoModification(InfoDynamicsMetric):
         self.addArg(parser, "type", metavar = "TYPE", choices = tuple(InfoModification.Type.getValues()))
         self.addArg(parser, "embedding", metavar = "EMBEDDING", type = int)
         self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
-        self.addArg(parser, "statistic", metavar = "STATISTIC", choices = tuple(InfoDynamicsMetric.Statistic.getValues()))
     
     def readArgs(self, args):
         self.type = self.readArg(args, "type")
         self.embedding = self.readArg(args, "embedding")
         self.stage = self.readArg(args, "stage")
-        self.statistic = self.readArg(args, "statistic")
     
     def getKey(self):
-        return "info-modification-{0}-{1}-{2}-{3}".format(self.type.lower(), self.embedding, self.stage, self.statistic)
+        return "info-modification-{0}-{1}-{2}".format(self.type.lower(), self.embedding, self.stage)
     
     def getDataFileName(self):
         return "info-dynamics-{0}-{1}.txt".format(self.embedding, self.stage)
@@ -639,25 +624,24 @@ class InfoModification(InfoDynamicsMetric):
             if flag == "M":
                 type, count, value = chunks.split()
                 if type == self.type:
+                    count = int(count)
                     value = float(value)
                     if self.type == InfoModification.Type.NONTRIVIAL:
                         value = -value
-                    values[int(agent)] = self.apply(self.statistic, int(count), value)
+                    values[int(agent)] = 0.0 if count == 0 else value / count
         return values
 
-class InfoStorage(InfoDynamicsMetric):
+class InfoStorage(AgentBasedMetric):
     def addArgs(self, parser):
         self.addArg(parser, "embedding", metavar = "EMBEDDING", type = int)
         self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
-        self.addArg(parser, "statistic", metavar = "STATISTIC", choices = tuple(InfoDynamicsMetric.Statistic.getValues()))
     
     def readArgs(self, args):
         self.embedding = self.readArg(args, "embedding")
         self.stage = self.readArg(args, "stage")
-        self.statistic = self.readArg(args, "statistic")
     
     def getKey(self):
-        return "info-storage-{0}-{1}-{2}".format(self.embedding, self.stage, self.statistic)
+        return "info-storage-{0}-{1}".format(self.embedding, self.stage)
     
     def getDataFileName(self):
         return "info-dynamics-{0}-{1}.txt".format(self.embedding, self.stage)
@@ -671,24 +655,23 @@ class InfoStorage(InfoDynamicsMetric):
             agent, flag, chunks = line.split(None, 2)
             if flag == "S":
                 count, value = chunks.split()
-                values[int(agent)] = self.apply(self.statistic, int(count), float(value))
+                count = int(count)
+                values[int(agent)] = 0.0 if count == 0 else float(value) / count
         return values
 
-class InfoTransfer(InfoDynamicsMetric):
+class InfoTransfer(AgentBasedMetric):
     def addArgs(self, parser):
         self.addArg(parser, "source", metavar = "SOURCE")
         self.addArg(parser, "embedding", metavar = "EMBEDDING", type = int)
         self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
-        self.addArg(parser, "statistic", metavar = "STATISTIC", choices = tuple(InfoDynamicsMetric.Statistic.getValues()))
     
     def readArgs(self, args):
         self.source = self.readArg(args, "source")
         self.embedding = self.readArg(args, "embedding")
         self.stage = self.readArg(args, "stage")
-        self.statistic = self.readArg(args, "statistic")
     
     def getKey(self):
-        return "info-transfer-{0}-{1}-{2}-{3}".format(self.source.lower(), self.embedding, self.stage, self.statistic)
+        return "info-transfer-{0}-{1}-{2}".format(self.source.lower(), self.embedding, self.stage)
     
     def getDataFileName(self):
         return "info-dynamics-{0}-{1}.txt".format(self.embedding, self.stage)
@@ -712,8 +695,9 @@ class InfoTransfer(InfoDynamicsMetric):
             agent = int(agent)
             if flag == "T":
                 source, count, value = chunks.split()
+                count = int(count)
                 if source == self.source:
-                    values[agent] = self.apply(self.statistic, self.getSynapseCount(neuronCounts[agent], source), float(value))
+                    values[int(agent)] = 0.0 if count == 0 else float(value) / count
         return values
 
 class Integration(AgentBasedMetric):
