@@ -419,13 +419,15 @@ class Diversity(TimeBasedMetric):
     def getDataFileName(self):
         return self.getKey() + ".txt.gz"
     
-    def read(self):
-        values = {}
+    def readAll(self):
         for line in self.readLines():
             chunks = line.split()
-            timestep = chunks[0]
-            del chunks[0]
-            values[int(timestep)] = sum(map(float, chunks)) / len(chunks)
+            yield int(chunks[0]), map(float, chunks[1:])
+    
+    def read(self):
+        values = {}
+        for timestep, geneValues in self.readAll():
+            values[timestep] = sum(geneValues) / len(geneValues)
         return values
 
 class Efficiency(AgentBasedMetric):
@@ -913,12 +915,21 @@ class ProgenyRate(AgentBasedMetric):
 class Selection(TimeBasedMetric):
     def addArgs(self, parser):
         self.addArg(parser, "group_size", metavar = "GROUP_SIZE", type = int, choices = tuple(xrange(8)))
+        self.addArg(parser, "index_min", metavar = "INDEX_MIN", type = int, action = OptionalStoreAction)
+        self.addArg(parser, "index_max", metavar = "INDEX_MAX", type = int, action = OptionalStoreAction)
     
     def readArgs(self, args):
         self.groupSize = self.readArg(args, "group_size")
+        self.indexMin = self.readArg(args, "index_min")
+        self.indexMax = self.readArg(args, "index_max")
+        if self.indexMin is not None:
+            assert self.indexMax is not None
     
     def getKey(self):
-        return "selection-{0}".format(self.groupSize)
+        if self.indexMin is None:
+            return "selection-{0}".format(self.groupSize)
+        else:
+            return "selection-{0}-{1}-{2}".format(self.groupSize, self.indexMin, self.indexMax)
     
     def getLabel(self):
         return "Selection"
@@ -927,17 +938,24 @@ class Selection(TimeBasedMetric):
         metric = Diversity()
         metric.groupSize = self.groupSize
         metric.initialize(self.run, passive)
-        return metric.read()
+        return metric.readAll()
     
-    def read(self):
-        values = {}
-        drivenValues = self.getDiversities(False)
-        passiveValues = self.getDiversities(True)
+    def calculate(self):
+        indexMin = 0 if self.indexMin is None else self.indexMin
+        indexMax = utility.getGeneCount(self.run) - 1 if self.indexMax is None else self.indexMax
+        driven = self.getDiversities(False)
+        passive = self.getDiversities(True)
         for timestep in xrange(utility.getFinalTimestep(self.run) + 1):
-            drivenValue = drivenValues.get(timestep)
-            passiveValue = passiveValues.get(timestep)
-            values[timestep] = NAN if passiveValue == 0.0 else drivenValue / passiveValue - 1.0
-        return values
+            drivenTimestep, drivenValues = next(driven)
+            passiveTimestep, passiveValues = next(passive)
+            assert drivenTimestep == timestep
+            assert passiveTimestep == timestep
+            values = []
+            for index in xrange(indexMin, indexMax + 1):
+                drivenValue = drivenValues[index]
+                passiveValue = passiveValues[index]
+                values.append(NAN if passiveValue == 0.0 else drivenValue / passiveValue - 1.0)
+            yield timestep, numpy.nanmean(values)
 
 class SmallWorldness(AgentBasedMetric):
     def addArgs(self, parser):

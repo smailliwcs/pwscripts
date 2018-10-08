@@ -144,6 +144,14 @@ def getPopulations(run):
                 agents.remove(event.agent)
         yield timestep, agents
 
+def getGeneCount(run):
+    count = 0
+    path = os.path.join(run, "genome", "meta", "geneindex.txt")
+    with open(path) as f:
+        for line in f:
+            count += 1
+    return count
+
 def getGeneTitles(run):
     titles = {}
     path = os.path.join(run, "genome", "meta", "geneindex.txt")
