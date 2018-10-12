@@ -176,6 +176,17 @@ def getGeneTitles(run):
         titles[index] = title
     return titles
 
+def getNerves(run):
+    nerves = []
+    path = os.path.join(run, "data", "neuron-count-by-type.txt")
+    with open(path) as f:
+        for line in f:
+            agent, type, count = line.split()
+            assert int(agent) == 1
+            if type == "Input":
+                return nerves
+            nerves.append(type)
+
 def getNeuronCounts(run):
     counts = collections.defaultdict(dict)
     path = os.path.join(run, "data", "neuron-count-by-type.txt")

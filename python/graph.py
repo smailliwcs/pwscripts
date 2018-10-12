@@ -92,11 +92,15 @@ class Graph(object):
         for node in xrange(size):
             self.weights[node] = [None] * size
     
-    def getNodeCount(self, nodeType):
-        count = 0
+    def getNodes(self, nodeType):
         for node in xrange(self.size):
             if self.nodeTypes[node] == nodeType:
-                count += 1
+                yield node
+    
+    def getNodeCount(self, nodeType):
+        count = 0
+        for node in self.getNodes(nodeType):
+            count += 1
         return count
     
     def hasLink(self, nodeOut, nodeIn):
