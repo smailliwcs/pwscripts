@@ -372,7 +372,7 @@ class Degree(AgentBasedMetric):
         return "degree-{0}".format(self.graphType)
     
     def getLabel(self):
-        return "Degree"
+        return "Synaptic degree"
     
     def calculate(self):
         for agent in utility.getAgents(self.run, self.start):
@@ -391,7 +391,7 @@ class Density(AgentBasedMetric):
         return "density-{0}".format(self.graphType)
     
     def getLabel(self):
-        return "Density"
+        return "Synaptic density"
     
     def calculate(self):
         for agent in utility.getAgents(self.run, self.start):
@@ -414,7 +414,7 @@ class Diversity(TimeBasedMetric):
         return "diversity-{0}".format(self.groupSize)
     
     def getLabel(self):
-        return "Diversity"
+        return "Genetic diversity"
     
     def getDataFileName(self):
         return self.getKey() + ".txt.gz"
@@ -932,7 +932,7 @@ class Selection(TimeBasedMetric):
             return "selection-{0}-{1}-{2}".format(self.groupSize, self.indexMin, self.indexMax)
     
     def getLabel(self):
-        return "Selection"
+        return "Evolutionary selection"
     
     def getDiversities(self, passive):
         metric = Diversity()
@@ -995,7 +995,7 @@ class Strength(WeightMetric):
         return "strength-{0}-{1}-{2}".format(self.stage, self.graphType, self.weightType)
     
     def getLabel(self):
-        return "{0} strength".format(self.weightType.capitalize())
+        return "{0} synaptic strength".format(self.weightType.capitalize())
     
     def calculate(self):
         for agent, graph in self.getGraphs():
@@ -1052,7 +1052,7 @@ class Weight(WeightMetric):
         return "weight-{0}-{1}-{2}".format(self.stage, self.graphType, self.weightType)
     
     def getLabel(self):
-        return "{0} weight".format(self.weightType.capitalize())
+        return "{0} synaptic weight".format(self.weightType.capitalize())
     
     def calculate(self):
         for agent, graph in self.getGraphs():
