@@ -147,4 +147,5 @@ for index1 in xrange(len(data) - 1):
     axes.annotate(getSignificance(p), **kwargs)
 
 # Save plot
+figure.set_tight_layout(plot.PAD)
 figure.savefig(metric.getKey())

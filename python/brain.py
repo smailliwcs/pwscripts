@@ -2,6 +2,7 @@ import argparse
 import graph as graph_mod
 import matplotlib.cm
 import matplotlib.pyplot
+import plot
 import sys
 import utility
 
@@ -41,6 +42,7 @@ if args.format == "matrix":
         axline(node - 0.5, 0.1)
     axline(inputCount - 0.5, 0.5)
     axline(inputCount + outputCount - 0.5, 0.5)
+    figure.set_tight_layout(plot.PAD)
     figure.savefig("brain-{0}-{1}".format(args.agent, args.stage))
 elif args.format == "text":
     node = 0

@@ -5,7 +5,7 @@ axes.grid.which: both
 axes.xmargin: 0
 axes.ymargin: 0
 backend: pdf
-figure.autolayout: True
+figure.dpi: 300
 font.family: serif
 font.size: 8
 grid.alpha: 0.1

@@ -29,6 +29,10 @@ COLOR = (
     matplotlib.cm.Oranges(0.45)
 )
 OFFSET_HIST = 0.1
+PAD = {
+    "pad": 0.75,
+    "h_pad": 0.0
+}
 SIZE = 3.25
 SIZE_FACTOR = 0.8
 STROKE = matplotlib.patheffects.withStroke(linewidth = 3.0, foreground = "1.0")
@@ -356,7 +360,7 @@ if __name__ == "__main__":
     xlabel = plot.xMetric.getLabel() if plot.args.xlabel is None else plot.args.xlabel
     ylabel = plot.yMetric.getLabel() if plot.args.ylabel is None else plot.args.ylabel
     if plot.sig:
-        axes1.tick_params(labelbottom = False)
+        axes1.tick_params(axis = "x", bottom = False, labelbottom = False)
         axes2.set_xlabel(xlabel)
         axes2.set_xlim(plot.args.xmin, plot.args.xmax)
         if plot.args.xstep is not None:
@@ -375,4 +379,5 @@ if __name__ == "__main__":
     if plot.args.diag:
         xlim = axes1.get_xlim()
         axes1.plot(xlim, xlim, **getGridKwargs())
+    figure.set_tight_layout(PAD)
     figure.savefig("{0}-vs-{1}".format(plot.yMetric.getKey(), plot.xMetric.getKey()))
