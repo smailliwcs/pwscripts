@@ -1,8 +1,7 @@
 import argparse
 import graph as graph_mod
+import matplotlib
 import matplotlib.cm
-import matplotlib.pyplot
-import plot
 import sys
 import utility
 
@@ -25,6 +24,9 @@ if args.format == "matrix":
             elif weight is None:
                 weight = 0.0
             weights[nodeOut][nodeIn] = weight
+    matplotlib.use("TkAgg")
+    import matplotlib.pyplot
+    import plot
     figure = matplotlib.pyplot.figure()
     axes = figure.gca()
     cmap = matplotlib.cm.get_cmap("bwr")
@@ -43,7 +45,7 @@ if args.format == "matrix":
     axline(inputCount - 0.5, 0.5)
     axline(inputCount + outputCount - 0.5, 0.5)
     figure.set_tight_layout(plot.PAD)
-    figure.savefig("brain-{0}-{1}".format(args.agent, args.stage))
+    matplotlib.pyplot.show()
 elif args.format == "text":
     node = 0
     counts = utility.getNeuronCounts(args.run)[args.agent]
