@@ -30,7 +30,7 @@ COLOR = (
 )
 OFFSET_HIST = 0.1
 PAD = {
-    "pad": 0.75,
+    "pad": 0.5,
     "h_pad": 0.0
 }
 SIZE = 3.25
