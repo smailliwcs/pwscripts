@@ -26,6 +26,7 @@ public class Diversity {
     
     private static final Pattern INIT_AGENTS_PATTERN = Pattern.compile("InitAgents\\s+(?<initAgentCount>\\d+)");
     
+    private static boolean mean;
     private static String run;
     private static int groupSize;
     private static EntropyCalculatorDiscrete calculator;
@@ -33,46 +34,60 @@ public class Diversity {
     
     public static void main(String[] args) throws Exception {
         if (!tryParseArgs(args)) {
-            System.err.printf("Usage: %s RUN GROUP_SIZE%n", Diversity.class.getSimpleName());
+            System.err.printf("Usage: %s [--mean] RUN GROUP_SIZE%n", Diversity.class.getSimpleName());
             return;
         }
         System.out.printf("# group_size = %d%n", groupSize);
         calculator = new EntropyCalculatorDiscrete(256 >> groupSize);
-        Map<Integer, Collection<Event>> events = readEvents();
         Map<Integer, List<Integer>> genomes = new HashMap<Integer, List<Integer>>();
-        int initAgentCount = getInitAgentCount();
-        for (int agentIndex = 1; agentIndex <= initAgentCount; agentIndex++) {
-            genomes.put(agentIndex, readGenome(agentIndex));
-        }
-        geneCount = genomes.get(1).size();
-        getDiversity(0, genomes.values());
-        int maxTimestep = getMaxTimestep();
-        for (int timestep = 1; timestep <= maxTimestep; timestep++) {
-            for (Event event : events.get(timestep)) {
-                int agentIndex = event.getAgentIndex();
-                switch (event.getType()) {
-                    case "BIRTH":
-                        genomes.put(agentIndex, readGenome(agentIndex));
-                        break;
-                    case "DEATH":
-                        genomes.remove(agentIndex);
-                        break;
-                    case "VIRTUAL":
-                        break;
-                    default:
-                        assert false;
-                }
+        if (mean) {
+            int agentCount = getAgentCount();
+            for (int agentIndex = 1; agentIndex <= agentCount; agentIndex++) {
+                genomes.put(agentIndex, readGenome(agentIndex));
             }
-            getDiversity(timestep, genomes.values());
+            geneCount = genomes.get(1).size();
+            getDiversity("mean", genomes.values());
+        } else {
+            Map<Integer, Collection<Event>> events = readEvents();
+            int initAgentCount = getInitAgentCount();
+            for (int agentIndex = 1; agentIndex <= initAgentCount; agentIndex++) {
+                genomes.put(agentIndex, readGenome(agentIndex));
+            }
+            geneCount = genomes.get(1).size();
+            getDiversity(0, genomes.values());
+            int maxTimestep = getMaxTimestep();
+            for (int timestep = 1; timestep <= maxTimestep; timestep++) {
+                for (Event event : events.get(timestep)) {
+                    int agentIndex = event.getAgentIndex();
+                    switch (event.getType()) {
+                        case "BIRTH":
+                            genomes.put(agentIndex, readGenome(agentIndex));
+                            break;
+                        case "DEATH":
+                            genomes.remove(agentIndex);
+                            break;
+                        case "VIRTUAL":
+                            break;
+                        default:
+                            assert false;
+                    }
+                }
+                getDiversity(timestep, genomes.values());
+            }
         }
     }
     
     private static boolean tryParseArgs(String[] args) {
         try {
-            assert args.length == 2;
-            run = args[0];
+            assert args.length >= 2 && args.length <= 3;
+            int index = 0;
+            if (args[index].equals("--mean")) {
+                mean = true;
+                index++;
+            }
+            run = args[index++];
             assert hasValidRun();
-            groupSize = Integer.parseInt(args[1]);
+            groupSize = Integer.parseInt(args[index++]);
             assert groupSize >= 0 && groupSize <= 7;
             return true;
         } catch (Throwable ex) {
@@ -109,6 +124,29 @@ public class Diversity {
             }
         }
         return events;
+    }
+    
+    private static int getAgentCount() throws Exception {
+        int agentIndex = 0;
+        File file = new File(run, "BirthsDeaths.log");
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            while (true) {
+                String line = reader.readLine();
+                if (line == null) {
+                    break;
+                }
+                if (line.startsWith("%")) {
+                    continue;
+                }
+                Scanner scanner = new Scanner(line);
+                int timestep = scanner.nextInt();
+                String type = scanner.next();
+                if (type.equals("BIRTH")) {
+                    agentIndex = scanner.nextInt();
+                }
+            }
+        }
+        return agentIndex;
     }
     
     private static int getInitAgentCount() throws Exception {
@@ -148,8 +186,8 @@ public class Diversity {
         return genome;
     }
     
-    private static void getDiversity(int timestep, Collection<List<Integer>> genomes) {
-        System.out.print(timestep);
+    private static void getDiversity(String label, Collection<List<Integer>> genomes) {
+        System.out.print(label);
         int[] genes = new int[genomes.size()];
         for (int geneIndex = 0; geneIndex < geneCount; geneIndex++) {
             int genomeIndex = 0;
@@ -160,6 +198,10 @@ public class Diversity {
             System.out.printf(" %.3f", getDiversity(genes));
         }
         System.out.println();
+    }
+    
+    private static void getDiversity(int timestep, Collection<List<Integer>> genomes) {
+        getDiversity(String.format("%d", timestep), genomes);
     }
     
     private static double getDiversity(int[] genes) {

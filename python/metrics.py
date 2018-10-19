@@ -596,7 +596,7 @@ class Gene(AgentBasedMetric):
         return "gene-{0}".format(self.index)
     
     def getLabel(self):
-        return "{0} gene".format(utility.getGeneTitles(self.run)[self.index])
+        return "{0} gene".format(utility.getGeneTitles(self.run, True)[self.index])
     
     def calculate(self):
         for agent in utility.getAgents(self.run, self.start):

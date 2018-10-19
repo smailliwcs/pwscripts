@@ -152,7 +152,7 @@ def getGeneCount(run):
             count += 1
     return count
 
-def getGeneTitles(run):
+def getGeneTitles(run, latex):
     titles = {}
     path = os.path.join(run, "genome", "meta", "geneindex.txt")
     with open(path) as f:
@@ -165,14 +165,18 @@ def getGeneTitles(run):
             title = line.split(" :: ")[0]
             titles[index] = title
     replacements = {
-        "_": "\\_{}",
-        ">": "\\textgreater{}",
         "InternalNeurGroup ": ""
     }
+    if latex:
+        replacements.update({
+            "_": "\\_{}",
+            ">": "\\textgreater{}",
+        })
     for index, title in titles.iteritems():
         for old, new in replacements.iteritems():
             title = title.replace(old, new)
-        title = "\\texttt{{{0}}}".format(title)
+        if latex:
+            title = "\\texttt{{{0}}}".format(title)
         titles[index] = title
     return titles
 
