@@ -237,6 +237,14 @@ class WeightMetric(AgentBasedMetric):
                 weight = self.getWeight(graph, nodeOut, nodeIn)
                 if weight is not None:
                     yield nodeOut, nodeIn, weight
+    
+    def read(self):
+        weightMax = float(utility.getParameter(self.run, "MaxSynapseWeight"))
+        values = {}
+        for line in self.readLines():
+            key, value = line.split()
+            values[int(key)] = float(value) * weightMax
+        return values
 
 class Adaptivity(AgentBasedMetric):
     class Type(utility.Enum):
