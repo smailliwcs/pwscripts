@@ -14,7 +14,7 @@ output=$1
 shift
 start=1
 delta=1
-for (( index=1; index <= $#; index++ )); do
+for index in $(seq $#); do
     next_index=$((index + 1))
     case "${!index}" in
         -s)
