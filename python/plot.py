@@ -311,7 +311,8 @@ if __name__ == "__main__":
         ybins = Data.bin(plot.yMetric, axy[1], plot.args.ymin, plot.args.ymax, plot.args.bins)
         image = axes1.hist2d(axy[0], axy[1], bins = (xbins, ybins), norm = HistNorm(vmax = plot.args.hmax), zorder = -4)[3]
         if not plot.sig:
-            colorbar = figure.colorbar(image)
+            colorbar = figure.colorbar(image, fraction = 0.125, pad = 0.0)
+            colorbar.set_label("Agent count", rotation = 270.0, labelpad = 11.0)
             colorbar.locator = ColorbarLocator()
             colorbar.formatter = ColorbarFormatter()
             colorbar.update_ticks()
