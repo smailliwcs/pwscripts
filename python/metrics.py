@@ -153,7 +153,7 @@ class AgentBasedMetric(Metric):
                 value = values[agent]
                 if math.isnan(value) or math.isinf(value):
                     continue
-                result[agent] = values[agent]
+                result[agent] = value
         return result
     
     def toTimeBased(self, values, interval):
@@ -259,6 +259,9 @@ class Adaptivity(AgentBasedMetric):
     def readArgs(self, args):
         self.type = self.readArg(args, "type")
         self.condition = self.readArg(args, "condition")
+    
+    def initialize(self, *args):
+        super(Adaptivity, self).initialize(*args)
         self.integral = self.type != Adaptivity.Type.FORAGING
     
     def getKey(self):
@@ -502,6 +505,22 @@ class Expansion(AgentBasedMetric):
     
     def getLabel(self):
         return "Phase space expansion"
+
+class Fitness(AgentBasedMetric):
+    def addArgs(self, parser):
+        self.addArg(parser, "condition", metavar = "CONDITION", action = OptionalStoreAction)
+    
+    def readArgs(self, args):
+        self.condition = self.readArg(args, "condition")
+    
+    def getKey(self):
+        if self.condition is None:
+            return "fitness"
+        else:
+            return "fitness-{0}".format(self.condition)
+    
+    def getLabel(self):
+        return "Evolutionary fitness"
 
 class FoodConsumption(TimeBasedMetric):
     def addArgs(self, parser):
