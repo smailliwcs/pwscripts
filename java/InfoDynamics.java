@@ -2,6 +2,18 @@ import infodynamics.measures.continuous.kraskov.*;
 import infodynamics.utils.*;
 
 public class InfoDynamics {
+    private static class Calculator extends ConditionalMutualInfoCalculatorMultiVariateKraskov1 {
+        @Override
+        public double[] computeLocalUsingPreviousObservations(double[][] source, double[][] target, double[][] conditional) throws Exception {
+            if (normalise) {
+                source = MatrixUtils.normaliseIntoNewArray(source, var1Means, var1Stds);
+                target = MatrixUtils.normaliseIntoNewArray(target, var2Means, var2Stds);
+                conditional = MatrixUtils.normaliseIntoNewArray(conditional, condMeans, condStds);
+            }
+            return computeFromObservations(true, new double[][][] { source, target, conditional });
+        }
+    }
+    
     private static class Result {
         public int count;
         public double sum;
@@ -15,20 +27,16 @@ public class InfoDynamics {
     private static boolean gpu;
     private static int embedding;
     private static String mode;
-    private static MutualInfoCalculatorMultiVariateKraskov storageCalculator;
-    private static ConditionalMutualInfoCalculatorMultiVariateKraskov transferCalculator;
+    private static Calculator calculator;
     
     public static void main(String[] args) throws Exception {
         if (!tryParseArgs(args)) {
             System.err.printf("Usage: %s GPU EMBEDDING [MODE]%n", InfoDynamics.class.getSimpleName());
             return;
         }
-        storageCalculator = new MutualInfoCalculatorMultiVariateKraskov1();
-        transferCalculator = new ConditionalMutualInfoCalculatorMultiVariateKraskov1();
+        calculator = new Calculator();
         if (gpu) {
-            String useGpu = Boolean.TRUE.toString();
-            storageCalculator.setProperty(MutualInfoCalculatorMultiVariateKraskov.PROP_USE_GPU, useGpu);
-            transferCalculator.setProperty(ConditionalMutualInfoCalculatorMultiVariateKraskov.PROP_USE_GPU, useGpu);
+            calculator.setProperty(ConditionalMutualInfoCalculatorMultiVariateKraskov.PROP_USE_GPU, Boolean.TRUE.toString());
         }
         try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(System.in)) {
             reader.readArguments(System.out);
@@ -83,17 +91,18 @@ public class InfoDynamics {
     }
     
     private static double getStorage(TimeSeriesEnsemble ensemble, int neuronIndex, double[][] locals) throws Exception {
-        storageCalculator.initialise(embedding, 1);
-        storageCalculator.startAddObservations();
+        calculator.initialise(embedding, 1, 0);
+        calculator.startAddObservations();
         for (TimeSeries timeSeries : ensemble) {
             int length = timeSeries.size() - embedding;
             double[][] data = timeSeries.getColumns(new int[] { neuronIndex });
-            storageCalculator.addObservations(
+            calculator.addObservations(
                 MatrixUtils.makeDelayEmbeddingVector(data, embedding, embedding - 1, length),
-                MatrixUtils.selectRows(data, embedding, length));
+                MatrixUtils.selectRows(data, embedding, length),
+                new double[length][0]);
         }
-        storageCalculator.finaliseAddObservations();
-        double[] local = storageCalculator.computeLocalOfPreviousObservations();
+        calculator.finaliseAddObservations();
+        double[] local = calculator.computeLocalOfPreviousObservations();
         locals[ensemble.getProcessingNeuronOffset(neuronIndex)] = local;
         return MatrixUtils.mean(local);
     }
@@ -121,22 +130,22 @@ public class InfoDynamics {
     
     private static double getCompleteTransfer(TimeSeriesEnsemble ensemble, int preNeuronIndex, int postNeuronIndex) throws Exception {
         int[] conditionalNeuronIndices = ensemble.getPreNeuronIndices(postNeuronIndex, preNeuronIndex);
-        transferCalculator.initialise(1, 1, embedding + conditionalNeuronIndices.length);
-        transferCalculator.startAddObservations();
+        calculator.initialise(1, 1, embedding + conditionalNeuronIndices.length);
+        calculator.startAddObservations();
         for (TimeSeries timeSeries : ensemble) {
             int length = timeSeries.size() - embedding;
             double[][] source = timeSeries.getColumns(new int[] { preNeuronIndex });
             double[][] target = timeSeries.getColumns(new int[] { postNeuronIndex });
             double[][] conditional = timeSeries.getColumns(conditionalNeuronIndices);
-            transferCalculator.addObservations(
+            calculator.addObservations(
                 MatrixUtils.selectRows(source, embedding - 1, length),
                 MatrixUtils.selectRows(target, embedding, length),
                 MatrixUtils.appendColumns(
                     MatrixUtils.makeDelayEmbeddingVector(target, embedding, embedding - 1, length),
                     MatrixUtils.selectRows(conditional, embedding - 1, length)));
         }
-        transferCalculator.finaliseAddObservations();
-        return MatrixUtils.mean(transferCalculator.computeLocalOfPreviousObservations());
+        calculator.finaliseAddObservations();
+        return MatrixUtils.mean(calculator.computeLocalOfPreviousObservations());
     }
     
     private static void getApparentTransfer(TimeSeriesEnsemble ensemble, double[][] locals) throws Exception {
@@ -146,19 +155,19 @@ public class InfoDynamics {
     }
     
     private static double getApparentTransfer(TimeSeriesEnsemble ensemble, int preNeuronIndex, int postNeuronIndex, double[][] locals) throws Exception {
-        transferCalculator.initialise(1, 1, embedding);
-        transferCalculator.startAddObservations();
+        calculator.initialise(1, 1, embedding);
+        calculator.startAddObservations();
         for (TimeSeries timeSeries : ensemble) {
             int length = timeSeries.size() - embedding;
             double[][] source = timeSeries.getColumns(new int[] { preNeuronIndex });
             double[][] target = timeSeries.getColumns(new int[] { postNeuronIndex });
-            transferCalculator.addObservations(
+            calculator.addObservations(
                 MatrixUtils.selectRows(source, embedding - 1, length),
                 MatrixUtils.selectRows(target, embedding, length),
                 MatrixUtils.makeDelayEmbeddingVector(target, embedding, embedding - 1, length));
         }
-        transferCalculator.finaliseAddObservations();
-        double[] local = transferCalculator.computeLocalOfPreviousObservations();
+        calculator.finaliseAddObservations();
+        double[] local = calculator.computeLocalOfPreviousObservations();
         MatrixUtils.addInPlace(locals[ensemble.getProcessingNeuronOffset(postNeuronIndex)], local);
         return MatrixUtils.mean(local);
     }
