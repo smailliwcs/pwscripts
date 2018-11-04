@@ -28,7 +28,8 @@ COLOR = (
     matplotlib.cm.Blues(0.9),
     matplotlib.cm.Oranges(0.45)
 )
-OFFSET_HIST = 0.1
+HIST_OFFSET = 0.0
+HIST_POWER = 1.5
 PAD = {
     "pad": 0.5,
     "h_pad": 0.0
@@ -46,14 +47,15 @@ class BareTexManager(matplotlib.texmanager.TexManager):
 matplotlib.texmanager.TexManager = BareTexManager
 
 class HistNorm(matplotlib.colors.LogNorm):
-    def __init__(self, offset = OFFSET_HIST, vmin = None, vmax = None, clip = True):
+    def __init__(self, offset = HIST_OFFSET, power = HIST_POWER, vmin = None, vmax = None, clip = True):
         super(HistNorm, self).__init__(vmin = vmin, vmax = vmax, clip = clip)
         self.offset = offset
+        self.power = power
 
     def __call__(self, value, clip = True):
         result = numpy.ma.masked_less_equal(value, 0, False)
         result = super(HistNorm, self).__call__(result, clip = clip)
-        return self.offset + (1.0 - self.offset) * result
+        return numpy.power(self.offset + (1.0 - self.offset) * result, self.power)
 
 class ColorbarLocator(matplotlib.ticker.Locator):
     def __call__(self):
@@ -115,6 +117,7 @@ class Plot(object):
         parser.add_argument("--ystep", metavar = "YSTEP", type = float)
         parser.add_argument("--ylabel", metavar = "YLABEL")
         parser.add_argument("--htmin", metavar = "HTMIN", type = int, default = 0)
+        parser.add_argument("--hmin", metavar = "HMIN", type = float)
         parser.add_argument("--hmax", metavar = "HMAX", type = float)
         group = parser.add_mutually_exclusive_group()
         group.add_argument("--logx", action = "store_true")
@@ -309,7 +312,7 @@ if __name__ == "__main__":
         axy = Data.flatten(map(lambda data: data.hist, driven.itervalues()))
         xbins = Data.bin(plot.xMetric, axy[0], plot.args.xmin, plot.args.xmax, plot.args.bins)
         ybins = Data.bin(plot.yMetric, axy[1], plot.args.ymin, plot.args.ymax, plot.args.bins)
-        image = axes1.hist2d(axy[0], axy[1], bins = (xbins, ybins), norm = HistNorm(vmax = plot.args.hmax), zorder = -4)[3]
+        image = axes1.hist2d(axy[0], axy[1], bins = (xbins, ybins), norm = HistNorm(vmin = plot.args.hmin, vmax = plot.args.hmax), zorder = -4)[3]
         if not plot.sig:
             colorbar = figure.colorbar(image, fraction = 0.125, pad = 0.0)
             colorbar.set_label("Agent count", rotation = 270.0, labelpad = 11.0)
