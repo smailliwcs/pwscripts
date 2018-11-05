@@ -16,6 +16,10 @@ public class InfoDynamics {
             }
             return computeFromObservations(true, new double[][][] { source, target, conditional });
         }
+        
+        public double[] computeLocalUsingPreviousObservations(double[][][] observations) throws Exception {
+            return computeLocalUsingPreviousObservations(observations[0], observations[1], observations[2]);
+        }
     }
     
     private static class Result {
@@ -28,6 +32,7 @@ public class InfoDynamics {
         }
     }
     
+    private static boolean single;
     private static boolean gpu;
     private static int embedding;
     private static String mode;
@@ -35,7 +40,7 @@ public class InfoDynamics {
     
     public static void main(String[] args) throws Exception {
         if (!tryParseArgs(args)) {
-            System.err.printf("Usage: %s GPU EMBEDDING [MODE]%n", InfoDynamics.class.getSimpleName());
+            System.err.printf("Usage: %s [--single] GPU EMBEDDING [MODE]%n", InfoDynamics.class.getSimpleName());
             return;
         }
         calculator = new Calculator();
@@ -68,11 +73,16 @@ public class InfoDynamics {
     private static boolean tryParseArgs(String[] args) {
         try {
             assert args.length >= 2 && args.length <= 3;
-            gpu = Boolean.parseBoolean(args[0]);
-            embedding = Integer.parseInt(args[1]);
+            int index = 0;
+            if (args[index].equals("--single")) {
+                single = true;
+                index++;
+            }
+            gpu = Boolean.parseBoolean(args[index++]);
+            embedding = Integer.parseInt(args[index++]);
             assert embedding > 0;
-            if (args.length > 2) {
-                mode = args[2];
+            if (index < args.length) {
+                mode = args[index++];
             }
             return true;
         } catch (Throwable ex) {
@@ -81,8 +91,13 @@ public class InfoDynamics {
     }
     
     private static void getStorage(TimeSeriesEnsemble ensemble, double[][] locals) throws Exception {
+        if (single) {
+            System.out.println("# S");
+        }
         Result result = getStorage(ensemble, ensemble.getProcessingNeuronIndices(), locals);
-        System.out.printf("%d S %d %g%n", ensemble.getAgentIndex(), result.count, result.sum);
+        if (!single) {
+            System.out.printf("%d S %d %g%n", ensemble.getAgentIndex(), result.count, result.sum);
+        }
     }
     
     private static Result getStorage(TimeSeriesEnsemble ensemble, int[] neuronIndices, double[][] locals) throws Exception {
@@ -97,11 +112,24 @@ public class InfoDynamics {
     private static double getStorage(TimeSeriesEnsemble ensemble, int neuronIndex, double[][] locals) throws Exception {
         calculator.initialise(embedding, 1, 0);
         calculator.startAddObservations();
-        for (TimeSeries timeSeries : ensemble) {
+        for (int index = 0; index < ensemble.size(); index++) {
+            if (single && index == ensemble.size() - 1) {
+                break;
+            }
+            TimeSeries timeSeries = ensemble.get(index);
             calculator.addObservations(getStorageObservations(timeSeries, neuronIndex));
         }
         calculator.finaliseAddObservations();
-        double[] local = calculator.computeLocalOfPreviousObservations();
+        double[] local;
+        if (single) {
+            TimeSeries timeSeries = ensemble.get(ensemble.size() - 1);
+            local = calculator.computeLocalUsingPreviousObservations(getStorageObservations(timeSeries, neuronIndex));
+            System.out.printf("%d ", neuronIndex);
+            MatrixUtils.printArray(System.out, local);
+            System.out.println();
+        } else {
+            local = calculator.computeLocalOfPreviousObservations();
+        }
         locals[ensemble.getProcessingNeuronOffset(neuronIndex)] = local;
         return MatrixUtils.mean(local);
     }
@@ -117,12 +145,17 @@ public class InfoDynamics {
     }
     
     private static void getCompleteTransfer(TimeSeriesEnsemble ensemble) throws Exception {
+        if (single) {
+            System.out.println("# CT");
+        }
         Result result = new Result();
         for (Nerve nerve : ensemble.getInputNerves()) {
             result.add(getCompleteTransfer(ensemble, nerve.getName(), nerve.getNeuronIndices()));
         }
         result.add(getCompleteTransfer(ensemble, "Internal", ensemble.getProcessingNeuronIndices()));
-        System.out.printf("%d T Total %d %g%n", ensemble.getAgentIndex(), result.count, result.sum);
+        if (!single) {
+            System.out.printf("%d T Total %d %g%n", ensemble.getAgentIndex(), result.count, result.sum);
+        }
     }
     
     private static Result getCompleteTransfer(TimeSeriesEnsemble ensemble, String label, int[] preNeuronIndices) throws Exception {
@@ -133,7 +166,9 @@ public class InfoDynamics {
                 result.sum += getCompleteTransfer(ensemble, preNeuronIndex, postNeuronIndex);
             }
         }
-        System.out.printf("%d T %s %d %g%n", ensemble.getAgentIndex(), label, result.count, result.sum);
+        if (!single) {
+            System.out.printf("%d T %s %d %g%n", ensemble.getAgentIndex(), label, result.count, result.sum);
+        }
         return result;
     }
     
@@ -141,11 +176,25 @@ public class InfoDynamics {
         int[] conditionalNeuronIndices = ensemble.getPreNeuronIndices(postNeuronIndex, preNeuronIndex);
         calculator.initialise(1, 1, embedding + conditionalNeuronIndices.length);
         calculator.startAddObservations();
-        for (TimeSeries timeSeries : ensemble) {
+        for (int index = 0; index < ensemble.size(); index++) {
+            if (single && index == ensemble.size() - 1) {
+                break;
+            }
+            TimeSeries timeSeries = ensemble.get(index);
             calculator.addObservations(getCompleteTransferObservations(timeSeries, preNeuronIndex, postNeuronIndex, conditionalNeuronIndices));
         }
         calculator.finaliseAddObservations();
-        return MatrixUtils.mean(calculator.computeLocalOfPreviousObservations());
+        double[] local;
+        if (single) {
+            TimeSeries timeSeries = ensemble.get(ensemble.size() - 1);
+            local = calculator.computeLocalUsingPreviousObservations(getCompleteTransferObservations(timeSeries, preNeuronIndex, postNeuronIndex, conditionalNeuronIndices));
+            System.out.printf("%d %d ", preNeuronIndex, postNeuronIndex);
+            MatrixUtils.printArray(System.out, local);
+            System.out.println();
+        } else {
+            local = calculator.computeLocalOfPreviousObservations();
+        }
+        return MatrixUtils.mean(local);
     }
     
     private static double[][][] getCompleteTransferObservations(TimeSeries timeSeries, int preNeuronIndex, int postNeuronIndex, int[] conditionalNeuronIndices) throws Exception {
@@ -163,6 +212,9 @@ public class InfoDynamics {
     }
     
     private static void getApparentTransfer(TimeSeriesEnsemble ensemble, double[][] locals) throws Exception {
+        if (single) {
+            System.out.println("# AT");
+        }
         for (Synapse synapse : ensemble.getSynapses()) {
             getApparentTransfer(ensemble, synapse.getPreNeuronIndex(), synapse.getPostNeuronIndex(), locals);
         }
@@ -171,11 +223,24 @@ public class InfoDynamics {
     private static double getApparentTransfer(TimeSeriesEnsemble ensemble, int preNeuronIndex, int postNeuronIndex, double[][] locals) throws Exception {
         calculator.initialise(1, 1, embedding);
         calculator.startAddObservations();
-        for (TimeSeries timeSeries : ensemble) {
+        for (int index = 0; index < ensemble.size(); index++) {
+            if (single && index == ensemble.size() - 1) {
+                break;
+            }
+            TimeSeries timeSeries = ensemble.get(ensemble.size() - 1);
             calculator.addObservations(getApparentTransferObservations(timeSeries, preNeuronIndex, postNeuronIndex));
         }
         calculator.finaliseAddObservations();
-        double[] local = calculator.computeLocalOfPreviousObservations();
+        double[] local;
+        if (single) {
+            TimeSeries timeSeries = ensemble.get(ensemble.size() - 1);
+            local = calculator.computeLocalUsingPreviousObservations(getApparentTransferObservations(timeSeries, preNeuronIndex, postNeuronIndex));
+            System.out.printf("%d %d ", preNeuronIndex, postNeuronIndex);
+            MatrixUtils.printArray(System.out, local);
+            System.out.println();
+        } else {
+            local = calculator.computeLocalOfPreviousObservations();
+        }
         MatrixUtils.addInPlace(locals[ensemble.getProcessingNeuronOffset(postNeuronIndex)], local);
         return MatrixUtils.mean(local);
     }
@@ -192,9 +257,19 @@ public class InfoDynamics {
     }
     
     private static void getModification(TimeSeriesEnsemble ensemble, double[][] locals) {
-        getModification(ensemble, "Trivial", true, false, locals);
-        getModification(ensemble, "Nontrivial", false, true, locals);
-        getModification(ensemble, "Total", true, true, locals);
+        if (single) {
+            int[] neuronIndices = ensemble.getProcessingNeuronIndices();
+            System.out.println("# M");
+            for (int index = 0; index < locals.length; index++) {
+                System.out.printf("%d ", neuronIndices[index]);
+                MatrixUtils.printArray(System.out, locals[index]);
+                System.out.println();
+            }
+        } else {
+            getModification(ensemble, "Trivial", true, false, locals);
+            getModification(ensemble, "Nontrivial", false, true, locals);
+            getModification(ensemble, "Total", true, true, locals);
+        }
     }
     
     private static void getModification(TimeSeriesEnsemble ensemble, String label, boolean positive, boolean negative, double[][] locals) {
