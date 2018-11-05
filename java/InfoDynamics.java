@@ -3,6 +3,10 @@ import infodynamics.utils.*;
 
 public class InfoDynamics {
     private static class Calculator extends ConditionalMutualInfoCalculatorMultiVariateKraskov1 {
+        public void addObservations(double[][][] observations) throws Exception {
+            addObservations(observations[0], observations[1], observations[2]);
+        }
+        
         @Override
         public double[] computeLocalUsingPreviousObservations(double[][] source, double[][] target, double[][] conditional) throws Exception {
             if (normalise) {
@@ -94,17 +98,22 @@ public class InfoDynamics {
         calculator.initialise(embedding, 1, 0);
         calculator.startAddObservations();
         for (TimeSeries timeSeries : ensemble) {
-            int length = timeSeries.size() - embedding;
-            double[][] data = timeSeries.getColumns(new int[] { neuronIndex });
-            calculator.addObservations(
-                MatrixUtils.makeDelayEmbeddingVector(data, embedding, embedding - 1, length),
-                MatrixUtils.selectRows(data, embedding, length),
-                new double[length][0]);
+            calculator.addObservations(getStorageObservations(timeSeries, neuronIndex));
         }
         calculator.finaliseAddObservations();
         double[] local = calculator.computeLocalOfPreviousObservations();
         locals[ensemble.getProcessingNeuronOffset(neuronIndex)] = local;
         return MatrixUtils.mean(local);
+    }
+    
+    private static double[][][] getStorageObservations(TimeSeries timeSeries, int neuronIndex) throws Exception {
+        int length = timeSeries.size() - embedding;
+        double[][] data = timeSeries.getColumns(new int[] { neuronIndex });
+        return new double[][][] {
+            MatrixUtils.makeDelayEmbeddingVector(data, embedding, embedding - 1, length),
+            MatrixUtils.selectRows(data, embedding, length),
+            new double[length][0]
+        };
     }
     
     private static void getCompleteTransfer(TimeSeriesEnsemble ensemble) throws Exception {
@@ -133,19 +142,24 @@ public class InfoDynamics {
         calculator.initialise(1, 1, embedding + conditionalNeuronIndices.length);
         calculator.startAddObservations();
         for (TimeSeries timeSeries : ensemble) {
-            int length = timeSeries.size() - embedding;
-            double[][] source = timeSeries.getColumns(new int[] { preNeuronIndex });
-            double[][] target = timeSeries.getColumns(new int[] { postNeuronIndex });
-            double[][] conditional = timeSeries.getColumns(conditionalNeuronIndices);
-            calculator.addObservations(
-                MatrixUtils.selectRows(source, embedding - 1, length),
-                MatrixUtils.selectRows(target, embedding, length),
-                MatrixUtils.appendColumns(
-                    MatrixUtils.makeDelayEmbeddingVector(target, embedding, embedding - 1, length),
-                    MatrixUtils.selectRows(conditional, embedding - 1, length)));
+            calculator.addObservations(getCompleteTransferObservations(timeSeries, preNeuronIndex, postNeuronIndex, conditionalNeuronIndices));
         }
         calculator.finaliseAddObservations();
         return MatrixUtils.mean(calculator.computeLocalOfPreviousObservations());
+    }
+    
+    private static double[][][] getCompleteTransferObservations(TimeSeries timeSeries, int preNeuronIndex, int postNeuronIndex, int[] conditionalNeuronIndices) throws Exception {
+        int length = timeSeries.size() - embedding;
+        double[][] source = timeSeries.getColumns(new int[] { preNeuronIndex });
+        double[][] target = timeSeries.getColumns(new int[] { postNeuronIndex });
+        double[][] conditional = timeSeries.getColumns(conditionalNeuronIndices);
+        return new double[][][] {
+            MatrixUtils.selectRows(source, embedding - 1, length),
+            MatrixUtils.selectRows(target, embedding, length),
+            MatrixUtils.appendColumns(
+                MatrixUtils.makeDelayEmbeddingVector(target, embedding, embedding - 1, length),
+                MatrixUtils.selectRows(conditional, embedding - 1, length))
+        };
     }
     
     private static void getApparentTransfer(TimeSeriesEnsemble ensemble, double[][] locals) throws Exception {
@@ -158,18 +172,23 @@ public class InfoDynamics {
         calculator.initialise(1, 1, embedding);
         calculator.startAddObservations();
         for (TimeSeries timeSeries : ensemble) {
-            int length = timeSeries.size() - embedding;
-            double[][] source = timeSeries.getColumns(new int[] { preNeuronIndex });
-            double[][] target = timeSeries.getColumns(new int[] { postNeuronIndex });
-            calculator.addObservations(
-                MatrixUtils.selectRows(source, embedding - 1, length),
-                MatrixUtils.selectRows(target, embedding, length),
-                MatrixUtils.makeDelayEmbeddingVector(target, embedding, embedding - 1, length));
+            calculator.addObservations(getApparentTransferObservations(timeSeries, preNeuronIndex, postNeuronIndex));
         }
         calculator.finaliseAddObservations();
         double[] local = calculator.computeLocalOfPreviousObservations();
         MatrixUtils.addInPlace(locals[ensemble.getProcessingNeuronOffset(postNeuronIndex)], local);
         return MatrixUtils.mean(local);
+    }
+    
+    private static double[][][] getApparentTransferObservations(TimeSeries timeSeries, int preNeuronIndex, int postNeuronIndex) throws Exception {
+        int length = timeSeries.size() - embedding;
+        double[][] source = timeSeries.getColumns(new int[] { preNeuronIndex });
+        double[][] target = timeSeries.getColumns(new int[] { postNeuronIndex });
+        return new double[][][] {
+            MatrixUtils.selectRows(source, embedding - 1, length),
+            MatrixUtils.selectRows(target, embedding, length),
+            MatrixUtils.makeDelayEmbeddingVector(target, embedding, embedding - 1, length)
+        };
     }
     
     private static void getModification(TimeSeriesEnsemble ensemble, double[][] locals) {
