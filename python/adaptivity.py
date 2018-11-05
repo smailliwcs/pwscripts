@@ -50,9 +50,12 @@ parser.add_argument("runs", metavar = "RUNS")
 parser.add_argument("trials", metavar = "TRIALS", type = int)
 parser.add_argument("agents", metavar = "AGENTS", type = int)
 parser.add_argument("stage", metavar = "STAGE", choices = ("incept", "birth", "death"))
+parser.add_argument("--single", metavar = "RUN:AGENT")
 parser.add_argument("--multiplier", metavar = "MULTIPLIER", type = float)
 parser.add_argument("--path", metavar = "PATH", default = ".")
 args = parser.parse_args()
+if args.single is not None:
+    assert args.trials == 1
 assert not os.path.exists("run")
 agents = []
 for run in utility.getRuns(args.runs):
@@ -61,6 +64,8 @@ for run in utility.getRuns(args.runs):
             "run": run,
             "index": agent
         })
+    if args.single is not None:
+        continue
     with open(getPath(args.path, run), "w") as f:
         f.write("# trials = {0}\n".format(args.trials))
         f.write("# agents = {0}\n".format(args.agents))
@@ -76,6 +81,12 @@ for trialIndex in xrange(args.trials):
         end = int(math.floor((batchIndex + 1) * float(len(agents)) / batchCount))
         batches[batchIndex] = agents[start:end]
         start = end
+    if args.single is not None:
+        chunks = args.single.rsplit(":", 1)
+        batches[0][0] = {
+            "run": chunks[0],
+            "index": int(chunks[1])
+        }
     for batch in batches:
         missing = []
         with open("genomeSeeds.txt", "w") as g, open("synapseSeeds.txt", "w") as s:
@@ -102,7 +113,7 @@ for trialIndex in xrange(args.trials):
             "--RecordBarrierPosition False",
             "--RecordBirthsDeaths False",
             "--RecordBrainAnatomy False",
-            "--RecordBrainFunction False",
+            "--RecordBrainFunction {0}".format(args.single is not None),
             "--RecordCarry False",
             "--RecordCollisions False",
             "--RecordComplexity False",
@@ -122,6 +133,8 @@ for trialIndex in xrange(args.trials):
             pwargs.append("--AgeEnergyMultiplier {0}".format(args.multiplier))
         pwargs.append("\"{0}\"".format(args.worldfile))
         os.system("./Polyworld {0}".format(" ".join(pwargs)))
+        if args.single is not None:
+            break
         wait(lambda: os.path.exists(os.path.join("run", "endStep.txt")))
         survival = getSurvival()
         foraging = getForaging()
