@@ -55,6 +55,9 @@ public class InfoDynamics {
                 if (ensemble == null) {
                     break;
                 }
+                if (single) {
+                    System.out.printf("# N = %d%n", ensemble.getNeuronCount());
+                }
                 double[][] locals = new double[ensemble.getProcessingNeuronCount()][];
                 if (mode == null || mode.equals("S") || mode.equals("M")) {
                     getStorage(ensemble, locals);
