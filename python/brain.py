@@ -29,7 +29,7 @@ if args.format == "matrix":
     import plot
     figure = matplotlib.pyplot.figure()
     axes = figure.gca()
-    cmap = matplotlib.cm.get_cmap("bwr")
+    cmap = matplotlib.cm.RdBu_r
     cmap.set_bad("0.5")
     axes.imshow(weights, vmin = -1.0, vmax = 1.0, cmap = cmap)
     axes.set_xticks(())
