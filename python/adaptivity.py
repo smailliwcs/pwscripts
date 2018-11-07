@@ -122,12 +122,12 @@ for trialIndex in xrange(args.trials):
             "--RecordFoodConsumption True",
             "--RecordFoodEnergy False",
             "--RecordGeneStats False",
-            "--RecordGenomes False",
+            "--RecordGenomes {0}".format(args.single is not None),
             "--RecordGitRevision False",
             "--RecordPopulation False",
             "--RecordPosition False",
             "--RecordSeparations False",
-            "--RecordSynapses False"
+            "--RecordSynapses {0}".format(args.single is not None)
         ]
         if args.multiplier is not None:
             pwargs.append("--AgeEnergyMultiplier {0}".format(args.multiplier))
