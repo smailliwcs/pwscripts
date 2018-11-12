@@ -2,6 +2,7 @@ import argparse
 import matplotlib
 import matplotlib.colors
 import matplotlib.pyplot
+import metrics as metrics_mod
 import numpy
 import os
 import patches
@@ -18,7 +19,7 @@ SHRINK = 10.0
 YTEXT = 0.9
 
 def parseArgs():
-    global metric
+    global metrics
     metrics = plot.Plot.getMetrics()
     parser = argparse.ArgumentParser(add_help = False)
     parser.add_argument("--tmin", metavar = "TMIN", type = int)
@@ -28,27 +29,38 @@ def parseArgs():
     parser.add_argument("--ymin", metavar = "YMIN", type = float)
     parser.add_argument("--ymax", metavar = "YMAX", type = float)
     parser.add_argument("--ylabel", metavar = "YLABEL")
-    parser.add_argument("runs", metavar = "RUNS", nargs = "+")
-    if len(metrics) != 1:
-        parser.add_argument("metric", metavar = "METRIC")
-        parser.print_help()
-        raise SystemExit
-    metric = metrics[0]
-    parser.add_argument("metric", metavar = metric.getName())
-    metric.addArgs(parser)
+    if len(metrics) <= 1:
+        parser.add_argument("runs", metavar = "RUNS", nargs = "+")
+        if len(metrics) == 0:
+            parser.add_argument("metric", metavar = "METRIC")
+            parser.print_help()
+            raise SystemExit
+    else:
+        parser.add_argument("runs", metavar = "RUNS")
+    for metric in metrics:
+        parser.add_argument("metrics", metavar = metric.getName(), action = "append")
+        metric.addArgs(parser)
     return parser.parse_args()
+
+def getRunsData(args, metric, runs):
+    ax = []
+    for run in utility.getRuns(runs):
+        metric.initialize(run, False, args)
+        dx = metric.constrain(metric.read(), (args.tmin, args.tmax))
+        ax.extend([y for x, y in dx.iteritems() if utility.contains((args.xmin, args.xmax), x)])
+    return ax
 
 def getData(args):
     data = []
-    for runs in args.runs:
-        sys.stderr.write("{0}\n".format(runs))
-        ax = []
-        for run in utility.getRuns(runs):
-            metric.initialize(run, False, args)
-            dx = metric.constrain(metric.read(), (args.tmin, args.tmax))
-            interval = (args.xmin, args.xmax)
-            ax.extend([y for x, y in dx.iteritems() if utility.contains(interval, x)])
-        data.append(ax)
+    if len(metrics) == 1:
+        metric = metrics[0]
+        for runs in args.runs:
+            sys.stderr.write("{0}\n".format(runs))
+            data.append(getRunsData(args, metric, runs))
+    else:
+        for metric in metrics:
+            sys.stderr.write("{0}\n".format(metric.getName()))
+            data.append(getRunsData(args, metric, args.runs))
     return data
 
 def getYMax(ymin, data):
@@ -65,6 +77,12 @@ def getYMax(ymin, data):
 
 def getKey(runs):
     return "\\texttt{{{0}}}".format(os.path.basename(os.path.realpath(runs)).capitalize())
+
+def getLabel(metric):
+    if hasattr(metric, "condition"):
+        return "\\texttt{{{0}}}".format(metric.condition.capitalize())
+    else:
+        return metric.getLabel()
 
 def getDirection(mean1, mean2, p):
     if p < 0.05:
@@ -86,10 +104,13 @@ figure.set_size_inches(plot.SIZE, plot.SIZE_FACTOR * plot.SIZE)
 axes = figure.gca()
 axes.grid(False, "both", "x")
 axes.set_xticks(range(len(data)))
-axes.set_xticklabels(map(getKey, args.runs))
+if len(metrics) == 1:
+    axes.set_xticklabels(map(getKey, args.runs))
+else:
+    axes.set_xticklabels(map(getLabel, metrics))
 axes.set_xlim(-0.5, len(data) - 0.5)
 if args.ylabel is None:
-    args.ylabel = metric.getLabel()
+    args.ylabel = metrics[0].getLabel()
 axes.set_ylabel(args.ylabel)
 if args.ymin is not None:
     axes.set_ylim(bottom = args.ymin)
@@ -148,4 +169,4 @@ for index1 in xrange(len(data) - 1):
 
 # Save plot
 figure.set_tight_layout(plot.PAD)
-figure.savefig(metric.getKey())
+figure.savefig(metrics[0].getKey())

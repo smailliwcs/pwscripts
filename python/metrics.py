@@ -262,7 +262,6 @@ class Adaptivity(AgentBasedMetric):
     
     def initialize(self, *args):
         super(Adaptivity, self).initialize(*args)
-        self.integral = self.type != Adaptivity.Type.FORAGING
     
     def getKey(self):
         if self.condition is None:
@@ -285,11 +284,11 @@ class Adaptivity(AgentBasedMetric):
             chunks = line.split()
             agent = int(chunks[0])
             if self.type == Adaptivity.Type.SURVIVAL:
-                value = int(chunks[1])
+                value = float(chunks[1])
             elif self.type == Adaptivity.Type.FORAGING:
                 value = float(chunks[2])
             elif self.type == Adaptivity.Type.REPRODUCTIVE:
-                value = int(chunks[3])
+                value = float(chunks[3])
             else:
                 assert False
             values[agent].append(value)
