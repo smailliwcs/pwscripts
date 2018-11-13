@@ -503,22 +503,6 @@ class Expansion(AgentBasedMetric):
     def getLabel(self):
         return "Phase space expansion"
 
-class Fitness(AgentBasedMetric):
-    def addArgs(self, parser):
-        self.addArg(parser, "condition", metavar = "CONDITION", action = OptionalStoreAction)
-    
-    def readArgs(self, args):
-        self.condition = self.readArg(args, "condition")
-    
-    def getKey(self):
-        if self.condition is None:
-            return "fitness"
-        else:
-            return "fitness-{0}".format(self.condition)
-    
-    def getLabel(self):
-        return "Evolutionary fitness"
-
 class FoodConsumption(TimeBasedMetric):
     def addArgs(self, parser):
         self.addArg(parser, "type", metavar = "TYPE", action = OptionalStoreAction)
