@@ -260,9 +260,6 @@ class Adaptivity(AgentBasedMetric):
         self.type = self.readArg(args, "type")
         self.condition = self.readArg(args, "condition")
     
-    def initialize(self, *args):
-        super(Adaptivity, self).initialize(*args)
-    
     def getKey(self):
         if self.condition is None:
             return "adaptivity-{0}".format(self.type)
@@ -283,16 +280,17 @@ class Adaptivity(AgentBasedMetric):
         for line in self.readLines():
             chunks = line.split()
             agent = int(chunks[0])
+            lifespan = float(chunks[1])
             if self.type == Adaptivity.Type.SURVIVAL:
-                value = float(chunks[1])
+                value = lifespan
             elif self.type == Adaptivity.Type.FORAGING:
-                value = float(chunks[2])
+                value = float(chunks[2]) / lifespan
             elif self.type == Adaptivity.Type.REPRODUCTIVE:
-                value = float(chunks[3])
+                value = float(chunks[3]) / lifespan
             else:
                 assert False
             values[agent].append(value)
-        return {agent: numpy.median(values[agent]) for agent in utility.getAgents(self.run)}
+        return {agent: numpy.mean(values[agent]) for agent in utility.getAgents(self.run)}
 
 class BirthCount(TimeBasedMetric):
     integral = True
