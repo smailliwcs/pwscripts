@@ -39,7 +39,7 @@ kwargs = {
     "linestyle": "None",
     "marker": "o",
     "markeredgewidth": 0.0,
-    "markersize": 0.4,
+    "markersize": 0.6,
     "rasterized": True
 }
 
