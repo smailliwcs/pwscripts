@@ -29,6 +29,14 @@ def digitize(value, step):
         index += 1
     return index * step
 
+def getSynapseCount(neuronCounts, source):
+    if source == "Internal":
+        return neuronCounts["Processing"] * (neuronCounts["Processing"] - 1)
+    elif source == "Total":
+        return neuronCounts["Input"] * neuronCounts["Processing"] + neuronCounts["Processing"] * (neuronCounts["Processing"] - 1)
+    else:
+        return neuronCounts[source] * neuronCounts["Processing"]
+
 class Stage(utility.Enum):
     INCEPT = "incept"
     BIRTH = "birth"
@@ -696,14 +704,6 @@ class InfoTransfer(AgentBasedMetric):
     def getLabel(self):
         return "{0} information transfer".format(self.source)
     
-    def getSynapseCount(self, neuronCounts, source):
-        if source == "Internal":
-            return neuronCounts["Processing"] * (neuronCounts["Processing"] - 1)
-        elif source == "Total":
-            return neuronCounts["Input"] * neuronCounts["Processing"] + neuronCounts["Processing"] * (neuronCounts["Processing"] - 1)
-        else:
-            return neuronCounts[source] * neuronCounts["Processing"]
-    
     def read(self):
         neuronCounts = utility.getNeuronCounts(self.run)
         values = dict.fromkeys(utility.getAgents(self.run), NAN)
@@ -711,9 +711,11 @@ class InfoTransfer(AgentBasedMetric):
             agent, flag, chunks = line.split(None, 2)
             agent = int(agent)
             if flag == "T":
-                source, count, value = chunks.split()
-                count = int(count)
+                source, actualCount, value = chunks.split()
+                actualCount = int(actualCount)
                 if source == self.source:
+                    potentialCount = getSynapseCount(neuronCounts[agent], source)
+                    count = potentialCount
                     values[int(agent)] = 0.0 if count == 0 else float(value) / count
         return values
 
