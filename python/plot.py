@@ -28,8 +28,8 @@ COLOR = (
     matplotlib.cm.Blues(0.9),
     matplotlib.cm.Oranges(0.45)
 )
+HIST_MAX = 1000
 HIST_OFFSET = 0.0
-HIST_POWER = 1.5
 PAD = {
     "pad": 0.5,
     "h_pad": 0.0
@@ -47,15 +47,15 @@ class BareTexManager(matplotlib.texmanager.TexManager):
 matplotlib.texmanager.TexManager = BareTexManager
 
 class HistNorm(matplotlib.colors.LogNorm):
-    def __init__(self, offset = HIST_OFFSET, power = HIST_POWER, vmin = None, vmax = None, clip = True):
-        super(HistNorm, self).__init__(vmin = vmin, vmax = vmax, clip = clip)
-        self.offset = offset
-        self.power = power
+    def __init__(self, vmin = None, vmax = None):
+        super(HistNorm, self).__init__(vmin = vmin, vmax = vmax)
+        self.base = matplotlib.colors.LogNorm(vmin = 1, vmax = HIST_MAX)
 
-    def __call__(self, value, clip = True):
+    def __call__(self, value, **kwargs):
+        super(HistNorm, self).__call__(value)
         result = numpy.ma.masked_less_equal(value, 0, False)
-        result = super(HistNorm, self).__call__(result, clip = clip)
-        return numpy.power(self.offset + (1.0 - self.offset) * result, self.power)
+        result = self.base.__call__(result)
+        return HIST_OFFSET + (1.0 - HIST_OFFSET) * result
 
 class ColorbarLocator(matplotlib.ticker.Locator):
     def __call__(self):
@@ -312,7 +312,8 @@ if __name__ == "__main__":
         axy = Data.flatten(map(lambda data: data.hist, driven.itervalues()))
         xbins = Data.bin(plot.xMetric, axy[0], plot.args.xmin, plot.args.xmax, plot.args.bins)
         ybins = Data.bin(plot.yMetric, axy[1], plot.args.ymin, plot.args.ymax, plot.args.bins)
-        image = axes1.hist2d(axy[0], axy[1], bins = (xbins, ybins), norm = HistNorm(vmin = plot.args.hmin, vmax = plot.args.hmax), zorder = -4)[3]
+        norm = HistNorm(vmin = plot.args.hmin, vmax = plot.args.hmax)
+        image = axes1.hist2d(axy[0], axy[1], bins = (xbins, ybins), norm = norm, zorder = -4)[3]
         if not plot.sig:
             colorbar = figure.colorbar(image, fraction = 0.125, pad = 0.0)
             colorbar.set_label("Agent count", rotation = 270.0, labelpad = 11.0)
