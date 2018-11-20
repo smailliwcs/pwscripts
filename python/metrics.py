@@ -623,6 +623,17 @@ class InfoModification(AgentBasedMetric):
         NONTRIVIAL = "Nontrivial"
         TOTAL = "Total"
     
+    @staticmethod
+    def getTypeLabel(type):
+        if type == InfoModification.Type.TRIVIAL:
+            return "Positive"
+        elif type == InfoModification.Type.NONTRIVIAL:
+            return "Negative"
+        elif type == InfoModification.Type.TOTAL:
+            return ""
+        else:
+            assert False
+    
     def addArgs(self, parser):
         self.addArg(parser, "type", metavar = "TYPE", choices = tuple(InfoModification.Type.getValues()))
         self.addArg(parser, "embedding", metavar = "EMBEDDING", type = int)
@@ -640,7 +651,7 @@ class InfoModification(AgentBasedMetric):
         return "info-dynamics-{0}-{1}.txt".format(self.embedding, self.stage)
     
     def getLabel(self):
-        return "{0} information modification".format(self.type)
+        return "{0} separable information".format(InfoModification.getTypeLabel(self.type)).strip().capitalize()
     
     def read(self):
         values = dict.fromkeys(utility.getAgents(self.run), NAN)
@@ -672,7 +683,7 @@ class InfoStorage(AgentBasedMetric):
         return "info-dynamics-{0}-{1}.txt".format(self.embedding, self.stage)
     
     def getLabel(self):
-        return "Information storage"
+        return "Active information storage"
     
     def read(self):
         values = dict.fromkeys(utility.getAgents(self.run), NAN)
@@ -702,7 +713,7 @@ class InfoTransfer(AgentBasedMetric):
         return "info-dynamics-{0}-{1}.txt".format(self.embedding, self.stage)
     
     def getLabel(self):
-        return "{0} information transfer".format(self.source)
+        return "Complete transfer entropy"
     
     def read(self):
         neuronCounts = utility.getNeuronCounts(self.run)
@@ -715,7 +726,7 @@ class InfoTransfer(AgentBasedMetric):
                 actualCount = int(actualCount)
                 if source == self.source:
                     potentialCount = getSynapseCount(neuronCounts[agent], source)
-                    count = potentialCount
+                    count = actualCount
                     values[int(agent)] = 0.0 if count == 0 else float(value) / count
         return values
 
