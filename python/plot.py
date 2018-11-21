@@ -30,6 +30,7 @@ COLOR = (
 )
 HIST_MAX = 1000
 HIST_OFFSET = 0.0
+HIST_THRESHOLD = 5
 PAD = {
     "pad": 0.5,
     "h_pad": 0.0
@@ -313,7 +314,10 @@ if __name__ == "__main__":
         xbins = Data.bin(plot.xMetric, axy[0], plot.args.xmin, plot.args.xmax, plot.args.bins)
         ybins = Data.bin(plot.yMetric, axy[1], plot.args.ymin, plot.args.ymax, plot.args.bins)
         norm = HistNorm(vmin = plot.args.hmin, vmax = plot.args.hmax)
-        image = axes1.hist2d(axy[0], axy[1], bins = (xbins, ybins), norm = norm, zorder = -4)[3]
+        hist, _, _, image = axes1.hist2d(axy[0], axy[1], bins = (xbins, ybins), norm = norm, zorder = -4)
+        indices = numpy.where(hist >= HIST_THRESHOLD)
+        sys.stderr.write("x: [{0}, {1}]\n".format(xbins[min(indices[0])], xbins[max(indices[0]) + 1]))
+        sys.stderr.write("y: [{0}, {1}]\n".format(ybins[min(indices[1])], ybins[max(indices[1]) + 1]))
         if not plot.sig:
             colorbar = figure.colorbar(image, fraction = 0.125, pad = 0.0)
             colorbar.set_label("Agent count", rotation = 270.0, labelpad = 11.0)
