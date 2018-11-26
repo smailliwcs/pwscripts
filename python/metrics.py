@@ -730,6 +730,27 @@ class InfoTransfer(AgentBasedMetric):
                     values[int(agent)] = 0.0 if count == 0 else float(value) / count
         return values
 
+class InfoTransferLite(AgentBasedMetric):
+    def addArgs(self, parser):
+        self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
+    
+    def readArgs(self, args):
+        self.stage = self.readArg(args, "stage")
+    
+    def getKey(self):
+        return "info-transfer-lite-{0}".format(self.stage)
+    
+    def getLabel(self):
+        return "Complete transfer entropy"
+    
+    def read(self):
+        values = dict.fromkeys(utility.getAgents(self.run), NAN)
+        for line in self.readLines():
+            agent, count, value = line.split()
+            count = int(count)
+            values[int(agent)] = 0.0 if count == 0 else float(value) / count
+        return values
+
 class Integration(AgentBasedMetric):
     def addArgs(self, parser):
         self.addArg(parser, "type", metavar = "TYPE")
