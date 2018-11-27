@@ -79,6 +79,10 @@ public class TimeSeriesEnsemble extends ArrayList<TimeSeries> {
         return Utility.toPrimitive(preNeuronIndices);
     }
     
+    public int[] getPreNeuronIndices(int postNeuronIndex) {
+        return getPreNeuronIndices(postNeuronIndex, -1);
+    }
+    
     public int[] getPostNeuronIndices(int preNeuronIndex) {
         Collection<Integer> postNeuronIndices = new LinkedList<Integer>();
         for (Synapse synapse : synapses) {

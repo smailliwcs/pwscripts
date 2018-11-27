@@ -2,15 +2,14 @@ import infodynamics.measures.continuous.kraskov.*;
 import infodynamics.utils.*;
 import java.util.*;
 
-public class InfoTransferLite {
+public class InfoTransferJoint {
     private static boolean gpu;
     private static int embedding;
-    private static int count;
     private static ConditionalMutualInfoCalculatorMultiVariateKraskov1 calculator;
     
     public static void main(String[] args) throws Exception {
         if (!tryParseArgs(args)) {
-            System.err.printf("Usage: %s GPU EMBEDDING COUNT%n", InfoTransferLite.class.getSimpleName());
+            System.err.printf("Usage: %s GPU EMBEDDING%n", InfoTransferJoint.class.getSimpleName());
             return;
         }
         calculator = new ConditionalMutualInfoCalculatorMultiVariateKraskov1();
@@ -20,59 +19,47 @@ public class InfoTransferLite {
         try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(System.in)) {
             reader.readArguments(System.out);
             System.out.printf("# embedding = %d%n", embedding);
-            System.out.printf("# count = %d%n", count);
             while (true) {
                 TimeSeriesEnsemble ensemble = reader.read();
                 if (ensemble == null) {
                     break;
                 }
-                List<Synapse> synapses = new ArrayList<Synapse>();
-                for (Synapse synapse : ensemble.getSynapses()) {
-                    synapses.add(synapse);
-                }
-                Collections.shuffle(synapses);
                 double sum = 0.0;
-                int index = 0;
-                while (index < count && index < synapses.size()) {
-                    Synapse synapse = synapses.get(index);
-                    sum += getTransfer(ensemble, synapse.getPreNeuronIndex(), synapse.getPostNeuronIndex());
-                    index++;
+                int count = 0;
+                for (int neuronIndex : ensemble.getProcessingNeuronIndices()) {
+                    sum += getTransfer(ensemble, neuronIndex);
+                    count++;
                 }
-                System.out.printf("%d %d %g%n", ensemble.getAgentIndex(), index, sum);
+                System.out.printf("%d %d %g%n", ensemble.getAgentIndex(), count, sum);
             }
         }
     }
     
     private static boolean tryParseArgs(String[] args) {
         try {
-            assert args.length == 3;
+            assert args.length == 2;
             int index = 0;
             gpu = Boolean.parseBoolean(args[index++]);
             embedding = Integer.parseInt(args[index++]);
             assert embedding > 0;
-            count = Integer.parseInt(args[index++]);
-            assert count > 0;
             return true;
         } catch (Throwable ex) {
             return false;
         }
     }
     
-    private static double getTransfer(TimeSeriesEnsemble ensemble, int preNeuronIndex, int postNeuronIndex) throws Exception {
-        int[] conditionalNeuronIndices = ensemble.getPreNeuronIndices(postNeuronIndex, preNeuronIndex);
-        calculator.initialise(1, 1, embedding + conditionalNeuronIndices.length);
+    private static double getTransfer(TimeSeriesEnsemble ensemble, int postNeuronIndex) throws Exception {
+        int[] preNeuronIndices = ensemble.getPreNeuronIndices(postNeuronIndex);
+        calculator.initialise(preNeuronIndices.length, 1, embedding);
         calculator.startAddObservations();
         for (TimeSeries timeSeries : ensemble) {
             int length = timeSeries.size() - embedding;
-            double[][] source = timeSeries.getColumns(new int[] { preNeuronIndex });
+            double[][] source = timeSeries.getColumns(preNeuronIndices);
             double[][] target = timeSeries.getColumns(new int[] { postNeuronIndex });
-            double[][] conditional = timeSeries.getColumns(conditionalNeuronIndices);
             calculator.addObservations(
                 MatrixUtils.selectRows(source, embedding - 1, length),
                 MatrixUtils.selectRows(target, embedding, length),
-                MatrixUtils.appendColumns(
-                    MatrixUtils.makeDelayEmbeddingVector(target, embedding, embedding - 1, length),
-                    MatrixUtils.selectRows(conditional, embedding - 1, length)));
+                MatrixUtils.makeDelayEmbeddingVector(target, embedding, embedding - 1, length));
         }
         calculator.finaliseAddObservations();
         return calculator.computeAverageLocalOfObservations();

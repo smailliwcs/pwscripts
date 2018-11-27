@@ -89,6 +89,7 @@ public class Diversity {
             assert hasValidRun();
             groupSize = Integer.parseInt(args[index++]);
             assert groupSize >= 0 && groupSize <= 7;
+            assert index == args.length;
             return true;
         } catch (Throwable ex) {
             return false;
