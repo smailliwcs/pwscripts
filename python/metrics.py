@@ -29,14 +29,6 @@ def digitize(value, step):
         index += 1
     return index * step
 
-def getSynapseCount(neuronCounts, source):
-    if source == "Internal":
-        return neuronCounts["Processing"] * (neuronCounts["Processing"] - 1)
-    elif source == "Total":
-        return neuronCounts["Input"] * neuronCounts["Processing"] + neuronCounts["Processing"] * (neuronCounts["Processing"] - 1)
-    else:
-        return neuronCounts[source] * neuronCounts["Processing"]
-
 class Stage(utility.Enum):
     INCEPT = "incept"
     BIRTH = "birth"
@@ -697,40 +689,34 @@ class InfoStorage(AgentBasedMetric):
 
 class InfoTransfer(AgentBasedMetric):
     def addArgs(self, parser):
-        self.addArg(parser, "source", metavar = "SOURCE")
         self.addArg(parser, "embedding", metavar = "EMBEDDING", type = int)
         self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
     
     def readArgs(self, args):
-        self.source = self.readArg(args, "source")
         self.embedding = self.readArg(args, "embedding")
         self.stage = self.readArg(args, "stage")
     
     def getKey(self):
-        return "info-transfer-{0}-{1}-{2}".format(self.source.lower(), self.embedding, self.stage)
+        return "info-transfer-apparent-{0}-{1}".format(self.embedding, self.stage)
     
     def getDataFileName(self):
         return "info-dynamics-{0}-{1}.txt".format(self.embedding, self.stage)
     
     def getLabel(self):
-        return "Complete transfer entropy"
+        return "Apparent transfer entropy"
     
     def read(self):
-        neuronCounts = utility.getNeuronCounts(self.run)
         values = dict.fromkeys(utility.getAgents(self.run), NAN)
         for line in self.readLines():
             agent, flag, chunks = line.split(None, 2)
-            agent = int(agent)
             if flag == "T":
-                source, actualCount, value = chunks.split()
-                actualCount = int(actualCount)
-                if source == self.source:
-                    potentialCount = getSynapseCount(neuronCounts[agent], source)
-                    count = actualCount
+                source, count, value = chunks.split()
+                if source == "Total":
+                    count = int(count)
                     values[int(agent)] = 0.0 if count == 0 else float(value) / count
         return values
 
-class InfoTransferLite(AgentBasedMetric):
+class InfoTransferComplete(AgentBasedMetric):
     def addArgs(self, parser):
         self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
     
@@ -738,10 +724,31 @@ class InfoTransferLite(AgentBasedMetric):
         self.stage = self.readArg(args, "stage")
     
     def getKey(self):
-        return "info-transfer-lite-{0}".format(self.stage)
+        return "info-transfer-complete-{0}".format(self.stage)
     
     def getLabel(self):
         return "Complete transfer entropy"
+    
+    def read(self):
+        values = dict.fromkeys(utility.getAgents(self.run), NAN)
+        for line in self.readLines():
+            agent, count, value = line.split()
+            count = int(count)
+            values[int(agent)] = 0.0 if count == 0 else float(value) / count
+        return values
+
+class InfoTransferJoint(AgentBasedMetric):
+    def addArgs(self, parser):
+        self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
+    
+    def readArgs(self, args):
+        self.stage = self.readArg(args, "stage")
+    
+    def getKey(self):
+        return "info-transfer-joint-{0}".format(self.stage)
+    
+    def getLabel(self):
+        return "Joint transfer entropy"
     
     def read(self):
         values = dict.fromkeys(utility.getAgents(self.run), NAN)
