@@ -716,27 +716,6 @@ class InfoTransfer(AgentBasedMetric):
                     values[int(agent)] = 0.0 if count == 0 else float(value) / count
         return values
 
-class InfoTransferComplete(AgentBasedMetric):
-    def addArgs(self, parser):
-        self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
-    
-    def readArgs(self, args):
-        self.stage = self.readArg(args, "stage")
-    
-    def getKey(self):
-        return "info-transfer-complete-{0}".format(self.stage)
-    
-    def getLabel(self):
-        return "Complete transfer entropy"
-    
-    def read(self):
-        values = dict.fromkeys(utility.getAgents(self.run), NAN)
-        for line in self.readLines():
-            agent, count, value = line.split()
-            count = int(count)
-            values[int(agent)] = 0.0 if count == 0 else float(value) / count
-        return values
-
 class InfoTransferCollective(AgentBasedMetric):
     def addArgs(self, parser):
         self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
@@ -749,6 +728,27 @@ class InfoTransferCollective(AgentBasedMetric):
     
     def getLabel(self):
         return "Collective transfer entropy"
+    
+    def read(self):
+        values = dict.fromkeys(utility.getAgents(self.run), NAN)
+        for line in self.readLines():
+            agent, count, value = line.split()
+            count = int(count)
+            values[int(agent)] = 0.0 if count == 0 else float(value) / count
+        return values
+
+class InfoTransferComplete(AgentBasedMetric):
+    def addArgs(self, parser):
+        self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
+    
+    def readArgs(self, args):
+        self.stage = self.readArg(args, "stage")
+    
+    def getKey(self):
+        return "info-transfer-complete-{0}".format(self.stage)
+    
+    def getLabel(self):
+        return "Complete transfer entropy"
     
     def read(self):
         values = dict.fromkeys(utility.getAgents(self.run), NAN)
