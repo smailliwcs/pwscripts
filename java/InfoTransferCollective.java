@@ -2,14 +2,14 @@ import infodynamics.measures.continuous.kraskov.*;
 import infodynamics.utils.*;
 import java.util.*;
 
-public class InfoTransferJoint {
+public class InfoTransferCollective {
     private static boolean gpu;
     private static int embedding;
     private static ConditionalMutualInfoCalculatorMultiVariateKraskov1 calculator;
     
     public static void main(String[] args) throws Exception {
         if (!tryParseArgs(args)) {
-            System.err.printf("Usage: %s GPU EMBEDDING%n", InfoTransferJoint.class.getSimpleName());
+            System.err.printf("Usage: %s GPU EMBEDDING%n", InfoTransferCollective.class.getSimpleName());
             return;
         }
         calculator = new ConditionalMutualInfoCalculatorMultiVariateKraskov1();

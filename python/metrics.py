@@ -737,7 +737,7 @@ class InfoTransferComplete(AgentBasedMetric):
             values[int(agent)] = 0.0 if count == 0 else float(value) / count
         return values
 
-class InfoTransferJoint(AgentBasedMetric):
+class InfoTransferCollective(AgentBasedMetric):
     def addArgs(self, parser):
         self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
     
@@ -745,10 +745,10 @@ class InfoTransferJoint(AgentBasedMetric):
         self.stage = self.readArg(args, "stage")
     
     def getKey(self):
-        return "info-transfer-joint-{0}".format(self.stage)
+        return "info-transfer-collective-{0}".format(self.stage)
     
     def getLabel(self):
-        return "Joint transfer entropy"
+        return "Collective transfer entropy"
     
     def read(self):
         values = dict.fromkeys(utility.getAgents(self.run), NAN)
