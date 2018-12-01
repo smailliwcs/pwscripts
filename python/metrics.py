@@ -687,7 +687,7 @@ class InfoStorage(AgentBasedMetric):
                 values[int(agent)] = 0.0 if count == 0 else float(value) / count
         return values
 
-class InfoTransfer(AgentBasedMetric):
+class InfoTransferApparent(AgentBasedMetric):
     def addArgs(self, parser):
         self.addArg(parser, "embedding", metavar = "EMBEDDING", type = int)
         self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
@@ -718,13 +718,15 @@ class InfoTransfer(AgentBasedMetric):
 
 class InfoTransferCollective(AgentBasedMetric):
     def addArgs(self, parser):
+        self.addArg(parser, "embedding", metavar = "EMBEDDING", type = int)
         self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
     
     def readArgs(self, args):
+        self.embedding = self.readArg(args, "embedding")
         self.stage = self.readArg(args, "stage")
     
     def getKey(self):
-        return "info-transfer-collective-{0}".format(self.stage)
+        return "info-transfer-collective-{0}-{1}".format(self.embedding, self.stage)
     
     def getLabel(self):
         return "Collective transfer entropy"
@@ -739,13 +741,15 @@ class InfoTransferCollective(AgentBasedMetric):
 
 class InfoTransferComplete(AgentBasedMetric):
     def addArgs(self, parser):
+        self.addArg(parser, "embedding", metavar = "EMBEDDING", type = int)
         self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
     
     def readArgs(self, args):
+        self.embedding = self.readArg(args, "embedding")
         self.stage = self.readArg(args, "stage")
     
     def getKey(self):
-        return "info-transfer-complete-{0}".format(self.stage)
+        return "info-transfer-complete-{0}-{1}".format(self.embedding, self.stage)
     
     def getLabel(self):
         return "Complete transfer entropy"
