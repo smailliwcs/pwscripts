@@ -50,6 +50,9 @@ public class InfoTransferCollective {
     
     private static double getTransfer(TimeSeriesEnsemble ensemble, int postNeuronIndex) throws Exception {
         int[] preNeuronIndices = ensemble.getPreNeuronIndices(postNeuronIndex);
+        if (preNeuronIndices.length == 0) {
+            return 0.0;
+        }
         calculator.initialise(preNeuronIndices.length, 1, embedding);
         calculator.startAddObservations();
         for (TimeSeries timeSeries : ensemble) {
