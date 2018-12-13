@@ -28,9 +28,9 @@ COLOR = (
     matplotlib.cm.Blues(0.9),
     matplotlib.cm.Oranges(0.45)
 )
-HIST_MAX = 1000
+HIST_MAX = 2500
 HIST_OFFSET = 0.0
-HIST_THRESHOLD = 5
+HIST_THRESHOLD = 10
 PAD = {
     "pad": 0.5,
     "h_pad": 0.0
