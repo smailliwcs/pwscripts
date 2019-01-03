@@ -489,6 +489,9 @@ class Entropy(AgentBasedMetric):
     
     def getLabel(self):
         return "Entropy"
+    
+    def aggregate(self, values):
+        return numpy.nanmedian(values)
 
 class Expansion(AgentBasedMetric):
     def addArgs(self, parser):
