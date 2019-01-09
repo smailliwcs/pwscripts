@@ -328,7 +328,11 @@ if __name__ == "__main__":
     # Plot regression
     if plot.args.regress:
         m, b, r = scipy.stats.linregress(axy)[:3]
-        ax = (min(axy[0]), max(axy[0]))
+        ax = [min(axy[0]), max(axy[0])]
+        if plot.args.xmin is not None:
+            ax[0] = plot.args.xmin
+        if plot.args.xmax is not None:
+            ax[1] = plot.args.xmax
         ay = map(lambda x: m * x + b, ax)
         kwargs = {
             "color": COLOR[0],
