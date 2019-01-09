@@ -490,8 +490,15 @@ class Entropy(AgentBasedMetric):
     def getLabel(self):
         return "Differential entropy"
     
-    def aggregate(self, values):
-        return numpy.nanmedian(values)
+    def read(self):
+        values = dict.fromkeys(utility.getAgents(self.run), NAN)
+        for line in self.readLines():
+            agent, value = line.split()
+            value = float(value)
+            if math.isinf(value):
+                continue
+            values[int(agent)] = value
+        return values
 
 class Expansion(AgentBasedMetric):
     def addArgs(self, parser):
