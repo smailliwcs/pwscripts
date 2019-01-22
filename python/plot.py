@@ -35,7 +35,7 @@ PAD = {
     "pad": 0.5,
     "h_pad": 0.0
 }
-SIZE = 3.25
+SIZE = 3.15
 SIZE_FACTOR = 0.8
 STROKE = matplotlib.patheffects.withStroke(linewidth = 3.0, foreground = "1.0")
 TSTEP = (10, 100)
