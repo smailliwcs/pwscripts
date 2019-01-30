@@ -1017,8 +1017,8 @@ class Selection(TimeBasedMetric):
             for index in xrange(indexMin, indexMax + 1):
                 drivenValue = drivenValues[index]
                 passiveValue = passiveValues[index]
-                values.append(NAN if passiveValue == 0.0 else drivenValue / passiveValue - 1.0)
-            yield timestep, numpy.nanmean(values)
+                values.append(NAN if passiveValue == 0.0 else drivenValue / passiveValue)
+            yield timestep, numpy.nanmean(values) - 1.0
 
 class SmallWorldness(AgentBasedMetric):
     def addArgs(self, parser):
