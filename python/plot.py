@@ -1,4 +1,5 @@
 import argparse
+import colorsys
 import itertools
 import math
 import matplotlib
@@ -25,8 +26,8 @@ matplotlib.rc("image", cmap = CMAP_NAME)
 CMAP = matplotlib.cm.get_cmap(CMAP_NAME)
 CMAP.set_bad("1.0")
 COLOR = (
-    matplotlib.cm.Blues(0.9),
-    matplotlib.cm.Oranges(0.45)
+    colorsys.hls_to_rgb(7.0 / 12.0, 0.3, 0.9) + (1.0,),
+    colorsys.hls_to_rgb(1.0 / 12.0, 0.7, 1.0) + (1.0,)
 )
 HIST_MAX = 2500
 HIST_OFFSET = 0.0
