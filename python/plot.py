@@ -40,11 +40,6 @@ SIZE = 3.15
 SIZE_FACTOR = 0.8
 STROKE = matplotlib.patheffects.withStroke(linewidth = 3.0, foreground = "1.0")
 TSTEP = (10, 100)
-UNITS = {
-    1: "",
-    3: "K",
-    6: "M"
-}
 
 class BareTexManager(matplotlib.texmanager.TexManager):
     def __init__(self):
@@ -262,8 +257,12 @@ def getGridKwargs():
     props = ("alpha", "color", "linestyle", "linewidth")
     return dict(map(lambda prop: (prop, matplotlib.rcParams["grid.{0}".format(prop)]), props))
 
-def getFormatter(scale):
-    return matplotlib.ticker.FuncFormatter(lambda tick, position: "{0}{1}".format(tick / 10.0 ** scale, UNITS[scale]))
+def formatAxis(axis, scale):
+    axis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda tick, position: tick / 10.0 ** scale))
+    axis.labelpad -= matplotlib.rcParams["font.size"] * 0.25
+
+def formatLabel(label, scale):
+    return "{0} / ($10^{{{1}}}$)".format(label, scale)
 
 def nudge(text, x, y):
     text.set_transform(text.get_transform() + matplotlib.transforms.Affine2D().translate(x, y))
@@ -384,12 +383,14 @@ if __name__ == "__main__":
     axes1.set_ylim(plot.args.ymin, plot.args.ymax)
     if plot.args.ystep is not None:
         axes1.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(plot.args.ystep))
-    if plot.args.xscale is not None:
-        axes1.xaxis.set_major_formatter(getFormatter(plot.args.xscale))
-    if plot.args.yscale is not None:
-        axes1.yaxis.set_major_formatter(getFormatter(plot.args.yscale))
     xlabel = plot.xMetric.getLabel() if plot.args.xlabel is None else plot.args.xlabel
     ylabel = plot.yMetric.getLabel() if plot.args.ylabel is None else plot.args.ylabel
+    if plot.args.xscale is not None:
+        formatAxis(axes1.xaxis, plot.args.xscale)
+        xlabel = formatLabel(xlabel, plot.args.xscale)
+    if plot.args.yscale is not None:
+        formatAxis(axes1.yaxis, plot.args.yscale)
+        ylabel = formatLabel(ylabel, plot.args.yscale)
     if plot.sig:
         axes1.tick_params(axis = "x", bottom = False, labelbottom = False)
         axes2.set_xlabel(xlabel)
@@ -397,7 +398,7 @@ if __name__ == "__main__":
         if plot.args.xstep is not None:
             axes2.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(plot.args.xstep))
         if plot.args.xscale is not None:
-            axes2.xaxis.set_major_formatter(getFormatter(plot.args.xscale))
+            formatAxis(axes2.xaxis, plot.args.xscale)
         axes2.set_ylabel("Significance")
         axes2.set_ylim(0.75, 1.05)
         ticks = axes2.set_yticks((0.8, 0.95, 1.0))
