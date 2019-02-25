@@ -40,6 +40,11 @@ SIZE = 3.15
 SIZE_FACTOR = 0.8
 STROKE = matplotlib.patheffects.withStroke(linewidth = 3.0, foreground = "1.0")
 TSTEP = (10, 100)
+UNITS = {
+    1: "",
+    3: "K",
+    6: "M"
+}
 
 class BareTexManager(matplotlib.texmanager.TexManager):
     def __init__(self):
@@ -113,10 +118,12 @@ class Plot(object):
         parser.add_argument("--xmin", metavar = "XMIN", type = float)
         parser.add_argument("--xmax", metavar = "XMAX", type = float)
         parser.add_argument("--xstep", metavar = "XSTEP", type = float)
+        parser.add_argument("--xscale", metavar = "XSCALE", type = int)
         parser.add_argument("--xlabel", metavar = "XLABEL")
         parser.add_argument("--ymin", metavar = "YMIN", type = float)
         parser.add_argument("--ymax", metavar = "YMAX", type = float)
         parser.add_argument("--ystep", metavar = "YSTEP", type = float)
+        parser.add_argument("--yscale", metavar = "YSCALE", type = int)
         parser.add_argument("--ylabel", metavar = "YLABEL")
         parser.add_argument("--htmin", metavar = "HTMIN", type = int, default = 0)
         parser.add_argument("--hmin", metavar = "HMIN", type = float)
@@ -161,6 +168,10 @@ class Plot(object):
                 self.args.tstep = TSTEP[0]
             else:
                 self.args.tstep = TSTEP[1]
+        if self.args.xscale is None and isinstance(self.xMetric, metrics_mod.Timestep):
+            self.args.xscale = 3
+        if self.args.yscale is None and isinstance(self.yMetric, metrics_mod.Timestep):
+            self.args.yscale = 3
 
 class Data:
     @staticmethod
@@ -250,6 +261,9 @@ def plotLine(axes, axy, kwargs):
 def getGridKwargs():
     props = ("alpha", "color", "linestyle", "linewidth")
     return dict(map(lambda prop: (prop, matplotlib.rcParams["grid.{0}".format(prop)]), props))
+
+def getFormatter(scale):
+    return matplotlib.ticker.FuncFormatter(lambda tick, position: "{0}{1}".format(tick / 10.0 ** scale, UNITS[scale]))
 
 def nudge(text, x, y):
     text.set_transform(text.get_transform() + matplotlib.transforms.Affine2D().translate(x, y))
@@ -370,6 +384,10 @@ if __name__ == "__main__":
     axes1.set_ylim(plot.args.ymin, plot.args.ymax)
     if plot.args.ystep is not None:
         axes1.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(plot.args.ystep))
+    if plot.args.xscale is not None:
+        axes1.xaxis.set_major_formatter(getFormatter(plot.args.xscale))
+    if plot.args.yscale is not None:
+        axes1.yaxis.set_major_formatter(getFormatter(plot.args.yscale))
     xlabel = plot.xMetric.getLabel() if plot.args.xlabel is None else plot.args.xlabel
     ylabel = plot.yMetric.getLabel() if plot.args.ylabel is None else plot.args.ylabel
     if plot.sig:
@@ -378,6 +396,8 @@ if __name__ == "__main__":
         axes2.set_xlim(plot.args.xmin, plot.args.xmax)
         if plot.args.xstep is not None:
             axes2.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(plot.args.xstep))
+        if plot.args.xscale is not None:
+            axes2.xaxis.set_major_formatter(getFormatter(plot.args.xscale))
         axes2.set_ylabel("Significance")
         axes2.set_ylim(0.75, 1.05)
         ticks = axes2.set_yticks((0.8, 0.95, 1.0))
