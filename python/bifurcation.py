@@ -32,7 +32,7 @@ axes2.set_xticks(XTICKS)
 axes2.set_xlabel("Maximum synaptic weight")
 axes2.set_ylim(-0.5, 2.5)
 axes2.set_yticks((0.0, 1.0, 2.0))
-axes2.set_ylabel("PSE")
+axes2.set_ylabel("SSE")
 kwargs = {
     "alpha": 0.1,
     "color": plot.COLOR[0],
@@ -48,7 +48,7 @@ path = os.path.join(args.run, "data", "bifurcation-{0}-{1}.txt.gz".format(args.s
 data = numpy.loadtxt(path)
 axes1.plot(data[:, 0], data[:, NEURONS.index(args.neuron) + 1], **kwargs)
 
-# Plot phase space expansion
+# Plot state space expansion
 path = os.path.join(args.run, "data", "expansion-{0}-{1}.txt".format(args.stage, args.agent))
 data = numpy.loadtxt(path)
 axes2.plot(data[:, 0], data[: ,1], **kwargs)

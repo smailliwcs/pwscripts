@@ -511,7 +511,7 @@ class Expansion(AgentBasedMetric):
         return "expansion-{0}".format(self.stage)
     
     def getLabel(self):
-        return "Phase space expansion"
+        return "State space expansion"
 
 class FoodConsumption(TimeBasedMetric):
     def addArgs(self, parser):
