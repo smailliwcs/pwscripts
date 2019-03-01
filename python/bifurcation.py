@@ -32,7 +32,7 @@ axes2.set_xticks(XTICKS)
 axes2.set_xlabel("Maximum synaptic weight")
 axes2.set_ylim(-0.5, 2.5)
 axes2.set_yticks((0.0, 1.0, 2.0))
-axes2.set_ylabel("SSE")
+axes2.set_ylabel("State space\nexpansion")
 kwargs = {
     "alpha": 0.1,
     "color": plot.COLOR[0],
