@@ -228,7 +228,7 @@ if __name__ == "__main__":
     assert args.k < args.N
     if args.metric == "Efficiency":
         sys.stdout.write("# p E_local E_global\n")
-        for p in numpy.linspace(0.0, 1.0, args.points):
+        for p in numpy.logspace(-3, 0, args.points):
             values = {
                 "local": [],
                 "global": []
