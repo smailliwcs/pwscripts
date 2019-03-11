@@ -19,7 +19,7 @@ import sys
 import textwrap
 import utility
 
-ALPHA_RUN = (0.1, 0.2)
+ALPHA_RUN = (0.167, 0.333)
 BIN_COUNT = 100
 CMAP_NAME = "YlGnBu"
 matplotlib.rc("image", cmap = CMAP_NAME)
@@ -32,6 +32,7 @@ COLOR = (
 HIST_MAX = 2500
 HIST_OFFSET = 0.0
 HIST_THRESHOLD = 10
+LINEWIDTH_RUN = 0.5
 PAD = {
     "pad": 0.5,
     "h_pad": 0.0
@@ -302,6 +303,7 @@ if __name__ == "__main__":
             kwargs = lambda index: {
                 "alpha": ALPHA_RUN[index],
                 "color": COLOR[index],
+                "linewidth": LINEWIDTH_RUN,
                 "zorder": -2 - index
             }
             plotLine(axes1, driven[run].line, kwargs(0))
