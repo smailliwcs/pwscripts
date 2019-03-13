@@ -108,6 +108,7 @@ class Plot(object):
         parser.add_argument("--hist", action = "store_true")
         parser.add_argument("--regress", action = "store_true")
         parser.add_argument("--passive", action = "store_true")
+        parser.add_argument("--wilcoxon", action = "store_true")
         parser.add_argument("--tmin", metavar = "TMIN", type = int)
         parser.add_argument("--tmax", metavar = "TMAX", type = int)
         parser.add_argument("--tstep", metavar = "TSTEP", type = int)
@@ -367,7 +368,12 @@ if __name__ == "__main__":
         axy = [[], []]
         for index in xrange(len(ax)):
             timestep = ax[index]
-            p = scipy.stats.ttest_rel(ay["driven"][index], ay["passive"][index])[1]
+            aytd = ay["driven"][index]
+            aytp = ay["passive"][index]
+            if plot.args.wilcoxon:
+                p = scipy.stats.wilcoxon(aytd, aytp, zero_method = "pratt")[1]
+            else:
+                p = scipy.stats.ttest_rel(aytd, aytp)[1]
             if math.isnan(p):
                 p = 1.0
             axy[0].append(timestep)
