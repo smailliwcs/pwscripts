@@ -102,8 +102,8 @@ class Metric(object):
     def calculate(self):
         raise NotImplementedError
     
-    def aggregate(self, values):
-        return numpy.nanmean(values)
+    def aggregate(self, *args, **kwargs):
+        return numpy.nanmean(*args, **kwargs)
     
     def constrain(self, values, interval):
         raise NotImplementedError
@@ -921,8 +921,8 @@ class Onset(AgentBasedMetric):
     def getLabel(self):
         return "Onset of criticality"
     
-    def aggregate(self, values):
-        return numpy.nanmedian(values)
+    def aggregate(self, *args, **kwargs):
+        return numpy.nanmedian(*args, **kwargs)
 
 class Population(TimeBasedMetric):
     integral = True
@@ -1107,8 +1107,8 @@ class Timestep(TimeBasedMetric):
             values[timestep] = timestep
         return values
     
-    def aggregate(self, values):
-        return max(values)
+    def aggregate(self, *args, **kwargs):
+        return numpy.nanmax(*args, **kwargs)
 
 class Weight(WeightMetric):
     def getKey(self):

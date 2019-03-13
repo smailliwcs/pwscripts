@@ -318,10 +318,10 @@ if __name__ == "__main__":
             "path_effects": [STROKE],
             "zorder": -index
         }
-        axy = numpy.mean(map(lambda data: data.line, driven.itervalues()), axis = 0)
+        axy = plot.yMetric.aggregate(map(lambda data: data.line, driven.itervalues()), axis = 0)
         plotLine(axes1, axy, kwargs(0))
         if plot.args.passive:
-            axy = numpy.mean(map(lambda data: data.line, passive.itervalues()), axis = 0)
+            axy = plot.yMetric.aggregate(map(lambda data: data.line, passive.itervalues()), axis = 0)
             plotLine(axes1, axy, kwargs(1))
     
     # Plot histogram
