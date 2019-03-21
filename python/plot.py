@@ -266,7 +266,7 @@ def scaleAxis(axis, scale):
     axis.labelpad -= matplotlib.rcParams["font.size"] * 0.25
 
 def scaleLabel(label, scale):
-    return "{0} / ($10^{{{1}}}$)".format(label, scale)
+    return "$\\text{{{0}}} / (10^{{{1}}})$".format(label, scale)
 
 def nudge(text, x, y):
     text.set_transform(text.get_transform() + matplotlib.transforms.Affine2D().translate(x, y))
