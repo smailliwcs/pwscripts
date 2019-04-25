@@ -16,7 +16,7 @@ for input in "$@"; do
         continue
     fi
     output=$(tempfile -s .pdf)
-    gs -dBATCH -dNOPAUSE -dQUIET -dSAFER -sDEVICE=pdfwrite -sOutputFile=- "$input" | \
+    gs -dBATCH -dNOPAUSE -dQUIET -dSAFER -sDEVICE=pdfwrite -dCompatibilityLevel=1.5 -sOutputFile=- "$input" | \
     exiftool -m -q -all:all= -o "$input.tmp" -
     qpdf --linearize --deterministic-id "$input.tmp" - | \
     sed -E 's/\/ID \[<[[:xdigit:]]{32}><([[:xdigit:]]{32})>\]/\/ID [<\1><\1>]/g' > "$output"
