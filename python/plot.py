@@ -167,10 +167,10 @@ class Plot(object):
                 self.args.tstep = TSTEP[0]
             else:
                 self.args.tstep = TSTEP[1]
-        if self.args.xscale is None and isinstance(self.xMetric, metrics_mod.Timestep):
-            self.args.xscale = 3
-        if self.args.yscale is None and isinstance(self.yMetric, metrics_mod.Timestep):
-            self.args.yscale = 3
+        if self.args.xscale is None:
+            self.args.xscale = 3 if isinstance(self.xMetric, metrics_mod.Timestep) else 0
+        if self.args.yscale is None:
+            self.args.yscale = 3 if isinstance(self.yMetric, metrics_mod.Timestep) else 0
 
 class Data:
     @staticmethod
@@ -262,10 +262,14 @@ def getGridKwargs():
     return dict(map(lambda prop: (prop, matplotlib.rcParams["grid.{0}".format(prop)]), props))
 
 def scaleAxis(axis, scale):
+    if scale == 0:
+        return
     axis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda tick, position: tick / 10.0 ** scale))
     axis.labelpad -= matplotlib.rcParams["font.size"] * 0.25
 
 def scaleLabel(label, scale):
+    if scale == 0:
+        return label
     return "{0} / ($10^{{{1}}}$)".format(label, scale)
 
 def nudge(text, x, y):
@@ -399,12 +403,10 @@ if __name__ == "__main__":
         axes1.set_yticks(numpy.append(axes1.get_yticks(), plot.args.ytick))
     xlabel = plot.xMetric.getLabel() if plot.args.xlabel is None else plot.args.xlabel
     ylabel = plot.yMetric.getLabel() if plot.args.ylabel is None else plot.args.ylabel
-    if plot.args.xscale is not None:
-        scaleAxis(axes1.xaxis, plot.args.xscale)
-        xlabel = scaleLabel(xlabel, plot.args.xscale)
-    if plot.args.yscale is not None:
-        scaleAxis(axes1.yaxis, plot.args.yscale)
-        ylabel = scaleLabel(ylabel, plot.args.yscale)
+    scaleAxis(axes1.xaxis, plot.args.xscale)
+    xlabel = scaleLabel(xlabel, plot.args.xscale)
+    scaleAxis(axes1.yaxis, plot.args.yscale)
+    ylabel = scaleLabel(ylabel, plot.args.yscale)
     if plot.sig:
         axes1.tick_params(axis = "x", bottom = False, labelbottom = False)
         axes2.set_xlabel(xlabel)
@@ -413,8 +415,7 @@ if __name__ == "__main__":
             axes2.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(plot.args.xstep))
         if plot.args.xtick is not None:
             axes2.set_xticks(numpy.append(axes2.get_xticks(), plot.args.xtick))
-        if plot.args.xscale is not None:
-            scaleAxis(axes2.xaxis, plot.args.xscale)
+        scaleAxis(axes2.xaxis, plot.args.xscale)
         axes2.set_ylabel("Significance")
         axes2.set_ylim(0.75, 1.05)
         ticks = axes2.set_yticks((0.8, 0.95, 1.0))
