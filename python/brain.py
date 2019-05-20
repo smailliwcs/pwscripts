@@ -20,8 +20,8 @@ TEMPLATES["gv"] = {}
 TEMPLATES["gv"]["graph"] = """
 digraph {{
     outputorder=edgesfirst;
-    node [fixedsize=true, label="", shape=circle, style=filled, width=0.075];
-    edge [arrowhead=none];
+    node [fixedsize=true, label="", penwidth=0.4, shape=circle, style=filled, width=0.075];
+    edge [arrowhead=none, penwidth=0.4];
 {nodes}
 {edges}
 }}
@@ -47,7 +47,7 @@ TEMPLATES["tex"]["graph"] = """
 \\end{{document}}
 """.lstrip()
 TEMPLATES["tex"]["node"] = """    \\node[fill={{rgb,255:red,{r};green,{g};blue,{b}}}] ({i}) at ({x:.3f}in,{y:.3f}in) {{}};"""
-TEMPLATES["tex"]["edge"] = """        \\draw[-, color={{rgb,255:red,{r};green,{g};blue,{b}}}] ({i}) to ({j});"""
+TEMPLATES["tex"]["edge"] = """        \\draw[-, opacity={o:.3f}] ({i}) to ({j});"""
 
 def setColor(kwargs, byte):
     kwargs.update({
@@ -94,7 +94,7 @@ for nerve in utility.getNerves(args.run):
         setPosition(kwargs, counts["Total"], offset)
         nodes.append(TEMPLATES[args.format]["node"].format(**kwargs))
         kwargs["i"] += 1
-setColor(kwargs, 192)
+setColor(kwargs, 160)
 for _ in xrange(counts["Internal"]):
     kwargs["type"] = "Internal"
     setPosition(kwargs, counts["Total"], offset)
@@ -117,7 +117,7 @@ for indices, weight in sorted(weights.iteritems(), key = lambda item: abs(item[1
     alpha = int(256 * abs(weight))
     if alpha > 255:
         alpha = 255
-    setColor(kwargs, 255 - alpha)
     kwargs["a"] = alpha
+    kwargs["o"] = alpha / 255.0
     edges.append(TEMPLATES[args.format]["edge"].format(**kwargs))
 sys.stdout.write(TEMPLATES[args.format]["graph"].format(nodes = "\n".join(nodes), edges = "\n".join(edges)))
