@@ -1,5 +1,6 @@
 import gzip
 import os
+import random
 import re
 import utility
 
@@ -133,3 +134,19 @@ class Graph(object):
             if (neighbor == node and include) or self.hasLink(neighbor, node) or self.hasLink(node, neighbor):
                 nodes.append(neighbor)
         return self.getSubgraph(nodes)
+    
+    def rewire(self):
+        graph = Graph(self.size)
+        for nodeOut in xrange(self.size):
+            graph.nodeTypes[nodeOut] = self.nodeTypes[nodeOut]
+            nodeIns = []
+            for nodeIn in xrange(self.size):
+                if self.nodeTypes[nodeIn] == NodeType.INPUT or nodeIn == nodeOut:
+                    continue
+                nodeIns.append(nodeIn)
+            shuffledNodeIns = random.sample(nodeIns, len(nodeIns))
+            mapping = dict(zip(nodeIns, shuffledNodeIns))
+            for nodeIn in xrange(self.size):
+                shuffledNodeIn = mapping.get(nodeIn, nodeIn)
+                graph.weights[nodeOut][shuffledNodeIn] = self.weights[nodeOut][nodeIn]
+        return graph

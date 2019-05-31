@@ -847,13 +847,15 @@ class Modularity(AgentBasedMetric):
     def addArgs(self, parser):
         self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
         self.addArg(parser, "graph-type", metavar = "GRAPH_TYPE", choices = tuple(graph_mod.GraphType.getValues()))
+        self.addArg(parser, "rewirings", metavar = "REWIRINGS", type = int)
     
     def readArgs(self, args):
         self.stage = self.readArg(args, "stage")
         self.graphType = self.readArg(args, "graph-type")
+        self.rewirings = self.readArg(args, "rewirings")
     
     def getKey(self):
-        return "modularity-{0}-{1}".format(self.stage, self.graphType)
+        return "modularity-{0}-{1}-{2}".format(self.stage, self.graphType, self.rewirings)
     
     def getLabel(self):
         return "Modularity"
@@ -864,7 +866,13 @@ class Modularity(AgentBasedMetric):
             if graph is None:
                 yield agent, NAN
                 continue
-            yield agent, algorithms.Modularity.calculate(graph.weights)
+            value = algorithms.Modularity.calculate(graph.weights)
+            rewiredValues = []
+            for index in xrange(self.rewirings):
+                rewired = graph.rewire()
+                rewiredValues.append(algorithms.Modularity.calculate(rewired.weights))
+            rewiredValue = 1.0 if len(rewiredValues) == 0 else sum(rewiredValues) / len(rewiredValues)
+            yield agent, value / rewiredValue
 
 class NeuronCount(AgentBasedMetric):
     integral = True
