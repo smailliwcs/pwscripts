@@ -640,11 +640,13 @@ class InfoModification(AgentBasedMetric):
         self.addArg(parser, "type", metavar = "TYPE", choices = tuple(InfoModification.Type.getValues()))
         self.addArg(parser, "embedding", metavar = "EMBEDDING", type = int)
         self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
+        self.addArg(parser, "aggregator", metavar = "AGGREGATOR", choices = ("sum", "mean"))
     
     def readArgs(self, args):
         self.type = self.readArg(args, "type")
         self.embedding = self.readArg(args, "embedding")
         self.stage = self.readArg(args, "stage")
+        self.aggregator = self.readArg(args, "aggregator")
     
     def getKey(self):
         return "info-modification-{0}-{1}-{2}".format(self.type.lower(), self.embedding, self.stage)
@@ -666,17 +668,21 @@ class InfoModification(AgentBasedMetric):
                     value = float(value)
                     if self.type == InfoModification.Type.NONTRIVIAL:
                         value = -value
-                    values[int(agent)] = 0.0 if count == 0 else value / count
+                    if self.aggregator == "mean":
+                        value = 0.0 if count == 0 else value / count
+                    values[int(agent)] = value
         return values
 
 class InfoStorage(AgentBasedMetric):
     def addArgs(self, parser):
         self.addArg(parser, "embedding", metavar = "EMBEDDING", type = int)
         self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
+        self.addArg(parser, "aggregator", metavar = "AGGREGATOR", choices = ("sum", "mean"))
     
     def readArgs(self, args):
         self.embedding = self.readArg(args, "embedding")
         self.stage = self.readArg(args, "stage")
+        self.aggregator = self.readArg(args, "aggregator")
     
     def getKey(self):
         return "info-storage-{0}-{1}".format(self.embedding, self.stage)
@@ -694,7 +700,10 @@ class InfoStorage(AgentBasedMetric):
             if flag == "S":
                 count, value = chunks.split()
                 count = int(count)
-                values[int(agent)] = 0.0 if count == 0 else float(value) / count
+                value = float(value)
+                if self.aggregator == "mean":
+                    value = 0.0 if count == 0 else value / count
+                values[int(agent)] = value
         return values
 
 class InfoTransferApparent(AgentBasedMetric):
@@ -730,10 +739,12 @@ class InfoTransferCollective(AgentBasedMetric):
     def addArgs(self, parser):
         self.addArg(parser, "embedding", metavar = "EMBEDDING", type = int)
         self.addArg(parser, "stage", metavar = "STAGE", choices = tuple(Stage.getValues()))
+        self.addArg(parser, "aggregator", metavar = "AGGREGATOR", choices = ("sum", "mean"))
     
     def readArgs(self, args):
         self.embedding = self.readArg(args, "embedding")
         self.stage = self.readArg(args, "stage")
+        self.aggregator = self.readArg(args, "aggregator")
     
     def getKey(self):
         return "info-transfer-collective-{0}-{1}".format(self.embedding, self.stage)
@@ -746,7 +757,10 @@ class InfoTransferCollective(AgentBasedMetric):
         for line in self.readLines():
             agent, count, value = line.split()
             count = int(count)
-            values[int(agent)] = 0.0 if count == 0 else float(value) / count
+            value = float(value)
+            if self.aggregator == "mean":
+                value = 0.0 if count == 0 else value / count
+            values[int(agent)] = value
         return values
 
 class InfoTransferComplete(AgentBasedMetric):
