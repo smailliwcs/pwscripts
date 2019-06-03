@@ -867,11 +867,17 @@ class Modularity(AgentBasedMetric):
                 yield agent, NAN
                 continue
             value = algorithms.Modularity.calculate(graph.weights)
+            if self.rewirings == 0:
+                yield agent, value
+                continue
             rewiredValues = []
             for index in xrange(self.rewirings):
                 rewired = graph.rewire()
                 rewiredValues.append(algorithms.Modularity.calculate(rewired.weights))
-            rewiredValue = 1.0 if len(rewiredValues) == 0 else sum(rewiredValues) / len(rewiredValues)
+            rewiredValue = sum(rewiredValues) / len(rewiredValues)
+            if rewiredValue == 0.0:
+                yield agent, NAN
+                continue
             yield agent, value / rewiredValue
 
 class NeuronCount(AgentBasedMetric):
