@@ -1,18 +1,11 @@
 from pylab import *
-import argparse
 import os
 import sys
-import utility
-
-parser = argparse.ArgumentParser()
-parser.add_argument("run", metavar = "RUN")
-args = parser.parse_args()
-ion()
 
 def population():
     x = []
     y = []
-    with open(os.path.join(args.run, "population.txt")) as f:
+    with open(os.path.join("run", "population.txt")) as f:
         for line in f:
             if line == "\n" or line.startswith("#"):
                 continue
@@ -26,7 +19,7 @@ def food():
     x = []
     ys = []
     cs = ("g", "r")
-    with open(os.path.join(args.run, "energy/food.txt")) as f:
+    with open(os.path.join("run", "energy/food.txt")) as f:
         for line in f:
             if line.startswith("#@L"):
                 for index in xrange(len(line.split()) - 2):
@@ -44,7 +37,7 @@ def food():
 
 def lifespans():
     y = []
-    with open(os.path.join(args.run, "lifespans.txt")) as f:
+    with open(os.path.join("run", "lifespans.txt")) as f:
         for line in f:
             if line == "\n" or line.startswith("#"):
                 continue
@@ -61,6 +54,7 @@ def _plot(fn):
     except Exception as ex:
         sys.stderr.write("{0}\n".format(ex))
 
+ion()
 while True:
     _plot(population)
     _plot(food)
