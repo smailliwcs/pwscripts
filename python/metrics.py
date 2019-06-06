@@ -619,6 +619,19 @@ class Gene(AgentBasedMetric):
     def getBins(self):
         return numpy.linspace(0, 256, 65)
 
+class Index(AgentBasedMetric):
+    integral = True
+    
+    def getKey(self):
+        return "index"
+    
+    def getLabel(self):
+        return "Agent index"
+    
+    def read(self):
+        agents = utility.getAgents(self.run, self.start)
+        return dict(zip(agents, agents))
+
 class InfoModification(AgentBasedMetric):
     class Type(utility.Enum):
         TRIVIAL = "Trivial"
