@@ -54,6 +54,8 @@ def _plot(fn):
     except Exception as ex:
         sys.stderr.write("{0}\n".format(ex))
 
+rc("figure", autolayout=True, figsize=(4, 3))
+rc("font", size=6)
 ion()
 while True:
     _plot(population)
