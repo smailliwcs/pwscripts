@@ -49,13 +49,11 @@ def lifespans():
 def _plot(fn):
     try:
         fn()
-    except IOError:
-        raise
     except Exception as ex:
         sys.stderr.write("{0}\n".format(ex))
 
-rc("figure", autolayout=True, figsize=(4, 3))
-rc("font", size=6)
+rc("figure", autolayout=True, figsize=(6, 4))
+rc("font", size=8)
 ion()
 while True:
     _plot(population)
