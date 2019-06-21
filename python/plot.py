@@ -29,7 +29,6 @@ COLOR = (
     colorsys.hls_to_rgb(7.0 / 12.0, 0.3, 0.9) + (1.0,),
     colorsys.hls_to_rgb(1.0 / 12.0, 0.6, 1.0) + (1.0,)
 )
-HIST_MAX = 2500
 HIST_OFFSET = 0.0
 HIST_THRESHOLD = 10
 LINEWIDTH_RUN = 0.5
@@ -50,9 +49,9 @@ class BareTexManager(matplotlib.texmanager.TexManager):
 matplotlib.texmanager.TexManager = BareTexManager
 
 class HistNorm(matplotlib.colors.LogNorm):
-    def __init__(self, vmin = None, vmax = None):
+    def __init__(self, vmin = None, vmax = None, base_vmax = None):
         super(HistNorm, self).__init__(vmin = vmin, vmax = vmax)
-        self.base = matplotlib.colors.LogNorm(vmin = 1, vmax = HIST_MAX)
+        self.base = matplotlib.colors.LogNorm(vmin = 1, vmax = base_vmax)
 
     def __call__(self, value, **kwargs):
         super(HistNorm, self).__call__(value)
@@ -127,6 +126,7 @@ class Plot(object):
         parser.add_argument("--htmin", metavar = "HTMIN", type = int, default = 0)
         parser.add_argument("--hmin", metavar = "HMIN", type = float)
         parser.add_argument("--hmax", metavar = "HMAX", type = float)
+        parser.add_argument("--vmax", metavar = "VMAX", type = int)
         group = parser.add_mutually_exclusive_group()
         group.add_argument("--logx", action = "store_true")
         group.add_argument("--logy", action = "store_true")
@@ -336,7 +336,7 @@ if __name__ == "__main__":
         axy = Data.flatten(map(lambda data: data.hist, driven.itervalues()))
         xbins = Data.bin(plot.xMetric, axy[0], plot.args.xmin, plot.args.xmax, plot.args.bins)
         ybins = Data.bin(plot.yMetric, axy[1], plot.args.ymin, plot.args.ymax, plot.args.bins)
-        norm = HistNorm(vmin = plot.args.hmin, vmax = plot.args.hmax)
+        norm = HistNorm(vmin = plot.args.hmin, vmax = plot.args.hmax, base_vmax = plot.args.vmax)
         hist, _, _, image = axes1.hist2d(axy[0], axy[1], bins = (xbins, ybins), norm = norm, zorder = -4)
         indices = numpy.where(hist >= HIST_THRESHOLD)
         sys.stderr.write("x: [{0}, {1}]\n".format(xbins[min(indices[0])], xbins[max(indices[0]) + 1]))
