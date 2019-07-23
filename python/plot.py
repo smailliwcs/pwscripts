@@ -1,11 +1,9 @@
 import argparse
-import colorsys
 import itertools
 import math
 import matplotlib
 import matplotlib.cm
 import matplotlib.colors
-import matplotlib.figure
 import matplotlib.gridspec
 import matplotlib.patheffects
 import matplotlib.pyplot
@@ -19,26 +17,19 @@ import sys
 import textwrap
 import utility
 
-ALPHA_RUN = (0.167, 0.333)
-BIN_COUNT = 100
-CMAP_NAME = "YlGnBu"
-matplotlib.rc("image", cmap = CMAP_NAME)
-CMAP = matplotlib.cm.get_cmap(CMAP_NAME)
-CMAP.set_bad("1.0")
-COLOR = (
-    colorsys.hls_to_rgb(7.0 / 12.0, 0.3, 0.9) + (1.0,),
-    colorsys.hls_to_rgb(1.0 / 12.0, 0.6, 1.0) + (1.0,)
-)
-HIST_OFFSET = 0.0
-HIST_THRESHOLD = 10
-LINEWIDTH_RUN = 0.5
+ALPHA = (0.15, 0.3)
+CMAP = matplotlib.cm.get_cmap(matplotlib.rcParams["image.cmap"])
+CMAP.set_bad("w")
+FIGSIZE = matplotlib.rcParams["figure.figsize"]
+FIGSIZE_RATIO = 0.8
+FONT_SIZE = matplotlib.rcParams["font.size"]
+LINEWIDTH = matplotlib.rcParams["lines.linewidth"]
 PAD = {
     "pad": 0.5,
-    "h_pad": 0.0
+    "h_pad": 0.0,
+    "w_pad": 0.0
 }
-SIZE = 3.15
-SIZE_FACTOR = 0.8
-STROKE = matplotlib.patheffects.withStroke(linewidth = 3.0, foreground = "1.0")
+STROKE = matplotlib.patheffects.withStroke(linewidth = LINEWIDTH * 2.0, foreground = "w")
 TSTEP = (10, 100)
 
 class BareTexManager(matplotlib.texmanager.TexManager):
@@ -56,8 +47,7 @@ class HistNorm(matplotlib.colors.LogNorm):
     def __call__(self, value, **kwargs):
         super(HistNorm, self).__call__(value)
         result = numpy.ma.masked_less_equal(value, 0, False)
-        result = self.base.__call__(result)
-        return HIST_OFFSET + (1.0 - HIST_OFFSET) * result
+        return self.base.__call__(result)
 
 class ColorbarLocator(matplotlib.ticker.Locator):
     def __call__(self):
@@ -123,19 +113,13 @@ class Plot(object):
         parser.add_argument("--ytick", metavar = "YTICK", type = int, nargs = "*")
         parser.add_argument("--yscale", metavar = "YSCALE", type = int)
         parser.add_argument("--ylabel", metavar = "YLABEL")
-        parser.add_argument("--htmin", metavar = "HTMIN", type = int, default = 0)
-        parser.add_argument("--hmin", metavar = "HMIN", type = float)
-        parser.add_argument("--hmax", metavar = "HMAX", type = float)
-        parser.add_argument("--vmax", metavar = "VMAX", type = int)
+        parser.add_argument("--hvmax", metavar = "HVMAX", type = int)
+        parser.add_argument("--hthreshold", metavar = "HTHRESHOLD", type = int, default = 10)
         group = parser.add_mutually_exclusive_group()
         group.add_argument("--logx", action = "store_true")
         group.add_argument("--logy", action = "store_true")
         group.add_argument("--logxy", action = "store_true")
-        parser.add_argument("--invx", action = "store_true")
-        parser.add_argument("--invy", action = "store_true")
-        parser.add_argument("--diag", action = "store_true")
-        parser.add_argument("--bins", metavar = "BINS", type = int, default = BIN_COUNT)
-        parser.add_argument("--size", metavar = "SIZE", type = float, default = SIZE)
+        parser.add_argument("--bins", metavar = "BINS", type = int, default = 100)
         parser.add_argument("--legend", metavar = "LOC", default = "upper left")
         parser.add_argument("runs", metavar = "RUNS")
         if len(metrics) != 2:
@@ -244,8 +228,6 @@ class Data:
             dy_line = plot.yMetric.toSeries(dy, interval, plot.args.tstep)
             self.line = Data.zip(dx_line, dy_line)
         if plot.args.hist and not passive:
-            if plot.args.tmin is None or plot.args.htmin > plot.args.tmin:
-                interval[0] = plot.args.htmin
             if all(map(lambda metric: isinstance(metric, metrics_mod.AgentBasedMetric), plot.metrics)):
                 dx_hist = plot.xMetric.constrain(dx, interval)
                 dy_hist = plot.yMetric.constrain(dy, interval)
@@ -254,40 +236,46 @@ class Data:
                 dy_hist = plot.yMetric.toTimeBased(dy, interval)
             self.hist = Data.zip(dx_hist, dy_hist)
 
+def getAxes(subplots):
+    figure = matplotlib.pyplot.figure()
+    size = list(FIGSIZE)
+    if not subplots:
+        size[1] = size[0] * FIGSIZE_RATIO
+    figure.set_size_inches(*size)
+    result = [figure]
+    if subplots:
+        grid = matplotlib.gridspec.GridSpec(4, 1)
+        result.append(figure.add_subplot(grid[0:-1, :]))
+        result.append(figure.add_subplot(grid[-1, :]))
+    else:
+        result.append(figure.gca())
+    return result
+
+def getBbox(axes):
+    return axes.get_window_extent().transformed(axes.figure.dpi_scale_trans.inverted())
+
 def plotLine(axes, axy, kwargs):
     axes.plot(axy[0], axy[1], **kwargs)
-
-def getGridKwargs():
-    props = ("alpha", "color", "linestyle", "linewidth")
-    return dict(map(lambda prop: (prop, matplotlib.rcParams["grid.{0}".format(prop)]), props))
 
 def scaleAxis(axis, scale):
     if scale == 0:
         return
     axis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda tick, position: tick / 10.0 ** scale))
-    axis.labelpad -= matplotlib.rcParams["font.size"] * 0.25
+    axis.labelpad -= FONT_SIZE * 0.25
 
 def scaleLabel(label, scale):
     if scale == 0:
         return label
     return "{0} / ($10^{{{1}}}$)".format(label, scale)
 
-def nudge(text, x, y):
-    text.set_transform(text.get_transform() + matplotlib.transforms.Affine2D().translate(x, y))
-
 if __name__ == "__main__":
     
     # Pre-configure plot
     plot = Plot()
-    figure = matplotlib.pyplot.figure()
     if plot.sig:
-        figure.set_size_inches(plot.args.size, plot.args.size)
-        grid = matplotlib.gridspec.GridSpec(4, 1)
-        axes1 = figure.add_subplot(grid[0:-1, :])
-        axes2 = figure.add_subplot(grid[-1, :])
+        figure, axes1, axes2 = getAxes(True)
     else:
-        figure.set_size_inches(plot.args.size, SIZE_FACTOR * plot.args.size)
-        axes1 = figure.gca()
+        figure, axes1 = getAxes(False)
     if plot.args.logx:
         axes1.semilogx()
     elif plot.args.logy:
@@ -308,9 +296,9 @@ if __name__ == "__main__":
         # Plot line
         if plot.args.line and not plot.args.hist:
             kwargs = lambda index: {
-                "alpha": ALPHA_RUN[index],
-                "color": COLOR[index],
-                "linewidth": LINEWIDTH_RUN,
+                "alpha": ALPHA[index],
+                "color": "C{}".format(index),
+                "linewidth": LINEWIDTH * 0.5,
                 "zorder": -2 - index
             }
             plotLine(axes1, driven[run].line, kwargs(0))
@@ -320,7 +308,7 @@ if __name__ == "__main__":
     # Plot line
     if plot.args.line:
         kwargs = lambda index: {
-            "color": COLOR[index],
+            "color": "C{}".format(index),
             "label": ("Driven", "Passive")[index],
             "path_effects": [STROKE],
             "zorder": -index
@@ -336,14 +324,15 @@ if __name__ == "__main__":
         axy = Data.flatten(map(lambda data: data.hist, driven.itervalues()))
         xbins = Data.bin(plot.xMetric, axy[0], plot.args.xmin, plot.args.xmax, plot.args.bins)
         ybins = Data.bin(plot.yMetric, axy[1], plot.args.ymin, plot.args.ymax, plot.args.bins)
-        norm = HistNorm(vmin = plot.args.hmin, vmax = plot.args.hmax, base_vmax = plot.args.vmax)
+        norm = HistNorm(base_vmax = plot.args.hvmax)
         hist, _, _, image = axes1.hist2d(axy[0], axy[1], bins = (xbins, ybins), norm = norm, zorder = -4)
-        indices = numpy.where(hist >= HIST_THRESHOLD)
-        sys.stderr.write("x: [{0}, {1}]\n".format(xbins[min(indices[0])], xbins[max(indices[0]) + 1]))
-        sys.stderr.write("y: [{0}, {1}]\n".format(ybins[min(indices[1])], ybins[max(indices[1]) + 1]))
+        indices = numpy.where(hist >= plot.args.hthreshold)
+        axes1.xaxis.set_data_interval(xbins[min(indices[0])], xbins[max(indices[0]) + 1], ignore = True)
+        axes1.yaxis.set_data_interval(ybins[min(indices[1])], ybins[max(indices[1]) + 1], ignore = True)
+        axes1.autoscale()
         if not plot.sig:
             colorbar = figure.colorbar(image, fraction = 0.125, pad = 0.0)
-            colorbar.set_label("Agent count", rotation = 270.0, labelpad = 11.0)
+            colorbar.set_label("Agent count", verticalalignment = "bottom", rotation = 270.0)
             colorbar.locator = ColorbarLocator()
             colorbar.formatter = ColorbarFormatter()
             colorbar.update_ticks()
@@ -358,9 +347,9 @@ if __name__ == "__main__":
             ax[1] = plot.args.xmax
         ay = map(lambda x: m * x + b, ax)
         kwargs = {
-            "color": COLOR[0],
+            "color": "C0",
             "label": "$r = {0:.3f}$".format(r),
-            "path_effects": (STROKE,),
+            "path_effects": [STROKE],
         }
         axes1.plot(ax, ay, **kwargs)
     
@@ -384,13 +373,9 @@ if __name__ == "__main__":
                 p = 1.0
             axy[0].append(timestep)
             axy[1].append(1.0 - p)
-        axes2.plot(axy[0], axy[1], color = COLOR[0])
+        axes2.plot(axy[0], axy[1], color = "C0")
     
     # Post-configure plot
-    if plot.args.invx:
-        axes1.invert_xaxis()
-    if plot.args.invy:
-        axes1.invert_yaxis()
     axes1.set_xlim(plot.args.xmin, plot.args.xmax)
     if plot.args.xstep is not None:
         axes1.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(plot.args.xstep))
@@ -401,8 +386,8 @@ if __name__ == "__main__":
         axes1.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(plot.args.ystep))
     if plot.args.ytick is not None:
         axes1.set_yticks(numpy.append(axes1.get_yticks(), plot.args.ytick))
-    xlabel = plot.xMetric.getLabel() if plot.args.xlabel is None else plot.args.xlabel
-    ylabel = plot.yMetric.getLabel() if plot.args.ylabel is None else plot.args.ylabel
+    xlabel = utility.coalesce(plot.args.xlabel, plot.xMetric.getLabel())
+    ylabel = utility.coalesce(plot.args.ylabel, plot.yMetric.getLabel())
     scaleAxis(axes1.xaxis, plot.args.xscale)
     xlabel = scaleLabel(xlabel, plot.args.xscale)
     scaleAxis(axes1.yaxis, plot.args.yscale)
@@ -417,18 +402,13 @@ if __name__ == "__main__":
             axes2.set_xticks(numpy.append(axes2.get_xticks(), plot.args.xtick))
         scaleAxis(axes2.xaxis, plot.args.xscale)
         axes2.set_ylabel("Significance")
-        axes2.set_ylim(0.75, 1.05)
+        ymargin = 0.02
+        axes2.set_ylim(0.8 - ymargin, 1.0 + ymargin)
         ticks = axes2.set_yticks((0.8, 0.95, 1.0))
-        if plot.args.size < 4.0:
-            nudge(ticks[1].label, 0.0, -1.0)
-            nudge(ticks[2].label, 0.0, 1.0)
     else:
         axes1.set_xlabel(xlabel)
     if plot.args.regress or plot.args.passive:
         axes1.legend(loc = plot.args.legend)
     axes1.set_ylabel(ylabel)
-    if plot.args.diag:
-        xlim = axes1.get_xlim()
-        axes1.plot(xlim, xlim, **getGridKwargs())
     figure.set_tight_layout(PAD)
     figure.savefig("{0}-vs-{1}".format(plot.yMetric.getKey(), plot.xMetric.getKey()))

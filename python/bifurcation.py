@@ -1,7 +1,4 @@
 import argparse
-import math
-import matplotlib.gridspec
-import matplotlib.pyplot
 import numpy
 import os
 import plot
@@ -19,27 +16,26 @@ def parseArgs():
 
 # Configure plot
 args = parseArgs()
-figure = matplotlib.pyplot.figure()
-figure.set_size_inches(plot.SIZE, plot.SIZE)
-grid = matplotlib.gridspec.GridSpec(4, 1)
-axes1 = figure.add_subplot(grid[0:-1, :])
-axes2 = figure.add_subplot(grid[-1, :])
+figure, axes1, axes2 = plot.getAxes(True)
 axes1.tick_params(axis = "x", bottom = False, labelbottom = False)
 axes1.set_xticks(XTICKS)
-axes1.set_ylim(-0.056, 1.056)
+ymargin = 0.2
+axes2.set_ylim(-ymargin, 2.0 + ymargin)
+axes2.set_yticks((0.0, 1.0, 2.0))
+axes2.set_ylabel("State space\nexpansion")
+ymargin_display = ymargin / (2.0 + ymargin * 2) * plot.getBbox(axes2).height
+ymargin = ymargin_display / (plot.getBbox(axes1).height - ymargin_display * 2)
+axes1.set_ylim(-ymargin, 1.0 + ymargin)
 axes1.set_ylabel("Neural activation")
 axes2.set_xticks(XTICKS)
 axes2.set_xlabel("Maximum synaptic weight")
-axes2.set_ylim(-0.5, 2.5)
-axes2.set_yticks((0.0, 1.0, 2.0))
-axes2.set_ylabel("State space\nexpansion")
 kwargs = {
-    "alpha": 0.1,
-    "color": plot.COLOR[0],
+    "alpha": 0.05,
+    "color": "C0",
     "linestyle": "None",
     "marker": "o",
     "markeredgewidth": 0.0,
-    "markersize": 0.6,
+    "markersize": plot.LINEWIDTH * 0.5,
     "rasterized": True
 }
 

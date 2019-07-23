@@ -12,9 +12,7 @@ import sys
 import utility
 
 ANGLE = 5.0
-CMAP = matplotlib.colors.LinearSegmentedColormap.from_list("boxplot", ("1.0", plot.COLOR[0]))
-FONT_SIZE = matplotlib.rcParams["font.size"]
-LINEWIDTH = matplotlib.rcParams["lines.linewidth"]
+CMAP = matplotlib.colors.LinearSegmentedColormap.from_list("boxplot", ("w", "C0"))
 SHRINK = 10.0
 YTEXT = 0.9
 
@@ -99,9 +97,7 @@ def getSignificance(p):
 # Configure plot
 args = parseArgs()
 data = getData(args)
-figure = matplotlib.pyplot.figure()
-figure.set_size_inches(plot.SIZE, plot.SIZE_FACTOR * plot.SIZE)
-axes = figure.gca()
+figure, axes = plot.getAxes(False)
 axes.grid(False, "both", "x")
 axes.set_xticks(range(len(data)))
 if len(metrics) == 1:
@@ -109,9 +105,7 @@ if len(metrics) == 1:
 else:
     axes.set_xticklabels(map(getLabel, metrics))
 axes.set_xlim(-0.5, len(data) - 0.5)
-if args.ylabel is None:
-    args.ylabel = metrics[0].getLabel()
-axes.set_ylabel(args.ylabel)
+axes.set_ylabel(utility.coalesce(args.ylabel, metrics[0].getLabel()))
 if args.ymin is not None:
     axes.set_ylim(bottom = args.ymin)
 if args.ymax is None:
@@ -124,15 +118,20 @@ for body in bodies:
     body.set_alpha(1.0)
     body.set_edgecolor(CMAP(0.1))
     body.set_facecolor(CMAP(0.1))
-    body.set_linewidth(LINEWIDTH)
+    body.set_linewidth(plot.LINEWIDTH)
 
 # Plot boxes
 means = map(lambda ax: numpy.mean(ax), data)
 percentiles = map(lambda ax: numpy.percentile(ax, (10, 25, 75, 90)), data)
 for index in xrange(len(data)):
-    axes.vlines(index, percentiles[index][0], percentiles[index][-1], color = CMAP(1.0))
-    axes.vlines(index, percentiles[index][1], percentiles[index][-2], color = CMAP(1.0), linewidth = LINEWIDTH * 4.0)
-    axes.scatter(index, means[index], color = "1.0", edgecolors = CMAP(1.0), linewidth = LINEWIDTH, zorder = 2)
+    axes.vlines(index, percentiles[index][0], percentiles[index][-1], color = "C0")
+    axes.vlines(index, percentiles[index][1], percentiles[index][-2], color = "C0", linewidth = plot.LINEWIDTH * 4.0)
+    kwargs = {k[18:]: v for k, v in matplotlib.rcParams.iteritems() if k.startswith("boxplot.meanprops")}
+    kwargs.update({
+        "markeredgewidth": plot.LINEWIDTH,
+        "zorder": 2
+    })
+    axes.plot(index, means[index], **kwargs)
 
 # Label significance
 for index1 in xrange(len(data) - 1):
@@ -142,7 +141,7 @@ for index1 in xrange(len(data) - 1):
     kwargs = {
         "arrowprops": {
             "arrowstyle": "-",
-            "connectionstyle": "angle, angleA=180, angleB={0}".format(90.0 - ANGLE / 2.0),
+            "connectionstyle": "angle, angleA=180, angleB={0}".format(90.0 - ANGLE * 0.5),
             "shrinkA": 0.0,
             "shrinkB": SHRINK
         },
@@ -151,7 +150,7 @@ for index1 in xrange(len(data) - 1):
     }
     patch = axes.annotate("", xy = (index1, percentiles[index1][-1]), **kwargs).arrow_patch
     patches.fix(patch)
-    kwargs["arrowprops"]["connectionstyle"] = "angle, angleA=180, angleB={0}".format(90.0 + ANGLE / 2.0)
+    kwargs["arrowprops"]["connectionstyle"] = "angle, angleA=180, angleB={0}".format(90.0 + ANGLE * 0.5)
     patch = axes.annotate("", xy = (index2, percentiles[index2][-1]), **kwargs).arrow_patch
     patches.fix(patch)
     kwargs = {
@@ -160,7 +159,7 @@ for index1 in xrange(len(data) - 1):
         "verticalalignment": "baseline",
         "xy": xytext,
         "xycoords": "axes fraction",
-        "xytext": [0.0, FONT_SIZE / 2.0]
+        "xytext": [0.0, plot.FONT_SIZE * 0.5]
     }
     axes.annotate(getDirection(means[index1], means[index2], p), **kwargs)
     kwargs["verticalalignment"] = "top"
