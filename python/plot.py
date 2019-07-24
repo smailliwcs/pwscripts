@@ -257,6 +257,14 @@ def getBbox(axes):
 def plotLine(axes, axy, kwargs):
     axes.plot(axy[0], axy[1], **kwargs)
 
+def setLimits(axis, min, max):
+    limits = axis.get_data_interval()
+    if min is not None:
+        limits[0] = min
+    if max is not None:
+        limits[1] = max
+    axis.set_data_interval(limits[0], limits[1], ignore = True)
+
 def scaleAxis(axis, scale):
     if scale == 0:
         return
@@ -327,9 +335,8 @@ if __name__ == "__main__":
         norm = HistNorm(base_vmax = plot.args.hvmax)
         hist, _, _, image = axes1.hist2d(axy[0], axy[1], bins = (xbins, ybins), norm = norm, zorder = -4)
         indices = numpy.where(hist >= plot.args.hthreshold)
-        axes1.xaxis.set_data_interval(xbins[min(indices[0])], xbins[max(indices[0]) + 1], ignore = True)
-        axes1.yaxis.set_data_interval(ybins[min(indices[1])], ybins[max(indices[1]) + 1], ignore = True)
-        axes1.autoscale()
+        sys.stderr.write("x: [{0}, {1}]\n".format(xbins[min(indices[0])], xbins[max(indices[0]) + 1]))
+        sys.stderr.write("y: [{0}, {1}]\n".format(ybins[min(indices[1])], ybins[max(indices[1]) + 1]))
         if not plot.sig:
             colorbar = figure.colorbar(image, fraction = 0.125, pad = 0.0)
             colorbar.set_label("Agent count", verticalalignment = "bottom", rotation = 270.0)
@@ -376,12 +383,13 @@ if __name__ == "__main__":
         axes2.plot(axy[0], axy[1], color = "C0")
     
     # Post-configure plot
-    axes1.set_xlim(plot.args.xmin, plot.args.xmax)
+    setLimits(axes1.xaxis, plot.args.xmin, plot.args.xmax)
+    setLimits(axes1.yaxis, plot.args.ymin, plot.args.ymax)
+    axes1.autoscale()
     if plot.args.xstep is not None:
         axes1.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(plot.args.xstep))
     if plot.args.xtick is not None:
         axes1.set_xticks(numpy.append(axes1.get_xticks(), plot.args.xtick))
-    axes1.set_ylim(plot.args.ymin, plot.args.ymax)
     if plot.args.ystep is not None:
         axes1.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(plot.args.ystep))
     if plot.args.ytick is not None:
@@ -394,8 +402,9 @@ if __name__ == "__main__":
     ylabel = scaleLabel(ylabel, plot.args.yscale)
     if plot.sig:
         axes1.tick_params(axis = "x", bottom = False, labelbottom = False)
+        setLimits(axes2.xaxis, plot.args.xmin, plot.args.xmax)
+        axes2.autoscale()
         axes2.set_xlabel(xlabel)
-        axes2.set_xlim(plot.args.xmin, plot.args.xmax)
         if plot.args.xstep is not None:
             axes2.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(plot.args.xstep))
         if plot.args.xtick is not None:
