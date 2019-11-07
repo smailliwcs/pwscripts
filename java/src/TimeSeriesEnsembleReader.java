@@ -1,10 +1,12 @@
 import java.io.*;
 import java.util.*;
 import java.util.regex.*;
+import java.util.stream.*;
 
 public class TimeSeriesEnsembleReader extends BufferedReader {
     private static final Pattern AGENT_PATTERN = Pattern.compile("^# AGENT (\\d+$)");
     private static final Pattern DIMENSIONS_PATTERN = Pattern.compile("^# DIMENSIONS (\\d+) (\\d+) (\\d+)$");
+    private static final Pattern SPACE_PATTERN = Pattern.compile(" ");
 
     public TimeSeriesEnsembleReader(Reader in) {
         super(in);
@@ -80,7 +82,7 @@ public class TimeSeriesEnsembleReader extends BufferedReader {
             }
             try (Scanner scanner = new Scanner(line)) {
                 String name = scanner.next();
-                int neuronCount = scanner.nextInt();
+                int neuronCount = Integer.parseInt(scanner.next());
                 nerves.add(new Nerve(name, neuronStartIndex, neuronCount));
                 neuronStartIndex += neuronCount;
             }
@@ -98,9 +100,9 @@ public class TimeSeriesEnsembleReader extends BufferedReader {
                 break;
             }
             try (Scanner scanner = new Scanner(line)) {
-                int preNeuronIndex = scanner.nextInt();
+                int preNeuronIndex = Integer.parseInt(scanner.next());
                 while (scanner.hasNext()) {
-                    int postNeuronIndex = scanner.nextInt();
+                    int postNeuronIndex = Integer.parseInt(scanner.next());
                     synapses.add(new Synapse(preNeuronIndex, postNeuronIndex));
                 }
             }
@@ -123,12 +125,9 @@ public class TimeSeriesEnsembleReader extends BufferedReader {
             if (line.equals("# END TIME SERIES")) {
                 return observations;
             }
-            List<Double> observation = new ArrayList<Double>(dimension);
-            try (Scanner scanner = new Scanner(line)) {
-                while (scanner.hasNext()) {
-                    observation.add(scanner.nextDouble());
-                }
-            }
+            List<Double> observation = SPACE_PATTERN.splitAsStream(line)
+                    .map(chunk -> Double.valueOf(chunk))
+                    .collect(Collectors.toCollection(ArrayList::new));
             observations.add(observation);
         }
     }
