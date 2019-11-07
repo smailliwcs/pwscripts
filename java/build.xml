@@ -1,10 +1,26 @@
-<project default="compile">
-    <target name="compile">
-        <javac srcdir="." classpath="infodynamics.jar" debug="true" includeAntRuntime="false"/>
+<project default="build">
+    <property name="debug" value="off" />
+    <property name="source" value="1.8" />
+    <property name="target" value="1.8" />
+    <fileset id="libs" dir="lib">
+        <include name="**/*.jar" />
+    </fileset>
+    <target name="init">
+        <mkdir dir="bin" />
+    </target>
+    <target name="build" depends="init">
+        <javac debug="${debug}" destdir="bin" includeantruntime="false" source="${source}" target="${target}">
+            <src path="src" />
+            <classpath>
+                <fileset refid="libs" />
+                <pathelement location="bin" />
+            </classpath>
+        </javac>
+        <copy todir="bin">
+            <fileset refid="libs" />
+        </copy>
     </target>
     <target name="clean">
-        <delete>
-            <fileset dir="." includes="*.class"/>
-        </delete>
+        <delete dir="bin" />
     </target>
 </project>
