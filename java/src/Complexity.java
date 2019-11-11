@@ -66,7 +66,7 @@ public class Complexity {
                 double complexity = Calculator.getComplexity(covariance, integration);
                 System.out.printf(
                         "%d %d %g %g%n",
-                        ensemble.getAgentIndex(),
+                        ensemble.getAgentId(),
                         neuronIndices.size(),
                         integration,
                         complexity);

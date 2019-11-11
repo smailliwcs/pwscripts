@@ -31,7 +31,7 @@ public class Entropy {
                 for (int neuronIndex : neuronIndices) {
                     entropy += calculator.getEntropy(ensemble, neuronIndex);
                 }
-                System.out.printf("%d %d %g%n", ensemble.getAgentIndex(), neuronIndices.size(), entropy);
+                System.out.printf("%d %d %g%n", ensemble.getAgentId(), neuronIndices.size(), entropy);
             }
         }
     }

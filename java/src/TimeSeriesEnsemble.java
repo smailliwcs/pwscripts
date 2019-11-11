@@ -3,16 +3,16 @@ import java.util.stream.*;
 
 @SuppressWarnings("serial")
 public class TimeSeriesEnsemble extends LinkedList<TimeSeries> {
-    private int agentIndex;
+    private int agentId;
     private Brain brain;
 
-    public TimeSeriesEnsemble(int agentIndex, Brain brain) {
-        this.agentIndex = agentIndex;
+    public TimeSeriesEnsemble(int agentId, Brain brain) {
+        this.agentId = agentId;
         this.brain = brain;
     }
 
-    public int getAgentIndex() {
-        return agentIndex;
+    public int getAgentId() {
+        return agentId;
     }
 
     public Brain getBrain() {

@@ -25,12 +25,12 @@ public class TimeSeriesEnsembleReader extends BufferedReader {
     }
 
     public TimeSeriesEnsemble readTimeSeriesEnsemble() throws IOException {
-        int agentIndex = readAgentIndex();
-        if (agentIndex == -1) {
+        int agentId = readAgentId();
+        if (agentId == -1) {
             return null;
         }
         Brain brain = readBrain();
-        TimeSeriesEnsemble ensemble = new TimeSeriesEnsemble(agentIndex, brain);
+        TimeSeriesEnsemble ensemble = new TimeSeriesEnsemble(agentId, brain);
         while (true) {
             TimeSeries observations = readTimeSeries(brain.getNeuronCount());
             if (observations == null) {
@@ -41,7 +41,7 @@ public class TimeSeriesEnsembleReader extends BufferedReader {
         return ensemble;
     }
 
-    private int readAgentIndex() throws IOException {
+    private int readAgentId() throws IOException {
         String line = readLine();
         if (line == null) {
             return -1;
