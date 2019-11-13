@@ -6,21 +6,21 @@ import infodynamics.measures.discrete.*;
 
 public class Diversity {
     private static class Calculator extends EntropyCalculatorDiscrete {
-        private int grouping;
+        private int groupingParameter;
         private int geneCount;
 
-        public Calculator(int grouping, int geneCount) {
-            super(1 << (8 - grouping));
-            this.grouping = grouping;
+        public Calculator(int groupingParameter, int geneCount) {
+            super(1 << (8 - groupingParameter));
+            this.groupingParameter = groupingParameter;
             this.geneCount = geneCount;
         }
 
         private double getDiversity(Collection<Iterator<Integer>> genes) {
             initialise();
             addObservations(genes.stream()
-                    .mapToInt(gene -> gene.next())
+                    .mapToInt(gene -> gene.next() >> groupingParameter)
                     .toArray());
-            return computeAverageLocalOfObservations() / (8 - grouping);
+            return computeAverageLocalOfObservations() / (8 - groupingParameter);
         }
 
         public double getDiversity(GenomePool pool) {
@@ -38,10 +38,10 @@ public class Diversity {
     private static class Arguments {
         public static Arguments parse(Queue<String> args) {
             try {
-                int grouping = Integer.parseInt(args.remove());
-                assert grouping >= 0 && grouping < 8;
+                int groupingParameter = Integer.parseInt(args.remove());
+                assert groupingParameter >= 0 && groupingParameter < 8;
                 assert args.isEmpty();
-                return new Arguments(grouping);
+                return new Arguments(groupingParameter);
             } catch (Throwable e) {
                 printUsage(System.err);
                 System.exit(1);
@@ -50,17 +50,17 @@ public class Diversity {
         }
 
         public static void printUsage(PrintStream out) {
-            out.printf("Usage: %s GROUPING%n", Diversity.class.getSimpleName());
+            out.printf("Usage: %s GROUPING_PARAMETER%n", Diversity.class.getSimpleName());
         }
 
-        public final int grouping;
+        public final int groupingParameter;
 
-        private Arguments(int grouping) {
-            this.grouping = grouping;
+        private Arguments(int groupingParameter) {
+            this.groupingParameter = groupingParameter;
         }
 
         public void print(PrintStream out) {
-            out.printf("# grouping = %d%n", grouping);
+            out.printf("# groupingParameter = %d%n", groupingParameter);
         }
     }
 
@@ -68,7 +68,7 @@ public class Diversity {
         Arguments arguments = Arguments.parse(new LinkedList<String>(Arrays.asList(args)));
         arguments.print(System.out);
         try (GenomePoolReader reader = new GenomePoolReader(new InputStreamReader(System.in))) {
-            Calculator calculator = new Calculator(arguments.grouping, reader.readSize());
+            Calculator calculator = new Calculator(arguments.groupingParameter, reader.readSize());
             double diversity = 0.0;
             while (true) {
                 GenomePool pool = reader.readGenomePool();
