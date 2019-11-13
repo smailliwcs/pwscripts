@@ -20,7 +20,6 @@ public class Entropy {
         Calculator calculator = new Calculator();
         try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(new InputStreamReader(System.in))) {
             reader.readArguments(System.out);
-            System.out.println("# agentId count entropy");
             while (true) {
                 TimeSeriesEnsemble ensemble = reader.readTimeSeriesEnsemble();
                 if (ensemble == null) {

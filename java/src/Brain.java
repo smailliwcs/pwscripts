@@ -120,6 +120,10 @@ public class Brain {
         return synapses.add(synapse);
     }
 
+    public Collection<Synapse> getSynapses() {
+        return synapses;
+    }
+
     public Collection<Integer> getPreNeuronIndices(int postNeuronIndex) {
         return synapses.stream()
                 .filter(synapse -> synapse.getPostNeuronIndex() == postNeuronIndex)

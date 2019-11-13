@@ -55,7 +55,6 @@ public class Complexity {
         assert args.length == 0;
         try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(new InputStreamReader(System.in))) {
             reader.readArguments(System.out);
-            System.out.println("# agentId count integration complexity");
             while (true) {
                 TimeSeriesEnsemble ensemble = reader.readTimeSeriesEnsemble();
                 if (ensemble == null) {

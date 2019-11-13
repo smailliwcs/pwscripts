@@ -109,11 +109,10 @@ public class InfoDynamics {
 
     public static void main(String[] args) throws Exception {
         Arguments arguments = Arguments.parse(new LinkedList<String>(Arrays.asList(args)));
-        arguments.print(System.out);
         calculator = new Calculator(arguments.useGpu, arguments.embeddingLength);
         try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(new InputStreamReader(System.in))) {
             reader.readArguments(System.out);
-            System.out.println("# agentId metricId count value");
+            arguments.print(System.out);
             while (true) {
                 ensemble = reader.readTimeSeriesEnsemble();
                 if (ensemble == null) {
