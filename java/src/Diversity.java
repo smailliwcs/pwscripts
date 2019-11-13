@@ -17,10 +17,9 @@ public class Diversity {
 
         private double getDiversity(Collection<Iterator<Integer>> genes) {
             initialise();
-            addObservations(
-                    genes.stream()
-                            .mapToInt(gene -> gene.next())
-                            .toArray());
+            addObservations(genes.stream()
+                    .mapToInt(gene -> gene.next())
+                    .toArray());
             return computeAverageLocalOfObservations() / (8 - grouping);
         }
 

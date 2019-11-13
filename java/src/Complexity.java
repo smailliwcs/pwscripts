@@ -57,10 +57,8 @@ public class Complexity {
                 if (ensemble == null) {
                     break;
                 }
-                Collection<Integer> neuronIndices = ensemble.getBrain()
-                        .getNeuronIndices(Brain.Layer.PROCESSING);
-                double[][] observations = ensemble.concatenate()
-                        .slice(neuronIndices);
+                Collection<Integer> neuronIndices = ensemble.getBrain().getNeuronIndices(Brain.Layer.PROCESSING);
+                double[][] observations = ensemble.concatenate().slice(neuronIndices);
                 Calculator.gaussianize(observations, neuronIndices.size());
                 double[][] covariance = MatrixUtils.covarianceMatrix(observations);
                 double integration = Calculator.getIntegration(covariance);

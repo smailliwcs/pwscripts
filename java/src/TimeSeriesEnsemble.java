@@ -28,7 +28,8 @@ public class TimeSeriesEnsemble extends LinkedList<TimeSeries> {
         if (size() <= 1) {
             return peek();
         }
-        return stream().flatMap(TimeSeries::stream)
+        return stream()
+                .flatMap(TimeSeries::stream)
                 .collect(Collectors.toCollection(() -> new TimeSeries(brain.getNeuronCount())));
     }
 }

@@ -24,7 +24,8 @@ public class TimeSeries extends LinkedList<List<Double>> {
     }
 
     public double[][] slice(Collection<Integer> variables) {
-        return stream().map(observation -> slice(observation, variables))
+        return stream()
+                .map(observation -> slice(observation, variables))
                 .toArray(double[][]::new);
     }
 

@@ -35,14 +35,14 @@ public class GenomePoolReader extends BufferedReader {
             if (event.equals("BIRTH") || event.equals("DEATH")) {
                 int agentId = Integer.parseInt(chunks[1]);
                 switch (event) {
-                    case "BIRTH":
-                        assert !pool.containsKey(agentId);
-                        pool.put(agentId, readGenome());
-                        break;
-                    case "DEATH":
-                        assert pool.containsKey(agentId);
-                        pool.remove(agentId);
-                        break;
+                case "BIRTH":
+                    assert !pool.containsKey(agentId);
+                    pool.put(agentId, readGenome());
+                    break;
+                case "DEATH":
+                    assert pool.containsKey(agentId);
+                    pool.remove(agentId);
+                    break;
                 }
                 pool.setDirty(true);
             } else {

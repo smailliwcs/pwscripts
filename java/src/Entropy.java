@@ -26,8 +26,7 @@ public class Entropy {
                 if (ensemble == null) {
                     break;
                 }
-                Collection<Integer> neuronIndices = ensemble.getBrain()
-                        .getNeuronIndices(Brain.Layer.PROCESSING);
+                Collection<Integer> neuronIndices = ensemble.getBrain().getNeuronIndices(Brain.Layer.PROCESSING);
                 double entropy = 0.0;
                 for (int neuronIndex : neuronIndices) {
                     entropy += calculator.getEntropy(ensemble, neuronIndex);

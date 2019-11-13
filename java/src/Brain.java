@@ -39,37 +39,37 @@ public class Brain {
 
     public int getNeuronStartIndex(Layer layer) {
         switch (layer) {
-            case ALL:
-                return 0;
-            case INPUT:
-                return 0;
-            case PROCESSING:
-                return inputNeuronCount;
-            case OUTPUT:
-                return inputNeuronCount;
-            case INTERNAL:
-                return inputNeuronCount + outputNeuronCount;
-            default:
-                assert false;
-                return -1;
+        case ALL:
+            return 0;
+        case INPUT:
+            return 0;
+        case PROCESSING:
+            return inputNeuronCount;
+        case OUTPUT:
+            return inputNeuronCount;
+        case INTERNAL:
+            return inputNeuronCount + outputNeuronCount;
+        default:
+            assert false;
+            return -1;
         }
     }
 
     public int getNeuronCount(Layer layer) {
         switch (layer) {
-            case ALL:
-                return neuronCount;
-            case INPUT:
-                return inputNeuronCount;
-            case PROCESSING:
-                return neuronCount - inputNeuronCount;
-            case OUTPUT:
-                return outputNeuronCount;
-            case INTERNAL:
-                return neuronCount - inputNeuronCount - outputNeuronCount;
-            default:
-                assert false;
-                return 0;
+        case ALL:
+            return neuronCount;
+        case INPUT:
+            return inputNeuronCount;
+        case PROCESSING:
+            return neuronCount - inputNeuronCount;
+        case OUTPUT:
+            return outputNeuronCount;
+        case INTERNAL:
+            return neuronCount - inputNeuronCount - outputNeuronCount;
+        default:
+            assert false;
+            return 0;
         }
     }
 
@@ -93,8 +93,7 @@ public class Brain {
 
     public boolean addNerve(Nerve nerve) {
         assert getLayerForNeuronIndex(nerve.getNeuronStartIndex()) == getLayerForNeuronIndex(nerve.getNeuronEndIndex());
-        assert nerves.stream()
-                .noneMatch(nerve::overlaps);
+        assert nerves.stream().noneMatch(nerve::overlaps);
         return nerves.add(nerve);
     }
 
