@@ -1,5 +1,4 @@
 import java.util.*;
-import java.util.stream.*;
 
 @SuppressWarnings("serial")
 public class TimeSeries extends LinkedList<List<Double>> {
@@ -30,9 +29,6 @@ public class TimeSeries extends LinkedList<List<Double>> {
     }
 
     public double[][] slice(int variable) {
-        return slice(
-                IntStream.of(variable)
-                        .boxed()
-                        .collect(Collectors.toList()));
+        return slice(Arrays.asList(variable));
     }
 }

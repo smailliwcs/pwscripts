@@ -49,6 +49,7 @@ public class Complexity {
     }
 
     public static void main(String[] args) throws Exception {
+        assert args.length == 0;
         try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(new InputStreamReader(System.in))) {
             reader.readArguments(System.out);
             while (true) {

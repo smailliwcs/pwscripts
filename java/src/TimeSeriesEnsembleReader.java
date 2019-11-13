@@ -80,12 +80,11 @@ public class TimeSeriesEnsembleReader extends BufferedReader {
             if (line.equals("# END NERVES")) {
                 break;
             }
-            try (Scanner scanner = new Scanner(line)) {
-                String name = scanner.next();
-                int neuronCount = Integer.parseInt(scanner.next());
-                nerves.add(new Nerve(name, neuronStartIndex, neuronCount));
-                neuronStartIndex += neuronCount;
-            }
+            String[] chunks = SPACE_PATTERN.split(line);
+            String name = chunks[0];
+            int neuronCount = Integer.parseInt(chunks[1]);
+            nerves.add(new Nerve(name, neuronStartIndex, neuronCount));
+            neuronStartIndex += neuronCount;
         }
         return nerves;
     }
@@ -99,13 +98,13 @@ public class TimeSeriesEnsembleReader extends BufferedReader {
             if (line.equals("# END SYNAPSES")) {
                 break;
             }
-            try (Scanner scanner = new Scanner(line)) {
-                int preNeuronIndex = Integer.parseInt(scanner.next());
-                while (scanner.hasNext()) {
-                    int postNeuronIndex = Integer.parseInt(scanner.next());
-                    synapses.add(new Synapse(preNeuronIndex, postNeuronIndex));
-                }
-            }
+            String[] chunks = SPACE_PATTERN.split(line);
+            int preNeuronIndex = Integer.parseInt(chunks[0]);
+            Arrays.stream(chunks)
+                    .skip(1)
+                    .mapToInt(chunk -> Integer.parseInt(chunk))
+                    .mapToObj(postNeuronIndex -> new Synapse(preNeuronIndex, postNeuronIndex))
+                    .forEach(synapses::add);
         }
         return synapses;
     }

@@ -13,15 +13,13 @@ public class Brain {
     private int neuronCount;
     private int inputNeuronCount;
     private int outputNeuronCount;
-    private Collection<Nerve> nerves;
-    private Collection<Synapse> synapses;
+    private Collection<Nerve> nerves = new LinkedList<Nerve>();
+    private Collection<Synapse> synapses = new LinkedList<Synapse>();
 
     public Brain(int neuronCount, int inputNeuronCount, int outputNeuronCount) {
         this.neuronCount = neuronCount;
         this.inputNeuronCount = inputNeuronCount;
         this.outputNeuronCount = outputNeuronCount;
-        nerves = new LinkedList<Nerve>();
-        synapses = new LinkedList<Synapse>();
     }
 
     public boolean isValidNeuronIndex(int neuronIndex) {
