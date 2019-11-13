@@ -4,7 +4,7 @@ import java.util.regex.*;
 import java.util.stream.*;
 
 public class TimeSeriesEnsembleReader extends BufferedReader {
-    private static final Pattern AGENT_PATTERN = Pattern.compile("^# AGENT (\\d+$)");
+    private static final Pattern AGENT_PATTERN = Pattern.compile("^# AGENT (\\d+)$");
     private static final Pattern DIMENSIONS_PATTERN = Pattern.compile("^# DIMENSIONS (\\d+) (\\d+) (\\d+)$");
     private static final Pattern SPACE_PATTERN = Pattern.compile(" ");
 
@@ -61,20 +61,15 @@ public class TimeSeriesEnsembleReader extends BufferedReader {
         int inputNeuronCount = Integer.parseInt(matcher.group(2));
         int outputNeuronCount = Integer.parseInt(matcher.group(3));
         Brain brain = new Brain(neuronCount, inputNeuronCount, outputNeuronCount);
-        for (Nerve nerve : readNerves()) {
-            brain.addNerve(nerve);
-        }
-        for (Synapse synapse : readSynapses()) {
-            brain.addSynapse(synapse);
-        }
+        readNerves(brain);
+        readSynapses(brain);
         return brain;
     }
 
-    private Collection<Nerve> readNerves() throws IOException {
+    private void readNerves(Brain brain) throws IOException {
         String line = readLine();
         assert line.equals("# BEGIN NERVES");
         int neuronStartIndex = 0;
-        Collection<Nerve> nerves = new LinkedList<Nerve>();
         while (true) {
             line = readLine();
             if (line.equals("# END NERVES")) {
@@ -83,16 +78,14 @@ public class TimeSeriesEnsembleReader extends BufferedReader {
             String[] chunks = SPACE_PATTERN.split(line);
             String name = chunks[0];
             int neuronCount = Integer.parseInt(chunks[1]);
-            nerves.add(new Nerve(name, neuronStartIndex, neuronCount));
+            brain.addNerve(new Nerve(name, neuronStartIndex, neuronCount));
             neuronStartIndex += neuronCount;
         }
-        return nerves;
     }
 
-    private Collection<Synapse> readSynapses() throws IOException {
+    private void readSynapses(Brain brain) throws IOException {
         String line = readLine();
         assert line.equals("# BEGIN SYNAPSES");
-        Collection<Synapse> synapses = new LinkedList<Synapse>();
         while (true) {
             line = readLine();
             if (line.equals("# END SYNAPSES")) {
@@ -100,13 +93,11 @@ public class TimeSeriesEnsembleReader extends BufferedReader {
             }
             String[] chunks = SPACE_PATTERN.split(line);
             int preNeuronIndex = Integer.parseInt(chunks[0]);
-            Arrays.stream(chunks)
-                    .skip(1)
-                    .mapToInt(chunk -> Integer.parseInt(chunk))
-                    .mapToObj(postNeuronIndex -> new Synapse(preNeuronIndex, postNeuronIndex))
-                    .forEach(synapses::add);
+            for (int chunkIndex = 1; chunkIndex < chunks.length; chunkIndex++) {
+                int postNeuronIndex = Integer.parseInt(chunks[chunkIndex]);
+                brain.addSynapse(new Synapse(preNeuronIndex, postNeuronIndex));
+            }
         }
-        return synapses;
     }
 
     private TimeSeries readTimeSeries(int dimension) throws IOException {
@@ -124,10 +115,9 @@ public class TimeSeriesEnsembleReader extends BufferedReader {
             if (line.equals("# END TIME SERIES")) {
                 return observations;
             }
-            List<Double> observation = SPACE_PATTERN.splitAsStream(line)
-                    .map(chunk -> Double.valueOf(chunk))
-                    .collect(Collectors.toCollection(ArrayList::new));
-            observations.add(observation);
+            observations.add(SPACE_PATTERN.splitAsStream(line)
+                    .map(Double::valueOf)
+                    .collect(Collectors.toCollection(ArrayList::new)));
         }
     }
 }

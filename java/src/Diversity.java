@@ -26,10 +26,10 @@ public class Diversity {
         public double getDiversity(GenomePool pool) {
             Collection<Iterator<Integer>> genes = pool.values()
                     .stream()
-                    .map(genome -> genome.iterator())
+                    .map(Genome::iterator)
                     .collect(Collectors.toList());
-            return IntStream.range(0, geneCount)
-                    .mapToDouble(geneIndex -> getDiversity(genes))
+            return DoubleStream.generate(() -> getDiversity(genes))
+                    .limit(geneCount)
                     .average()
                     .getAsDouble();
         }
@@ -69,6 +69,7 @@ public class Diversity {
         arguments.print(System.out);
         try (GenomePoolReader reader = new GenomePoolReader(new InputStreamReader(System.in))) {
             Calculator calculator = new Calculator(arguments.groupingParameter, reader.readSize());
+            System.out.println("# time diversity");
             double diversity = 0.0;
             while (true) {
                 GenomePool pool = reader.readGenomePool();

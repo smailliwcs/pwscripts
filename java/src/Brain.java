@@ -3,11 +3,21 @@ import java.util.stream.*;
 
 public class Brain {
     public static enum Layer {
-        ALL,
-        INPUT,
-        PROCESSING,
-        OUTPUT,
-        INTERNAL
+        ALL("All"),
+        INPUT("Input"),
+        PROCESSING("Processing"),
+        OUTPUT("Output"),
+        INTERNAL("Internal");
+
+        private String name;
+
+        private Layer(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
     }
 
     private int neuronCount;
@@ -113,14 +123,14 @@ public class Brain {
     public Collection<Integer> getPreNeuronIndices(int postNeuronIndex) {
         return synapses.stream()
                 .filter(synapse -> synapse.getPostNeuronIndex() == postNeuronIndex)
-                .map(synapse -> synapse.getPreNeuronIndex())
+                .map(Synapse::getPreNeuronIndex)
                 .collect(Collectors.toList());
     }
 
     public Collection<Integer> getPostNeuronIndices(int preNeuronIndex) {
         return synapses.stream()
                 .filter(synapse -> synapse.getPreNeuronIndex() == preNeuronIndex)
-                .map(synapse -> synapse.getPostNeuronIndex())
+                .map(Synapse::getPostNeuronIndex)
                 .collect(Collectors.toList());
     }
 }

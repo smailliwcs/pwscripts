@@ -9,14 +9,14 @@ public class Complexity {
 
         public static void gaussianize(double[][] observations, int dimension) {
             Random random = new Random();
+            Integer[] times = new Integer[observations.length];
             double[] values = new double[observations.length];
             double[] gaussians = new double[observations.length];
-            Integer[] times = new Integer[observations.length];
             for (int variable = 0; variable < dimension; variable++) {
                 for (int time = 0; time < observations.length; time++) {
+                    times[time] = time;
                     values[time] = observations[time][variable] + random.nextGaussian() * NOISE;
                     gaussians[time] = random.nextGaussian();
-                    times[time] = time;
                 }
                 Arrays.sort(times, new IndexComparator(values));
                 Arrays.sort(gaussians);
@@ -34,17 +34,20 @@ public class Complexity {
             return product;
         }
 
+        private static double[][] getSubset(double[][] matrix, int index) {
+            return MatrixUtils.copyMatrixEliminateRowAndColumn(matrix, index, index);
+        }
+
         public static double getIntegration(double[][] covariance) throws Exception {
             return 0.5 * Math.log(getDiagonalProduct(covariance) / MatrixUtils.determinantSymmPosDefMatrix(covariance));
         }
 
         public static double getComplexity(double[][] covariance, double integration) throws Exception {
-            double subsetIntegrationSum = 0.0;
+            double subsetIntegration = 0.0;
             for (int index = 0; index < covariance.length; index++) {
-                subsetIntegrationSum += getIntegration(
-                        MatrixUtils.copyMatrixEliminateRowAndColumn(covariance, index, index));
+                subsetIntegration += getIntegration(getSubset(covariance, index));
             }
-            return ((covariance.length - 1) * integration - subsetIntegrationSum) / covariance.length;
+            return ((covariance.length - 1) * integration - subsetIntegration) / covariance.length;
         }
     }
 
@@ -52,6 +55,7 @@ public class Complexity {
         assert args.length == 0;
         try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(new InputStreamReader(System.in))) {
             reader.readArguments(System.out);
+            System.out.println("# agentId count integration complexity");
             while (true) {
                 TimeSeriesEnsemble ensemble = reader.readTimeSeriesEnsemble();
                 if (ensemble == null) {

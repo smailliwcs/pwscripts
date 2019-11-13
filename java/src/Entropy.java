@@ -1,5 +1,4 @@
 import java.io.*;
-import java.util.*;
 
 import infodynamics.measures.continuous.kozachenko.*;
 
@@ -21,17 +20,17 @@ public class Entropy {
         Calculator calculator = new Calculator();
         try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(new InputStreamReader(System.in))) {
             reader.readArguments(System.out);
+            System.out.println("# agentId count entropy");
             while (true) {
                 TimeSeriesEnsemble ensemble = reader.readTimeSeriesEnsemble();
                 if (ensemble == null) {
                     break;
                 }
-                Collection<Integer> neuronIndices = ensemble.getBrain().getNeuronIndices(Brain.Layer.PROCESSING);
-                double entropy = 0.0;
-                for (int neuronIndex : neuronIndices) {
-                    entropy += calculator.getEntropy(ensemble, neuronIndex);
+                Result result = new Result();
+                for (int neuronIndex : ensemble.getBrain().getNeuronIndices(Brain.Layer.PROCESSING)) {
+                    result.add(calculator.getEntropy(ensemble, neuronIndex));
                 }
-                System.out.printf("%d %d %g%n", ensemble.getAgentId(), neuronIndices.size(), entropy);
+                System.out.printf("%d %d %g%n", ensemble.getAgentId(), result.getCount(), result.getSum());
             }
         }
     }
