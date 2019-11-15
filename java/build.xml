@@ -16,9 +16,6 @@
                 <pathelement location="bin" />
             </classpath>
         </javac>
-        <copy todir="bin">
-            <fileset refid="libs" />
-        </copy>
     </target>
     <target name="clean">
         <delete dir="bin" />

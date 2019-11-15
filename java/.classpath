@@ -2,9 +2,9 @@
 <classpath>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="lib" path="lib/infodynamics.jar">
+	<classpathentry kind="lib" path="lib/jidt/infodynamics.jar" sourcepath="lib/jidt/java/source">
 		<attributes>
-			<attribute name="javadoc_location" value="jar:platform:/resource/pwscripts/doc/infodynamics.zip!/"/>
+			<attribute name="javadoc_location" value="http://lizier.me/joseph/software/jidt/javadocs/v1.5/"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="output" path="bin"/>
