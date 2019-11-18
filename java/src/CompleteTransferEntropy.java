@@ -60,7 +60,7 @@ public class CompleteTransferEntropy {
 
         public static void printUsage(PrintStream out) {
             out.printf(
-                    "Usage: %s [--use-gpu] EMBEDDING_LENGTH SYNAPSE_COUNT_MAX%n",
+                    "Usage: %s [--use-gpu] EMBEDDING SYNAPSES%n",
                     InfoDynamics.class.getSimpleName());
         }
 
@@ -75,8 +75,8 @@ public class CompleteTransferEntropy {
         }
 
         public void print(PrintStream out) {
-            out.printf("# embeddingLength = %d%n", embeddingLength);
-            out.printf("# synapseCountMax = %d%n", synapseCountMax);
+            out.printf("# embedding = %d%n", embeddingLength);
+            out.printf("# synapses = %d%n", synapseCountMax);
         }
     }
 

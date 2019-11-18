@@ -55,7 +55,7 @@ public class CollectiveTransferEntropy {
         }
 
         public static void printUsage(PrintStream out) {
-            out.printf("Usage: %s [--use-gpu] EMBEDDING_LENGTH%n", InfoDynamics.class.getSimpleName());
+            out.printf("Usage: %s [--use-gpu] EMBEDDING%n", InfoDynamics.class.getSimpleName());
         }
 
         public final boolean useGpu;
@@ -67,7 +67,7 @@ public class CollectiveTransferEntropy {
         }
 
         public void print(PrintStream out) {
-            out.printf("# embeddingLength = %d%n", embeddingLength);
+            out.printf("# embedding = %d%n", embeddingLength);
         }
     }
 

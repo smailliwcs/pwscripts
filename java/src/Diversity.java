@@ -50,7 +50,7 @@ public class Diversity {
         }
 
         public static void printUsage(PrintStream out) {
-            out.printf("Usage: %s GROUPING_PARAMETER%n", Diversity.class.getSimpleName());
+            out.printf("Usage: %s GROUPING%n", Diversity.class.getSimpleName());
         }
 
         public final int groupingParameter;
@@ -60,7 +60,7 @@ public class Diversity {
         }
 
         public void print(PrintStream out) {
-            out.printf("# groupingParameter = %d%n", groupingParameter);
+            out.printf("# grouping = %d%n", groupingParameter);
         }
     }
 
