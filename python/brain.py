@@ -1,123 +1,77 @@
-import argparse
-import graph as graph_mod
-import math
-import sys
-import utility
+import enum
+import os
+import re
 
-TEMPLATES = {}
-SIZE_RATE = 0.025
-WEIGHT_THRESHOLD = 0.01
+import polyworld as pw
+from graph import WeightGraph
 
-TEMPLATES["txt"] = {}
-TEMPLATES["txt"]["graph"] = """
-{nodes}
-{edges}
-""".lstrip()
-TEMPLATES["txt"]["node"] = """node {i} {type}"""
-TEMPLATES["txt"]["edge"] = """edge {i} {j} {w}"""
 
-TEMPLATES["gv"] = {}
-TEMPLATES["gv"]["graph"] = """
-digraph {{
-    outputorder=edgesfirst;
-    node [fixedsize=true, label="", penwidth=0.4, shape=circle, style=filled, width=0.075];
-    edge [arrowhead=none, penwidth=0.4];
-{nodes}
-{edges}
-}}
-""".lstrip()
-TEMPLATES["gv"]["node"] = """    {i} [fillcolor="#{r:02x}{g:02x}{b:02x}", pos="{x:.3f},{y:.3f}!"];"""
-TEMPLATES["gv"]["edge"] = """    {i} -> {j} [color="#000000{a:02x}"];"""
+class Brain:
+    class Layer(enum.Enum):
+        ALL = "all"
+        INPUT = "input"
+        PROCESSING = "processing"
+        OUTPUT = "output"
+        INTERNAL = "internal"
 
-TEMPLATES["tex"] = {}
-TEMPLATES["tex"]["graph"] = """
-\\documentclass{{standalone}}
-\\usepackage{{tikz}}
-\\usetikzlibrary{{backgrounds}}
-\\begin{{document}}
-\\begin{{tikzpicture}}
-    [
-        every node/.style={{draw, circle, minimum size=0.075in, inner sep=0pt}}
-    ]
-{nodes}
-    \\begin{{scope}}[on background layer]
-{edges}
-    \\end{{scope}}
-\\end{{tikzpicture}}
-\\end{{document}}
-""".lstrip()
-TEMPLATES["tex"]["node"] = """    \\node[fill={{rgb,255:red,{r};green,{g};blue,{b}}}] ({i}) at ({x:.3f}in,{y:.3f}in) {{}};"""
-TEMPLATES["tex"]["edge"] = """        \\draw[-, opacity={o:.3f}] ({i}) to ({j});"""
+    class Dimensions:
+        _HEADER_PATTERN = re.compile(
+            r"^synapses \d+ "
+            r"maxweight=(?P<weight_max>[^ ]+) "
+            r"numsynapses=(?P<synapse_count>\d+) "
+            r"numneurons=(?P<neuron_count>\d+) "
+            r"numinputneurons=(?P<input_neuron_count>\d+) "
+            r"numoutputneurons=(?P<output_neuron_count>\d+)$")
 
-def setColor(kwargs, byte):
-    kwargs.update({
-        "r": byte,
-        "g": byte,
-        "b": byte
-    })
+        @staticmethod
+        def read(run, agent, stage=pw.Stage.BIRTH):
+            with pw.read_file(Brain._get_path(run, agent, stage)) as f:
+                return Brain.Dimensions(f.readline())
 
-def setPosition(kwargs, count, offset):
-    size = count * SIZE_RATE
-    angle = offset - 2 * math.pi * kwargs["i"] / count
-    kwargs.update({
-        "x": size * math.cos(angle),
-        "y": size * math.sin(angle)
-    })
+        def __init__(self, header):
+            match = self._HEADER_PATTERN.match(header)
+            self.weight_max = float(match.group("weight_max"))
+            self.synapse_count = int(match.group("synapse_count"))
+            self.neuron_count = int(match.group("neuron_count"))
+            self.input_neuron_count = int(match.group("input_neuron_count"))
+            self.output_neuron_count = int(match.group("output_neuron_count"))
 
-parser = argparse.ArgumentParser()
-parser.add_argument("run", metavar = "RUN")
-parser.add_argument("agent", metavar = "AGENT", type = int)
-parser.add_argument("stage", metavar = "STAGE", choices = ("incept", "birth", "death"))
-parser.add_argument("format", metavar = "FORMAT", choices = ("txt", "gv", "tex"))
-args = parser.parse_args()
-graph = graph_mod.Graph.read(args.run, args.agent, args.stage, graph_mod.GraphType.ALL)
-counts = utility.getNeuronCounts(args.run)[args.agent]
-sector = 2 * math.pi / counts["Total"]
-offset = math.pi / 2 + (counts["Input"] - 1) * sector / 2
-nodes = []
-edges = []
-kwargs = {
-    "i": 0
-}
-for nerve in utility.getNerves(args.run):
-    if nerve in ("Red", "Green", "Blue"):
-        kwargs["type"] = "Input-" + nerve
-        setColor(kwargs, 128)
-        kwargs[nerve[0].lower()] = 255
-    elif kwargs["i"] < counts["Input"]:
-        kwargs["type"] = "Input-Other"
-        setColor(kwargs, 0)
-    else:
-        kwargs["type"] = "Output"
-        setColor(kwargs, 255)
-    for _ in xrange(counts[nerve]):
-        setPosition(kwargs, counts["Total"], offset)
-        nodes.append(TEMPLATES[args.format]["node"].format(**kwargs))
-        kwargs["i"] += 1
-setColor(kwargs, 160)
-for _ in xrange(counts["Internal"]):
-    kwargs["type"] = "Internal"
-    setPosition(kwargs, counts["Total"], offset)
-    nodes.append(TEMPLATES[args.format]["node"].format(**kwargs))
-    kwargs["i"] += 1
-weights = {}
-for i in xrange(graph.size):
-    for j in xrange(graph.size):
-        weight = graph.weights[i][j]
-        if weight is None or abs(weight) < WEIGHT_THRESHOLD:
-            continue
-        weights[(i, j)] = weight
-kwargs = {}
-for indices, weight in sorted(weights.iteritems(), key = lambda item: abs(item[1])):
-    kwargs.update({
-        "i": indices[0],
-        "j": indices[1]
-    })
-    kwargs["w"] = weight
-    alpha = int(256 * abs(weight))
-    if alpha > 255:
-        alpha = 255
-    kwargs["a"] = alpha
-    kwargs["o"] = alpha / 255.0
-    edges.append(TEMPLATES[args.format]["edge"].format(**kwargs))
-sys.stdout.write(TEMPLATES[args.format]["graph"].format(nodes = "\n".join(nodes), edges = "\n".join(edges)))
+        def get_neurons(self, layer):
+            if layer == Brain.Layer.ALL:
+                return range(self.neuron_count)
+            if layer == Brain.Layer.INPUT:
+                return range(self.input_neuron_count)
+            if layer == Brain.Layer.PROCESSING:
+                return range(self.input_neuron_count, self.neuron_count)
+            if layer == Brain.Layer.OUTPUT:
+                return range(self.input_neuron_count, self.input_neuron_count + self.output_neuron_count)
+            if layer == Brain.Layer.INTERNAL:
+                return range(self.input_neuron_count + self.output_neuron_count, self.neuron_count)
+            raise ValueError
+
+    @staticmethod
+    def _get_path(run, agent, stage):
+        return os.path.join(run, "brain", "synapses", f"synapses_{agent}_{stage.value}.txt")
+
+    @staticmethod
+    def read(run, agent, stage):
+        path = Brain._get_path(run, agent, stage)
+        if not pw.file_exists(path):
+            return None
+        with pw.read_file(path) as f:
+            dimensions = Brain.Dimensions(f.readline())
+            brain = Brain(dimensions)
+            input_neurons = dimensions.get_neurons(Brain.Layer.INPUT)
+            for line in f:
+                chunks = line.split()
+                pre_neuron = int(chunks[0])
+                post_neuron = int(chunks[1])
+                assert pre_neuron != post_neuron
+                assert post_neuron not in input_neurons
+                weight = float(chunks[2]) / dimensions.weight_max
+                brain.weights[pre_neuron, post_neuron] += weight
+            return brain
+
+    def __init__(self, dimensions):
+        self.dimensions = dimensions
+        self.weights = WeightGraph(range(self.dimensions.neuron_count))

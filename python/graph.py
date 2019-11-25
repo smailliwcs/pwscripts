@@ -1,152 +1,110 @@
-import gzip
-import os
-import random
-import re
-import utility
+import functools
+import math
+import operator
 
-class NodeType(utility.Enum):
-    INPUT = "input"
-    OUTPUT = "output"
-    INTERNAL = "internal"
-    
-    @staticmethod
-    def getValue(node, inputCount, outputCount, size):
-        if node < inputCount:
-            return NodeType.INPUT
-        elif node < inputCount + outputCount:
-            return NodeType.OUTPUT
-        elif node < size:
-            return NodeType.INTERNAL
+
+class Graph:
+    _missing = math.nan
+    _is_missing = math.isnan
+
+    def __init__(self, vertices):
+        self._vertices = set(vertices)
+        self._edges = {}
+        self._out_edges = self._get_edge_dict()
+        self._in_edges = self._get_edge_dict()
+
+    def _get_edge_dict(self):
+        return {vertex: {} for vertex in self._vertices}
+
+    def __getitem__(self, key):
+        return self._edges.get(key, self._missing)
+
+    def __setitem__(self, key, value):
+        i, j = key
+        if self._is_missing(value):
+            self._edges.pop(key, None)
+            self._out_edges[i].pop(j, None)
+            self._in_edges[j].pop(i, None)
         else:
-            raise ValueError
+            self._edges[key] = value
+            self._out_edges[i][j] = value
+            self._in_edges[j][i] = value
 
-class GraphType(utility.Enum):
-    INPUT = "input"
-    OUTPUT = "output"
-    INTERNAL = "internal"
-    PROCESSING = "processing"
-    ALL = "all"
-    
-    @staticmethod
-    def getNonInputValues():
-        for value in GraphType.getValues():
-            if value != GraphType.INPUT:
-                yield value
-    
-    @staticmethod
-    def getNodes(value, size, inputCount, outputCount):
-        if value == GraphType.INPUT:
-            return xrange(inputCount)
-        elif value == GraphType.OUTPUT:
-            return xrange(inputCount, inputCount + outputCount)
-        elif value == GraphType.INTERNAL:
-            return xrange(inputCount + outputCount, size)
-        elif value == GraphType.PROCESSING:
-            return xrange(inputCount, size)
-        elif value == GraphType.ALL:
-            return xrange(size)
-        else:
-            raise ValueError
+    @property
+    def vertex_count(self):
+        return len(self._vertices)
 
-class Graph(object):
-    HEADER_PATTERN = re.compile(" ".join((
-        r"^synapses",
-        r"(?P<agent>\d+)",
-        r"maxweight=(?P<maxweight>[^ ]+)",
-        r"numsynapses=\d+",
-        r"numneurons=(?P<numneurons>\d+)",
-        r"numinputneurons=(?P<numinputneurons>\d+)",
-        r"numoutputneurons=(?P<numoutputneurons>\d+)$")))
-    
-    @staticmethod
-    def read(run, agent, stage, graphType):
-        path = os.path.join(run, "brain", "synapses", "synapses_{0}_{1}.txt.gz".format(agent, stage))
-        if not os.path.isfile(path):
-            return None
-        with gzip.open(path) as f:
-            headerMatch = Graph.HEADER_PATTERN.match(f.readline())
-            weightMax = float(headerMatch.group("maxweight"))
-            size = int(headerMatch.group("numneurons"))
-            inputCount = int(headerMatch.group("numinputneurons"))
-            outputCount = int(headerMatch.group("numoutputneurons"))
-            nodes = list(GraphType.getNodes(graphType, size, inputCount, outputCount))
-            graph = Graph(len(nodes))
-            for index in xrange(graph.size):
-                graph.nodeTypes[index] = NodeType.getValue(nodes[index], inputCount, outputCount, size)
-            for line in f:
-                chunks = line.split()
-                nodeOut = int(chunks[0])
-                nodeIn = int(chunks[1])
-                assert nodeOut != nodeIn
-                if nodeOut not in nodes or nodeIn not in nodes:
+    @property
+    def edge_count(self):
+        return len(self._edges)
+
+    def vertices(self):
+        return iter(self._vertices)
+
+    def edges(self):
+        return iter(self._edges.items())
+
+    def get_neighbors(self, vertex):
+        neighbors = set()
+        neighbors.update(self._out_edges[vertex])
+        neighbors.update(self._in_edges[vertex])
+        neighbors.discard(vertex)
+        return neighbors
+
+    def get_neighborhood(self, vertex):
+        neighbors = self.get_neighbors(vertex)
+        neighborhood = type(self)(neighbors)
+        for i in neighbors:
+            for j, value in self._out_edges[i].items():
+                if j not in neighbors:
                     continue
-                indexOut = nodes.index(nodeOut)
-                indexIn = nodes.index(nodeIn)
-                weight = float(chunks[2]) / weightMax
-                graph.weights[indexOut][indexIn] = utility.coalesce(graph.weights[indexOut][indexIn], 0.0) + weight
+                neighborhood[i, j] = value
+        return neighborhood
+
+    def _map(self, cls, function):
+        graph = cls(self._vertices)
+        for key, value in self._edges.items():
+            graph[key] = function(value)
         return graph
-    
-    def __init__(self, size):
-        self.size = size
-        self.nodeTypes = [None] * size
-        self.weights = [None] * size
-        for node in xrange(size):
-            self.weights[node] = [None] * size
-    
-    def getNodes(self, nodeType):
-        for node in xrange(self.size):
-            if self.nodeTypes[node] == nodeType:
-                yield node
-    
-    def getNodeCount(self, nodeType):
-        count = 0
-        for node in self.getNodes(nodeType):
-            count += 1
-        return count
-    
-    def hasLink(self, nodeOut, nodeIn):
-        return utility.coalesce(self.weights[nodeOut][nodeIn], 0.0) != 0.0
-    
-    def getLinkCount(self):
-        count = 0
-        for nodeOut in xrange(self.size):
-            for nodeIn in xrange(self.size):
-                if self.hasLink(nodeOut, nodeIn):
-                    count += 1
-        return count
-    
-    def getSubgraph(self, nodes):
-        size = len(nodes)
-        graph = Graph(size)
-        for index in xrange(size):
-            node = nodes[index]
-            graph.nodeTypes[index] = self.nodeTypes[node]
-        for indexOut in xrange(size):
-            nodeOut = nodes[indexOut]
-            for indexIn in xrange(size):
-                nodeIn = nodes[indexIn]
-                graph.weights[indexOut][indexIn] = self.weights[nodeOut][nodeIn]
-        return graph
-    
-    def getNeighborhood(self, node, include):
-        nodes = []
-        for neighbor in xrange(self.size):
-            if (neighbor == node and include) or self.hasLink(neighbor, node) or self.hasLink(node, neighbor):
-                nodes.append(neighbor)
-        return self.getSubgraph(nodes)
-    
-    def rewire(self):
-        graph = Graph(self.size)
-        for nodeOut in xrange(self.size):
-            graph.nodeTypes[nodeOut] = self.nodeTypes[nodeOut]
-            nodeIns = []
-            for nodeIn in xrange(self.size):
-                if self.nodeTypes[nodeIn] == NodeType.INPUT or nodeIn == nodeOut:
-                    continue
-                nodeIns.append(nodeIn)
-            shuffledNodeIns = random.sample(nodeIns, len(nodeIns))
-            mapping = dict(zip(nodeIns, shuffledNodeIns))
-            for nodeIn in xrange(self.size):
-                shuffledNodeIn = mapping.get(nodeIn, nodeIn)
-                graph.weights[nodeOut][shuffledNodeIn] = self.weights[nodeOut][nodeIn]
-        return graph
+
+
+class WeightGraph(Graph):
+    _missing = 0.0
+    _is_missing = functools.partial(operator.eq, _missing)
+
+    @classmethod
+    def get_length(cls, weight):
+        return 1.0 / abs(weight)
+
+    def __abs__(self):
+        return self._map(type(self), abs)
+
+    def get_lengths(self):
+        return self._map(LengthGraph, self.get_length)
+
+
+class LengthGraph(Graph):
+    _missing = math.inf
+    _is_missing = functools.partial(operator.eq, _missing)
+
+    def __setitem__(self, key, value):
+        assert value > 0.0
+        super().__setitem__(key, value)
+
+    def get_distances(self):
+        for i in self._vertices:
+            distances_i = dict.fromkeys(self._vertices, math.inf)
+            distances_i[i] = 0.0
+            js = set(self._vertices)
+            while js:
+                j = min(js, key=distances_i.__getitem__)
+                js.remove(j)
+                distance_ij = distances_i[j]
+                if distance_ij == math.inf:
+                    break
+                for k, length_jk in self._out_edges[j].items():
+                    distance_ijk = distance_ij + length_jk
+                    if distance_ijk < distances_i[k]:
+                        distances_i[k] = distance_ijk
+            for j in self._vertices:
+                yield (i, j), distances_i[j]
