@@ -4,8 +4,9 @@ import java.util.regex.*;
 import java.util.stream.*;
 
 public class TimeSeriesEnsembleReader extends BufferedReader {
-    private static final Pattern AGENT_PATTERN = Pattern.compile("^# AGENT (\\d+)$");
-    private static final Pattern DIMENSIONS_PATTERN = Pattern.compile("^# DIMENSIONS (\\d+) (\\d+) (\\d+)$");
+    private static final Pattern AGENT_PATTERN = Pattern.compile("^# AGENT (?<agentId>\\d+)$");
+    private static final Pattern DIMENSIONS_PATTERN = Pattern.compile(
+            "^# DIMENSIONS (?<neuronCount>\\d+) (?<inputNeuronCount>\\d+) (?<outputNeuronCount>\\d+)$");
     private static final Pattern SPACE_PATTERN = Pattern.compile(" ");
 
     public TimeSeriesEnsembleReader(Reader in) {
@@ -49,7 +50,7 @@ public class TimeSeriesEnsembleReader extends BufferedReader {
         Matcher matcher = AGENT_PATTERN.matcher(line);
         boolean isMatch = matcher.matches();
         assert isMatch;
-        return Integer.parseInt(matcher.group(1));
+        return Integer.parseInt(matcher.group("agentId"));
     }
 
     private Brain readBrain() throws IOException {
@@ -57,9 +58,9 @@ public class TimeSeriesEnsembleReader extends BufferedReader {
         Matcher matcher = DIMENSIONS_PATTERN.matcher(line);
         boolean isMatch = matcher.matches();
         assert isMatch;
-        int neuronCount = Integer.parseInt(matcher.group(1));
-        int inputNeuronCount = Integer.parseInt(matcher.group(2));
-        int outputNeuronCount = Integer.parseInt(matcher.group(3));
+        int neuronCount = Integer.parseInt(matcher.group("neuronCount"));
+        int inputNeuronCount = Integer.parseInt(matcher.group("inputNeuronCount"));
+        int outputNeuronCount = Integer.parseInt(matcher.group("outputNeuronCount"));
         Brain brain = new Brain(neuronCount, inputNeuronCount, outputNeuronCount);
         readNerves(brain);
         readSynapses(brain);

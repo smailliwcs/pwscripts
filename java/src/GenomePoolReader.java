@@ -2,7 +2,7 @@ import java.io.*;
 import java.util.regex.*;
 
 public class GenomePoolReader extends BufferedReader {
-    private static final Pattern SIZE_PATTERN = Pattern.compile("^SIZE (\\d+)$");
+    private static final Pattern SIZE_PATTERN = Pattern.compile("^SIZE (?<size>\\d+)$");
     private static final Pattern SPACE_PATTERN = Pattern.compile(" ");
 
     private GenomePool pool = new GenomePool();
@@ -16,7 +16,7 @@ public class GenomePoolReader extends BufferedReader {
         Matcher matcher = SIZE_PATTERN.matcher(line);
         boolean isMatch = matcher.matches();
         assert isMatch;
-        return Integer.parseInt(matcher.group(1));
+        return Integer.parseInt(matcher.group("size"));
     }
 
     public GenomePool readGenomePool() throws IOException {
