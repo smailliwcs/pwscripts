@@ -1,3 +1,4 @@
+import collections
 import itertools
 import random
 
@@ -26,27 +27,25 @@ class Partition:
         self.vertices_by_community = {vertex: {vertex} for vertex in weights.vertices()}
         self.edge_modularities = dict.fromkeys(itertools.product(weights.vertices(), repeat=2), 0.0)
         strength = 0.0
-        out_strengths = dict.fromkeys(weights.vertices(), 0.0)
-        in_strengths = dict.fromkeys(weights.vertices(), 0.0)
+        out_strengths = collections.defaultdict(float)
+        in_strengths = collections.defaultdict(float)
         for (i, j), weight_ij in weights.edges():
-            self.neighbors[i].append(j)
-            self.neighbors[j].append(i)
+            if j != i:
+                self.neighbors[i].append(j)
+                self.neighbors[j].append(i)
             strength += weight_ij
             out_strengths[i] += weight_ij
             in_strengths[j] += weight_ij
         for i, out_strength_i in out_strengths.items():
             for j, in_strength_j in in_strengths.items():
-                if out_strength_i == 0.0 or in_strength_j == 0.0:
-                    continue
                 actual_weight = weights[i, j]
                 expected_weight = out_strength_i * in_strength_j / strength
                 self.edge_modularities[i, j] = (actual_weight - expected_weight) / strength
 
     def _get_community_edges(self):
         for community, vertices in self.vertices_by_community.items():
-            for i in vertices:
-                for j in vertices:
-                    yield (i, j)
+            for edge in itertools.product(vertices, repeat=2):
+                yield edge
 
     def _get_community_neighbors(self, vertex, community):
         neighbors = set(self.vertices_by_community[community])
