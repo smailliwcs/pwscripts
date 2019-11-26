@@ -24,17 +24,21 @@ class Brain:
             r"numoutputneurons=(?P<output_neuron_count>\d+)$")
 
         @staticmethod
+        def match(header):
+            match = Brain.Dimensions._HEADER_PATTERN.match(header)
+            return Brain.Dimensions(**match.groupdict())
+
+        @staticmethod
         def read(run, agent, stage=pw.Stage.BIRTH):
             with pw.read_file(Brain._get_path(run, agent, stage)) as f:
-                return Brain.Dimensions(f.readline())
+                return Brain.Dimensions.match(f.readline())
 
-        def __init__(self, header):
-            match = self._HEADER_PATTERN.match(header)
-            self.weight_max = float(match.group("weight_max"))
-            self.synapse_count = int(match.group("synapse_count"))
-            self.neuron_count = int(match.group("neuron_count"))
-            self.input_neuron_count = int(match.group("input_neuron_count"))
-            self.output_neuron_count = int(match.group("output_neuron_count"))
+        def __init__(self, **kwargs):
+            self.weight_max = float(kwargs["weight_max"])
+            self.synapse_count = int(kwargs["synapse_count"])
+            self.neuron_count = int(kwargs["neuron_count"])
+            self.input_neuron_count = int(kwargs["input_neuron_count"])
+            self.output_neuron_count = int(kwargs["output_neuron_count"])
 
         def get_neurons(self, layer):
             if layer == Brain.Layer.ALL:
@@ -59,14 +63,14 @@ class Brain:
         if not pw.file_exists(path):
             return None
         with pw.read_file(path) as f:
-            dimensions = Brain.Dimensions(f.readline())
+            dimensions = Brain.Dimensions.match(f.readline())
             brain = Brain(dimensions)
             input_neurons = dimensions.get_neurons(Brain.Layer.INPUT)
             for line in f:
                 chunks = line.split()
                 pre_neuron = int(chunks[0])
                 post_neuron = int(chunks[1])
-                assert pre_neuron != post_neuron
+                assert post_neuron != pre_neuron
                 assert post_neuron not in input_neurons
                 weight = float(chunks[2]) / dimensions.weight_max
                 brain.weights[pre_neuron, post_neuron] += weight
