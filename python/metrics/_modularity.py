@@ -28,12 +28,12 @@ class Partition:
         strength = 0.0
         out_strengths = dict.fromkeys(weights.vertices(), 0.0)
         in_strengths = dict.fromkeys(weights.vertices(), 0.0)
-        for (i, j), weight in weights.edges():
+        for (i, j), weight_ij in weights.edges():
             self.neighbors[i].append(j)
             self.neighbors[j].append(i)
-            strength += weight
-            out_strengths[i] += weight
-            in_strengths[j] += weight
+            strength += weight_ij
+            out_strengths[i] += weight_ij
+            in_strengths[j] += weight_ij
         for i, out_strength_i in out_strengths.items():
             for j, in_strength_j in in_strengths.items():
                 if out_strength_i == 0.0 or in_strength_j == 0.0:
@@ -96,8 +96,8 @@ class Partition:
 
     def combine(self):
         weights = WeightGraph(set(self.vertices_by_community))
-        for (i, j), weight in self.weights.edges():
-            weights[self.communities_by_vertex[i], self.communities_by_vertex[j]] += weight
+        for (i, j), weight_ij in self.weights.edges():
+            weights[self.communities_by_vertex[i], self.communities_by_vertex[j]] += weight_ij
         self._initialize(weights)
 
 

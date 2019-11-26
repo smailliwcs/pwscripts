@@ -55,10 +55,10 @@ class Graph:
         neighbors = self.get_neighbors(vertex)
         neighborhood = type(self)(neighbors)
         for i in neighbors:
-            for j, value in self._out_edges[i].items():
+            for j, value_ij in self._out_edges[i].items():
                 if j not in neighbors:
                     continue
-                neighborhood[i, j] = value
+                neighborhood[i, j] = value_ij
         return neighborhood
 
     def _map(self, cls, function):
@@ -106,5 +106,5 @@ class LengthGraph(Graph):
                     distance_ijk = distance_ij + length_jk
                     if distance_ijk < distances_i[k]:
                         distances_i[k] = distance_ijk
-            for j in self._vertices:
-                yield (i, j), distances_i[j]
+            for j, distance_ij in distances_i.items():
+                yield (i, j), distance_ij
