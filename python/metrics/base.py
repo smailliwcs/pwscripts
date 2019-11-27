@@ -64,7 +64,7 @@ class IndividualMetric(Metric, abc.ABC):
             return times, values
 
     _index_label = "agent"
-    _aggregator = pd.Series.mean
+    _aggregator = "mean"
 
     @abc.abstractmethod
     def _get_value(self, agent):
