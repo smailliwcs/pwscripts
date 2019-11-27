@@ -1,7 +1,5 @@
 import enum
 
-import numpy as np
-
 import polyworld as pw
 from brain import Brain
 from utility import *
@@ -41,7 +39,7 @@ class Efficiency(IndividualMetric):
     def _get_value(self, agent):
         brain = Brain.read(self.run, agent, self.stage)
         if brain is None:
-            return np.ma.masked
+            return None
         lengths = brain.weights.get_lengths()
         if self.scope == Efficiency.Scope.LOCAL:
             return get_local_efficiency(lengths)

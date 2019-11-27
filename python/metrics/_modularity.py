@@ -2,8 +2,6 @@ import collections
 import itertools
 import random
 
-import numpy as np
-
 import polyworld as pw
 from brain import Brain
 from graph import WeightGraph
@@ -133,5 +131,5 @@ class Modularity(IndividualMetric):
     def _get_value(self, agent):
         brain = Brain.read(self.run, agent, self.stage)
         if brain is None:
-            return np.ma.masked
+            return None
         return get_modularity(brain.weights)

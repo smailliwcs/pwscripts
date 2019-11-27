@@ -1,15 +1,14 @@
 import abc
 import argparse
 
-import numpy as np
 import pandas as pd
 
 import polyworld as pw
 
 
 class Metric(abc.ABC):
-    _x_label = None
-    _y_label = "value"
+    _index_label = None
+    _value_label = "value"
 
     @classmethod
     def _parse_run_arg(cls, arg):
@@ -22,6 +21,14 @@ class Metric(abc.ABC):
         parser.add_argument("run", metavar="RUN", type=cls._parse_run_arg)
         parser.add_argument("metric", metavar=cls.__name__)
 
+    @classmethod
+    def write(cls, data, file):
+        data.to_csv(file, header=True)
+
+    @classmethod
+    def read(cls, file):
+        return pd.read_csv(file, index_col=0, squeeze=True)
+
     def __init__(self, **kwargs):
         self.run = kwargs["run"]
 
@@ -30,27 +37,24 @@ class Metric(abc.ABC):
         raise NotImplementedError
 
     def calculate(self):
-        x, y = self._calculate()
-        return pd.DataFrame({
-            self._x_label: x,
-            self._y_label: y
-        })
+        indices, values = self._calculate()
+        index = pd.Index(indices, name=self._index_label)
+        return pd.Series(values, index, name=self._value_label)
+
+
+class PopulationMetric(Metric, abc.ABC):
+    _index_label = "time"
 
 
 class IndividualMetric(Metric, abc.ABC):
-    _x_label = "agent"
+    _index_label = "agent"
 
     @abc.abstractmethod
     def _get_value(self, agent):
         raise NotImplementedError
 
     def _calculate(self):
-        agents = np.array(pw.get_agents(self.run))
-        values = np.ma.empty(agents.shape)
-        for index, agent in enumerate(agents):
-            values[index] = self._get_value(agent)
+        agents = range(1, pw.get_agent_count(self.run) + 1)
+        values = (self._get_value(agent) for agent in agents)
         return agents, values
 
-
-class PopulationMetric(Metric, abc.ABC):
-    _x_label = "time"

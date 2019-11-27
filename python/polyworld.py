@@ -35,5 +35,3 @@ def get_agent_count(run):
     return datalib.parse_digest(os.path.join(run, "lifespans.txt"))["tables"]["LifeSpans"]["nrows"]
 
 
-def get_agents(run):
-    return range(1, get_agent_count(run) + 1)
