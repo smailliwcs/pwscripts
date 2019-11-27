@@ -5,7 +5,7 @@ import random
 import polyworld as pw
 from brain import Brain
 from graph import WeightGraph
-from ._metric import IndividualMetric
+from .base import IndividualMetric
 
 
 class Partition:

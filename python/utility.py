@@ -12,6 +12,6 @@ def mean(values):
     return sum_ / count
 
 
-__all__ = [
-    "mean"
-]
+__all__ = (
+    "mean",
+)

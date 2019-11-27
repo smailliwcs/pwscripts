@@ -3,7 +3,7 @@ import enum
 import polyworld as pw
 from brain import Brain
 from utility import *
-from ._metric import IndividualMetric
+from .base import IndividualMetric
 
 
 def get_efficiency(lengths):

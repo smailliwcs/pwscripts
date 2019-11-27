@@ -1,32 +1,31 @@
-import argparse
-import sys
-import textwrap
-
-from ._efficiency import Efficiency
-from ._modularity import Modularity
-
-metrics = {metric.__name__: metric for metric in [
-    # Degree
-    # Density
-    Efficiency,
-    # EventCount
-    # FoodConsumption
-    # FoodEnergy
-    # Gene
-    # LearningRate
-    # Lifespan
-    Modularity
-    # NeuronCount
-    # OffspringCount
-    # Population
-    # PopulationAggregate
-    # Strength
-    # SynapseCount
-    # Weight
-]}
+from .base import IndividualMetric, Metric, PopulationMetric
+from .efficiency import Efficiency
+from .modularity import Modularity
 
 
 def parse_args(args=None):
+    import argparse
+    import sys
+    import textwrap
+
+    metrics = {metric.__name__: metric for metric in [
+        # Degree
+        # Density
+        Efficiency,
+        # EventCount
+        # FoodConsumption
+        # FoodEnergy
+        # Gene
+        # LearningRate
+        # Lifespan
+        Modularity
+        # NeuronCount
+        # OffspringCount
+        # Population
+        # Strength
+        # SynapseCount
+        # Weight
+    ]}
     if args is None:
         args = sys.argv[1:]
     wrapper = textwrap.TextWrapper(subsequent_indent="  ")
