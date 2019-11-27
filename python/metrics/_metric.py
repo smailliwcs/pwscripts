@@ -47,7 +47,24 @@ class PopulationMetric(Metric, abc.ABC):
 
 
 class IndividualMetric(Metric, abc.ABC):
+    class Aggregator(PopulationMetric):
+        def __init__(self, run, data, function):
+            super().__init__(run=run)
+            if isinstance(function, str):
+                function = getattr(pd.Series, function)
+            self.data = data
+            self.function = function
+
+        def _calculate(self):
+            times = []
+            values = []
+            for time, agents in pw.get_populations(self.run):
+                times.append(time)
+                values.append(self.function(self.data.loc[agents]))
+            return times, values
+
     _index_label = "agent"
+    _aggregator = pd.Series.mean
 
     @abc.abstractmethod
     def _get_value(self, agent):
@@ -58,3 +75,9 @@ class IndividualMetric(Metric, abc.ABC):
         values = (self._get_value(agent) for agent in agents)
         return agents, values
 
+    def aggregate(self, data=None, function=None):
+        if data is None:
+            data = self.calculate()
+        if function is None:
+            function = self._aggregator
+        return self.Aggregator(self.run, data, function).calculate()
