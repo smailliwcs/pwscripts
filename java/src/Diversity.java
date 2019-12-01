@@ -67,6 +67,7 @@ public class Diversity {
     public static void main(String[] args) throws Exception {
         Arguments arguments = Arguments.parse(new LinkedList<String>(Arrays.asList(args)));
         arguments.print(System.out);
+        System.out.println("time,value");
         try (GenomePoolReader reader = new GenomePoolReader(new InputStreamReader(System.in))) {
             Calculator calculator = new Calculator(arguments.groupingParameter, reader.readSize());
             double diversity = 0.0;
@@ -78,7 +79,7 @@ public class Diversity {
                 if (pool.isDirty()) {
                     diversity = calculator.getDiversity(pool);
                 }
-                System.out.printf("%d %g%n", pool.getTime(), diversity);
+                System.out.printf("%d,%g%n", pool.getTime(), diversity);
             }
         }
     }

@@ -55,6 +55,7 @@ public class Complexity {
         assert args.length == 0;
         try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(new InputStreamReader(System.in))) {
             reader.readArguments(System.out);
+            System.out.println("agent,count,integration,complexity");
             while (true) {
                 TimeSeriesEnsemble ensemble = reader.readTimeSeriesEnsemble();
                 if (ensemble == null) {
@@ -67,7 +68,7 @@ public class Complexity {
                 double integration = Calculator.getIntegration(covariance);
                 double complexity = Calculator.getComplexity(covariance, integration);
                 System.out.printf(
-                        "%d %d %g %g%n",
+                        "%d,%d,%g,%g%n",
                         ensemble.getAgentId(),
                         neuronIndices.size(),
                         integration,

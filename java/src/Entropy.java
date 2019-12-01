@@ -20,6 +20,7 @@ public class Entropy {
         Calculator calculator = new Calculator();
         try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(new InputStreamReader(System.in))) {
             reader.readArguments(System.out);
+            System.out.println("agent,count,value");
             while (true) {
                 TimeSeriesEnsemble ensemble = reader.readTimeSeriesEnsemble();
                 if (ensemble == null) {
@@ -29,7 +30,7 @@ public class Entropy {
                 for (int neuronIndex : ensemble.getBrain().getNeuronIndices(Brain.Layer.PROCESSING)) {
                     result.add(calculator.getEntropy(ensemble, neuronIndex));
                 }
-                System.out.printf("%d %d %g%n", ensemble.getAgentId(), result.getCount(), result.getSum());
+                System.out.printf("%d,%d,%g%n", ensemble.getAgentId(), result.getCount(), result.getSum());
             }
         }
     }

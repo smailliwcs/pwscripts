@@ -86,6 +86,7 @@ public class CompleteTransferEntropy {
         try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(new InputStreamReader(System.in))) {
             reader.readArguments(System.out);
             arguments.print(System.out);
+            System.out.println("agent,count,value");
             while (true) {
                 TimeSeriesEnsemble ensemble = reader.readTimeSeriesEnsemble();
                 if (ensemble == null) {
@@ -103,7 +104,7 @@ public class CompleteTransferEntropy {
                         break;
                     }
                 }
-                System.out.printf("%d %d %g%n", ensemble.getAgentId(), result.getCount(), result.getSum());
+                System.out.printf("%d,%d,%g%n", ensemble.getAgentId(), result.getCount(), result.getSum());
             }
         }
     }
