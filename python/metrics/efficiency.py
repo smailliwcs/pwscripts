@@ -1,15 +1,15 @@
 import enum
+import statistics
 
 import polyworld as pw
 from brain import Brain
-from utility import *
 from .base import IndividualMetric
 
 
 def get_efficiency(lengths):
     if lengths.vertex_count <= 1:
         return 0.0
-    return mean(1.0 / distance_ij for (i, j), distance_ij in lengths.get_distances() if j != i)
+    return statistics.mean(1.0 / distance_ij for (i, j), distance_ij in lengths.get_distances() if j != i)
 
 
 def get_global_efficiency(lengths):
@@ -17,7 +17,9 @@ def get_global_efficiency(lengths):
 
 
 def get_local_efficiency(lengths):
-    return mean(get_efficiency(lengths.get_neighborhood(vertex)) for vertex in lengths.vertices())
+    if lengths.vertex_count == 0:
+        return 0.0
+    return statistics.mean(get_efficiency(lengths.get_neighborhood(vertex)) for vertex in lengths.vertices())
 
 
 class Efficiency(IndividualMetric):
