@@ -22,15 +22,22 @@ class Metric(abc.ABC):
         parser.add_argument("metric", metavar=cls.__name__)
 
     @classmethod
-    def write(cls, data, file):
+    def write_data(cls, data, file):
         data.to_csv(file, header=True)
 
     @classmethod
-    def read(cls, file):
+    def read_data(cls, file):
         return pd.read_csv(file, index_col=0, squeeze=True)
 
     def __init__(self, **kwargs):
+        self.arguments = kwargs
         self.run = kwargs["run"]
+
+    def write_arguments(self, file):
+        for key, value in self.arguments.items():
+            if key == "run" or key == "metric":
+                continue
+            file.write(f"# {key} = {value}\n")
 
     @abc.abstractmethod
     def _calculate(self):

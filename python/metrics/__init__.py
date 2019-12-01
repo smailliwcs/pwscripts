@@ -8,7 +8,7 @@ def parse_args(args=None):
     import sys
     import textwrap
 
-    metrics = {metric.__name__: metric for metric in [
+    metrics = {metric.__name__: metric for metric in (
         # Degree
         # Density
         Efficiency,
@@ -25,7 +25,7 @@ def parse_args(args=None):
         # Strength
         # SynapseCount
         # Weight
-    ]}
+    )}
     if args is None:
         args = sys.argv[1:]
     wrapper = textwrap.TextWrapper(subsequent_indent="  ")
