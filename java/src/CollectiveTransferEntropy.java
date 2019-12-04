@@ -67,7 +67,7 @@ public class CollectiveTransferEntropy {
         }
 
         public void print(PrintStream out) {
-            out.printf("# embedding = %d%n", embeddingLength);
+            out.printf("# EMBEDDING = %d%n", embeddingLength);
         }
     }
 
@@ -77,7 +77,7 @@ public class CollectiveTransferEntropy {
         try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(new InputStreamReader(System.in))) {
             reader.readArguments(System.out);
             arguments.print(System.out);
-            System.out.println("agent,count,value");
+            System.out.println("agent count value");
             while (true) {
                 TimeSeriesEnsemble ensemble = reader.readTimeSeriesEnsemble();
                 if (ensemble == null) {
@@ -87,7 +87,7 @@ public class CollectiveTransferEntropy {
                 for (int neuronIndex : ensemble.getBrain().getNeuronIndices(Brain.Layer.PROCESSING)) {
                     result.add(calculator.getCollectiveTransferEntropy(ensemble, neuronIndex));
                 }
-                System.out.printf("%d,%d,%g%n", ensemble.getAgentId(), result.getCount(), result.getSum());
+                System.out.printf("%d %d %g%n", ensemble.getAgentId(), result.getCount(), result.getSum());
             }
         }
     }

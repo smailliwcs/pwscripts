@@ -21,7 +21,7 @@ public class TimeSeriesEnsembleReader extends BufferedReader {
             if (line.equals("# END ARGUMENTS")) {
                 break;
             }
-            out.printf("# %s%n", line);
+            out.printf("%s%n", line);
         }
     }
 

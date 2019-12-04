@@ -75,8 +75,8 @@ public class CompleteTransferEntropy {
         }
 
         public void print(PrintStream out) {
-            out.printf("# embedding = %d%n", embeddingLength);
-            out.printf("# synapses = %d%n", synapseCountMax);
+            out.printf("# EMBEDDING = %d%n", embeddingLength);
+            out.printf("# SYNAPSES = %d%n", synapseCountMax);
         }
     }
 
@@ -86,14 +86,16 @@ public class CompleteTransferEntropy {
         try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(new InputStreamReader(System.in))) {
             reader.readArguments(System.out);
             arguments.print(System.out);
-            System.out.println("agent,count,value");
+            System.out.println("agent count value");
             while (true) {
                 TimeSeriesEnsemble ensemble = reader.readTimeSeriesEnsemble();
                 if (ensemble == null) {
                     break;
                 }
                 List<Synapse> synapses = new ArrayList<Synapse>(ensemble.getBrain().getSynapses());
-                Collections.shuffle(synapses);
+                if (synapses.size() > arguments.synapseCountMax) {
+                    Collections.shuffle(synapses);
+                }
                 Result result = new Result();
                 for (Synapse synapse : synapses) {
                     result.add(calculator.getCompleteTransferEntropy(
@@ -104,7 +106,7 @@ public class CompleteTransferEntropy {
                         break;
                     }
                 }
-                System.out.printf("%d,%d,%g%n", ensemble.getAgentId(), result.getCount(), result.getSum());
+                System.out.printf("%d %d %g%n", ensemble.getAgentId(), result.getCount(), result.getSum());
             }
         }
     }

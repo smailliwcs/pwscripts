@@ -80,7 +80,7 @@ public class InfoDynamics {
         }
 
         public void print(PrintStream out) {
-            out.printf("# embedding = %d%n", embeddingLength);
+            out.printf("# EMBEDDING = %d%n", embeddingLength);
         }
     }
 
@@ -96,10 +96,7 @@ public class InfoDynamics {
         }
 
         public String getId(String subset) {
-            if (subset == null) {
-                return id;
-            }
-            return String.format("%s[%s]", id, subset);
+            return String.format("%s[%s]", id, subset == null ? "*" : subset);
         }
     }
 
@@ -113,7 +110,7 @@ public class InfoDynamics {
         try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(new InputStreamReader(System.in))) {
             reader.readArguments(System.out);
             arguments.print(System.out);
-            System.out.println("agent,metric,count,value");
+            System.out.println("agent metric count value");
             while (true) {
                 ensemble = reader.readTimeSeriesEnsemble();
                 if (ensemble == null) {
@@ -129,7 +126,7 @@ public class InfoDynamics {
 
     private static void print(Metric metric, String subset, Result result) {
         System.out.printf(
-                "%d,%s,%d,%g%n",
+                "%d %s %d %g%n",
                 ensemble.getAgentId(),
                 metric.getId(subset),
                 result.getCount(),
