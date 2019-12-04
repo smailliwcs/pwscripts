@@ -16,7 +16,7 @@ public class Entropy {
     }
 
     public static void main(String[] args) throws Exception {
-        assert args.length == 0;
+        new ArgumentParser(args, Entropy.class.getName()).close();
         Calculator calculator = new Calculator();
         try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(new InputStreamReader(System.in))) {
             reader.readArguments(System.out);

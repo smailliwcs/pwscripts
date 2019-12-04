@@ -52,7 +52,7 @@ public class Complexity {
     }
 
     public static void main(String[] args) throws Exception {
-        assert args.length == 0;
+        new ArgumentParser(args, Complexity.class.getName()).close();
         try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(new InputStreamReader(System.in))) {
             reader.readArguments(System.out);
             System.out.println("agent count integration complexity");

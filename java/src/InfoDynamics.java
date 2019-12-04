@@ -45,30 +45,15 @@ public class InfoDynamics {
     }
 
     private static class Arguments {
-        public static Arguments parse(Queue<String> args) {
-            try {
-                boolean useGpu = false;
-                while (!args.isEmpty() && args.peek().startsWith("--")) {
-                    switch (args.remove()) {
-                    case "--use-gpu":
-                        useGpu = true;
-                        break;
-                    default:
-                        assert false;
-                    }
-                }
-                int embeddingLength = Integer.parseInt(args.remove());
-                assert args.isEmpty();
+        public static Arguments parse(String[] args) {
+            try (ArgumentParser parser = new ArgumentParser(args, InfoDynamics.class.getName(), "GPU", "EMBEDDING")) {
+                boolean useGpu = parser.parse(Boolean::parseBoolean);
+                int embeddingLength = parser.parse(
+                        Integer::parseInt,
+                        argument -> argument >= 1,
+                        "Invalid embedding length");
                 return new Arguments(useGpu, embeddingLength);
-            } catch (Throwable e) {
-                printUsage(System.err);
-                System.exit(1);
-                return null;
             }
-        }
-
-        public static void printUsage(PrintStream out) {
-            out.printf("Usage: %s [--use-gpu] EMBEDDING%n", InfoDynamics.class.getSimpleName());
         }
 
         public final boolean useGpu;
@@ -79,8 +64,10 @@ public class InfoDynamics {
             this.embeddingLength = embeddingLength;
         }
 
-        public void print(PrintStream out) {
-            out.printf("# EMBEDDING = %d%n", embeddingLength);
+        public String toString() {
+            StringBuilder result = new StringBuilder();
+            result.append(String.format("# EMBEDDING = %d%n", embeddingLength));
+            return result.toString();
         }
     }
 
@@ -105,11 +92,11 @@ public class InfoDynamics {
     private static Map<Integer, double[]> locals;
 
     public static void main(String[] args) throws Exception {
-        Arguments arguments = Arguments.parse(new LinkedList<String>(Arrays.asList(args)));
+        Arguments arguments = Arguments.parse(args);
         calculator = new Calculator(arguments.useGpu, arguments.embeddingLength);
         try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(new InputStreamReader(System.in))) {
             reader.readArguments(System.out);
-            arguments.print(System.out);
+            System.out.print(arguments);
             System.out.println("agent metric count value");
             while (true) {
                 ensemble = reader.readTimeSeriesEnsemble();

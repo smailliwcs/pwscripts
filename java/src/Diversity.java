@@ -36,21 +36,14 @@ public class Diversity {
     }
 
     private static class Arguments {
-        public static Arguments parse(Queue<String> args) {
-            try {
-                int groupingParameter = Integer.parseInt(args.remove());
-                assert groupingParameter >= 0 && groupingParameter < 8;
-                assert args.isEmpty();
+        public static Arguments parse(String[] args) {
+            try (ArgumentParser parser = new ArgumentParser(args, Diversity.class.getName(), "GROUPING")) {
+                int groupingParameter = parser.parse(
+                        Integer::parseInt,
+                        argument -> argument >= 0 && argument <= 7,
+                        "Invalid grouping parameter (choose from [0, 7])");
                 return new Arguments(groupingParameter);
-            } catch (Throwable e) {
-                printUsage(System.err);
-                System.exit(1);
-                return null;
             }
-        }
-
-        public static void printUsage(PrintStream out) {
-            out.printf("Usage: %s GROUPING%n", Diversity.class.getSimpleName());
         }
 
         public final int groupingParameter;
@@ -59,14 +52,16 @@ public class Diversity {
             this.groupingParameter = groupingParameter;
         }
 
-        public void print(PrintStream out) {
-            out.printf("# GROUPING = %d%n", groupingParameter);
+        public String toString() {
+            StringBuilder result = new StringBuilder();
+            result.append(String.format("# GROUPING = %d%n", groupingParameter));
+            return result.toString();
         }
     }
 
     public static void main(String[] args) throws Exception {
-        Arguments arguments = Arguments.parse(new LinkedList<String>(Arrays.asList(args)));
-        arguments.print(System.out);
+        Arguments arguments = Arguments.parse(args);
+        System.out.print(arguments);
         System.out.println("time value");
         try (GenomePoolReader reader = new GenomePoolReader(new InputStreamReader(System.in))) {
             Calculator calculator = new Calculator(arguments.groupingParameter, reader.readSize());
