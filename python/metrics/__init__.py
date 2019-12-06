@@ -36,8 +36,8 @@ def parse_args(args=None):
         parser.add_argument("run", metavar="RUN")
         parser.add_argument("metric", metavar="METRIC")
         parser.add_argument("option", metavar="OPTION", nargs="*")
-        parser.print_help()
-        raise SystemExit(1)
+        parser.parse_args(args)
+        return None
     metric = metrics[metric_name]
     metric.add_arguments(parser)
     return metric(**vars(parser.parse_args(args)))

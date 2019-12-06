@@ -1,5 +1,6 @@
 import abc
 import argparse
+import math
 
 import pandas as pd
 
@@ -23,21 +24,18 @@ class Metric(abc.ABC):
 
     @classmethod
     def write_data(cls, data, file):
-        data.to_csv(file, header=True)
+        data.to_csv(file, sep=" ", na_rep=str(math.nan), header=True)
 
     @classmethod
     def read_data(cls, file):
-        return pd.read_csv(file, index_col=0, squeeze=True)
+        return pd.read_csv(file, sep=" ", index_col=0, squeeze=True)
 
     def __init__(self, **kwargs):
         self.arguments = kwargs
         self.run = kwargs["run"]
 
     def write_arguments(self, file):
-        for key, value in self.arguments.items():
-            if key == "run" or key == "metric":
-                continue
-            file.write(f"# {key} = {value}\n")
+        pass
 
     @abc.abstractmethod
     def _calculate(self):

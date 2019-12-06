@@ -128,6 +128,9 @@ class Modularity(IndividualMetric):
         super().__init__(**kwargs)
         self.stage = pw.Stage(kwargs["stage"])
 
+    def write_arguments(self, file):
+        file.write(f"# STAGE = {self.stage.value}\n")
+
     def _get_value(self, agent):
         brain = Brain.read(self.run, agent, self.stage)
         if brain is None:

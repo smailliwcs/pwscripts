@@ -38,6 +38,10 @@ class Efficiency(IndividualMetric):
         self.scope = Efficiency.Scope(kwargs["scope"])
         self.stage = pw.Stage(kwargs["stage"])
 
+    def write_arguments(self, file):
+        file.write(f"# SCOPE = {self.scope.value}\n")
+        file.write(f"# STAGE = {self.stage.value}\n")
+
     def _get_value(self, agent):
         brain = Brain.read(self.run, agent, self.stage)
         if brain is None:
