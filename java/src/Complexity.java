@@ -62,7 +62,7 @@ public class Complexity {
         }
         try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(new InputStreamReader(System.in))) {
             reader.readArguments(System.out);
-            System.out.println("agent count integration complexity");
+            System.out.println("agent count value");
             while (true) {
                 TimeSeriesEnsemble ensemble = reader.readTimeSeriesEnsemble();
                 if (ensemble == null) {
@@ -74,12 +74,7 @@ public class Complexity {
                 double[][] covariance = MatrixUtils.covarianceMatrix(observations);
                 double integration = Calculator.getIntegration(covariance);
                 double complexity = Calculator.getComplexity(covariance, integration);
-                System.out.printf(
-                        "%d %d %g %g%n",
-                        ensemble.getAgentId(),
-                        neuronIndices.size(),
-                        integration,
-                        complexity);
+                System.out.printf("%d %d %g%n", ensemble.getAgentId(), neuronIndices.size(), complexity);
             }
         }
     }
