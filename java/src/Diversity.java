@@ -36,12 +36,20 @@ public class Diversity {
     }
 
     private static class Arguments {
+        private static String getUsage() {
+            StringBuilder usage = new StringBuilder();
+            usage.append("Usage: %s GROUPING%n");
+            usage.append("%n");
+            usage.append("  GROUPING  Allele grouping parameter%n");
+            return usage.toString();
+        }
+
         public static Arguments parse(String[] args) {
-            try (ArgumentParser parser = new ArgumentParser(args, Diversity.class.getName(), "GROUPING")) {
+            try (ArgumentParser parser = new ArgumentParser(getUsage(), Diversity.class.getName(), args)) {
                 int groupingParameter = parser.parse(
                         Integer::parseInt,
                         argument -> argument >= 0 && argument <= 7,
-                        "Invalid grouping parameter (choose from [0, 7])");
+                        "Invalid allele grouping parameter (choose from [0, 7])");
                 return new Arguments(groupingParameter);
             }
         }

@@ -45,13 +45,22 @@ public class InfoDynamics {
     }
 
     private static class Arguments {
+        private static String getUsage() {
+            StringBuilder usage = new StringBuilder();
+            usage.append("Usage: %s GPU EMBEDDING%n");
+            usage.append("%n");
+            usage.append("  GPU        Use GPU acceleration%n");
+            usage.append("  EMBEDDING  Time series embedding length%n");
+            return usage.toString();
+        }
+
         public static Arguments parse(String[] args) {
-            try (ArgumentParser parser = new ArgumentParser(args, InfoDynamics.class.getName(), "GPU", "EMBEDDING")) {
+            try (ArgumentParser parser = new ArgumentParser(getUsage(), InfoDynamics.class.getName(), args)) {
                 boolean useGpu = parser.parse(Boolean::parseBoolean);
                 int embeddingLength = parser.parse(
                         Integer::parseInt,
                         argument -> argument >= 1,
-                        "Invalid embedding length");
+                        "Invalid time series embedding length");
                 return new Arguments(useGpu, embeddingLength);
             }
         }

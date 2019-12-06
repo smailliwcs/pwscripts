@@ -51,8 +51,15 @@ public class Complexity {
         }
     }
 
+    private static String getUsage() {
+        StringBuilder usage = new StringBuilder();
+        usage.append("Usage: %s%n");
+        return usage.toString();
+    }
+
     public static void main(String[] args) throws Exception {
-        new ArgumentParser(args, Complexity.class.getName()).close();
+        try (ArgumentParser parser = new ArgumentParser(getUsage(), Complexity.class.getName(), args)) {
+        }
         try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(new InputStreamReader(System.in))) {
             reader.readArguments(System.out);
             System.out.println("agent count integration complexity");

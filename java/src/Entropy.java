@@ -15,8 +15,15 @@ public class Entropy {
         }
     }
 
+    private static String getUsage() {
+        StringBuilder usage = new StringBuilder();
+        usage.append("Usage: %s%n");
+        return usage.toString();
+    }
+
     public static void main(String[] args) throws Exception {
-        new ArgumentParser(args, Entropy.class.getName()).close();
+        try (ArgumentParser parser = new ArgumentParser(getUsage(), Entropy.class.getName(), args)) {
+        }
         Calculator calculator = new Calculator();
         try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(new InputStreamReader(System.in))) {
             reader.readArguments(System.out);
