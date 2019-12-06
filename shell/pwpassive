@@ -1,0 +1,42 @@
+#!/usr/bin/env sh
+
+usage() {
+    echo "Usage: $0 PASSIVE DRIVEN..."
+}
+
+fail() {
+    if [ -z "$1" ]; then
+        usage >&2
+    else
+        echo "$0: $1" >&2
+    fi
+    exit 1
+}
+
+if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    usage
+    exit 0
+fi
+[ $# -ge 2 ] || fail
+passive="$1"
+[ ! -e "$passive" ] || fail "$passive: Already exists"
+shift
+for driven in "$@"; do
+    [ -f "$driven/BirthsDeaths.log" ] || fail "$driven: Not a Polyworld run"
+done
+([ -f Polyworld ] && [ -x Polyworld ]) || fail "Polyworld not found"
+mkdir -p "$passive"
+for driven in "$@"; do
+    cp "$driven/BirthsDeaths.log" LOCKSTEP-BirthsDeaths.log
+    ./Polyworld "$driven/normalized.wf" --PassiveLockstep True || fail "Polyworld error"
+    rm LOCKSTEP-BirthsDeaths.log
+    if [ $# -gt 1 ]; then
+        output="$passive/$(basename "$driven")"
+        if [ -e "$output" ]; then
+            output="$(mktemp -d -p "$passive" run_XXXXXX)"
+        fi
+        mv -T run "$output"
+    else
+        mv -T run "$passive"
+    fi
+done

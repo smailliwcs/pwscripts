@@ -1,0 +1,60 @@
+#!/usr/bin/env sh
+
+usage() {
+    echo "Usage: $0 [--complete] WORLDFILE COUNT OUTPUT [-- [OPTION]...]"
+}
+
+fail() {
+    if [ -z "$1" ]; then
+        usage >&2
+    else
+        echo "$0: $1" >&2
+    fi
+    exit 1
+}
+
+if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    usage
+    exit 0
+fi
+complete=
+while [ "$(expr substr "$1" 1 1)" = "-" ]; do
+    case "$1" in
+        --complete)
+            complete=true
+            shift
+            ;;
+        *)
+            fail "$1: Unrecognized option"
+            ;;
+    esac
+done
+[ $# -ge 3 ] || fail
+worldfile="$1"
+[ -f "$worldfile" ] || fail "$worldfile: Not found"
+count="$2"
+[ "$count" -ge 1 ] || fail "$count: Expected positive integer"
+output="$3"
+[ ! -e "$output" ] || fail "$output: Already exists"
+shift 3
+if [ "$1" = "--" ]; then
+    shift
+else
+    [ $# -eq 0 ] || fail
+fi
+([ -f Polyworld ] && [ -x Polyworld ]) || fail "Polyworld not found"
+mkdir -p "$output"
+for index in $(seq $count); do
+    while true; do
+        ./Polyworld "$worldfile" --InitSeed "$(date +%s)" "$@" || fail "Polyworld error"
+        if [ ! $complete ] || [ "$(cat run/endReason.txt)" = "MaxSteps" ]; then
+            break
+        fi
+        rm -rf run
+    done
+    if [ $count -gt 1 ]; then
+        mv -T run "$(printf "$output/run_%0${#count}d" $index)"
+    else
+        mv -T run "$output"
+    fi
+done

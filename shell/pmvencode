@@ -1,0 +1,60 @@
+#!/usr/bin/env sh
+
+usage() {
+    echo "Usage: $0 INPUT OUTPUT WIDTH HEIGHT [-- [OPTION]...]"
+}
+
+fail() {
+    if [ -z "$1" ]; then
+        usage >&2
+    else
+        echo "$0: $1" >&2
+    fi
+    exit 1
+}
+
+parse() {
+    option="$1"
+    default="$2"
+    shift 2
+    while [ $# -gt 0 ]; do
+        if [ "$1" = "$option" ]; then
+            echo "$2"
+            return
+        fi
+        shift
+    done
+    echo "$default"
+}
+
+if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    usage
+    exit 0
+fi
+[ $# -ge 4 ] || fail
+input="$1"
+[ -f "$input" ] || fail "$input: Not found"
+output="$2"
+[ ! -e "$output" ] || fail "$output: Already exists"
+width="$3"
+[ "$width" -ge 1 ] || fail "$width: Expected positive integer"
+height="$4"
+[ "$height" -ge 1 ] || fail "$height: Expected positive integer"
+shift 4
+if [ "$1" = "--" ]; then
+    shift
+else
+    [ $# -eq 0 ] || fail
+fi
+start="$(parse -s 1 "$@")"
+[ "$start" -ge 1 ] || fail "$start: Expected positive integer"
+delta="$(parse -d 1 "$@")"
+[ "$delta" -ge 1 ] || fail "$delta: Expected positive integer"
+filter="vflip,drawtext=x=10:y=10:fontcolor=white:text='%{eif\:$start+n*$delta\:d}'"
+([ -f bin/PwMoviePlayer ] && [ -x bin/PwMoviePlayer ]) || fail "PwMoviePlayer not found"
+command -v ffmpeg > /dev/null || fail "ffmpeg not found"
+./bin/PwMoviePlayer -f "$input" "$@" -w | \
+ffmpeg \
+    -f rawvideo -pix_fmt rgba -s "${width}x${height}" -r 60 -i pipe:0 \
+    -c:v libx264 -profile:v high -crf 18 -coder 1 -pix_fmt yuv420p -movflags +faststart -g 30 -bf 2 -filter:v "$filter" \
+    "$output"
