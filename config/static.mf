@@ -1,0 +1,24 @@
+@defaults gui
+
+CameraControllerSettings [
+    {
+        Name "Main"
+        Mode Static
+    },
+    {
+        Name "Overhead"
+        Mode AgentTracking
+        AgentTracking {
+            AgentTracker "Fittest"
+            Perspective Overhead
+        }
+    },
+    {
+        Name "POV"
+        Mode AgentTracking
+        AgentTracking {
+            AgentTracker "Fittest"
+            Perspective POV
+        }
+    }
+]

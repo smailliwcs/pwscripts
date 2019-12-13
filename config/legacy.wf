@@ -1,0 +1,48 @@
+@version 2
+@defaults legacy
+
+# ----------
+# Simulation
+# ----------
+MaxSteps 16000
+StaticTimestepGeometry True
+
+# ----------
+# Population
+# ----------
+ApplyLowPopulationAdvantage True
+EndOnPopulationCrash True
+NumDepletionSteps 125
+
+# ----------
+# Energetics
+# ----------
+AgentsAreFood False
+EnergyUseNeurons 0.0
+EnergyUseSynapses 0.0
+MinMateEnergyFraction 0.5
+
+# ------------
+# Neural Model
+# ------------
+MinExcitatoryNeuronsPerGroup 1
+MinInhibitoryNeuronsPerGroup 1
+
+# -------------
+# Genetic Model
+# -------------
+SeedAgents InitAgents
+
+# ---------
+# Recording
+# ---------
+RecordAgentEnergy True
+RecordBirthsDeaths True
+RecordBrainAnatomy True
+RecordBrainFunction True
+RecordFoodConsumption True
+RecordFoodEnergy True
+RecordGenomes True
+RecordGitRevision True
+RecordPopulation True
+RecordSynapses True

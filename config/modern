@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+
+worldfile="$(mktemp --suffix=.wf)"
+m4 "$@" "$(dirname "$0")/modern.m4" > "$worldfile"
+echo "$worldfile"
