@@ -2,14 +2,17 @@ import argparse
 import sys
 import textwrap
 
+from .density import Density
 from .efficiency import Efficiency
 from .modularity import Modularity
+from .neuron_count import NeuronCount
+from .synapse_count import SynapseCount
+from .weight import Weight
 
 
 def parse_args(args=None):
     metrics = {metric.__name__: metric for metric in (
-        # Degree
-        # Density
+        Density,
         Efficiency,
         # EventCount
         # FoodConsumption
@@ -17,13 +20,11 @@ def parse_args(args=None):
         # Gene
         # LearningRate
         # Lifespan
-        Modularity
-        # NeuronCount
-        # OffspringCount
+        Modularity,
+        NeuronCount,
         # Population
-        # Strength
-        # SynapseCount
-        # Weight
+        SynapseCount,
+        Weight
     )}
     if args is None:
         args = sys.argv[1:]

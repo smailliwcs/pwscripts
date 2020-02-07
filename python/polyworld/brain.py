@@ -1,21 +1,14 @@
-import enum
 import re
 
 from graph import WeightGraph
 from . import paths
 from . import utility
+from .layer import Layer
 from .stage import Stage
 from .synapse import Synapse
 
 
 class Brain:
-    class Layer(enum.Enum):
-        ALL = "all"
-        INPUT = "input"
-        PROCESSING = "processing"
-        OUTPUT = "output"
-        INTERNAL = "internal"
-
     class Dimensions:
         REGEX = re.compile(
             r"^synapses (?P<agent>\d+) "
@@ -26,46 +19,44 @@ class Brain:
             r"numoutputneurons=(?P<output_neuron_count>\d+)$")
 
         @classmethod
-        def read(cls, run, agent, stage=Stage.BIRTH):
-            with utility.open_file(paths.synapses(run, agent, stage)) as f:
-                return cls.parse(f.readline(), agent)
-
-        @classmethod
         def parse(cls, header, agent):
             match = cls.REGEX.match(header)
             assert int(match.group("agent")) == agent
             neuron_count = int(match.group("neuron_count"))
             input_neuron_count = int(match.group("input_neuron_count"))
             output_neuron_count = int(match.group("output_neuron_count"))
-            synapse_count = int(match.group("synapse_count"))
             weight_max = float(match.group("weight_max"))
-            return cls(neuron_count, input_neuron_count, output_neuron_count, synapse_count, weight_max)
+            return cls(neuron_count, input_neuron_count, output_neuron_count, weight_max)
 
-        def __init__(self, neuron_count, input_neuron_count, output_neuron_count, synapse_count, weight_max):
+        @classmethod
+        def read(cls, run, agent, stage=Stage.BIRTH):
+            with utility.open_file(paths.synapses(run, agent, stage)) as f:
+                return cls.parse(f.readline(), agent)
+
+        def __init__(self, neuron_count, input_neuron_count, output_neuron_count, weight_max):
             self.neuron_count = neuron_count
             self.input_neuron_count = input_neuron_count
             self.output_neuron_count = output_neuron_count
-            self.synapse_count = synapse_count
             self.weight_max = weight_max
 
         def get_neurons(self, layer):
-            if layer == Brain.Layer.ALL:
+            if layer == Layer.ALL:
                 return range(self.neuron_count)
-            if layer == Brain.Layer.INPUT:
+            if layer == Layer.INPUT:
                 return range(self.input_neuron_count)
-            if layer == Brain.Layer.PROCESSING:
+            if layer == Layer.PROCESSING:
                 return range(self.input_neuron_count, self.neuron_count)
-            if layer == Brain.Layer.OUTPUT:
+            if layer == Layer.OUTPUT:
                 return range(self.input_neuron_count, self.input_neuron_count + self.output_neuron_count)
-            if layer == Brain.Layer.INTERNAL:
+            if layer == Layer.INTERNAL:
                 return range(self.input_neuron_count + self.output_neuron_count, self.neuron_count)
             raise ValueError
 
     @classmethod
-    def read(cls, run, agent, stage):
+    def read(cls, run, agent, stage=Stage.BIRTH):
         with utility.open_file(paths.synapses(run, agent, stage)) as f:
             dimensions = cls.Dimensions.parse(f.readline(), agent)
-            input_neurons = dimensions.get_neurons(cls.Layer.INPUT)
+            input_neurons = dimensions.get_neurons(Layer.INPUT)
             brain = cls(dimensions)
             for line in f:
                 synapse = Synapse.parse(line)
@@ -77,3 +68,15 @@ class Brain:
     def __init__(self, dimensions):
         self.dimensions = dimensions
         self.weights = WeightGraph(range(dimensions.neuron_count))
+
+    @property
+    def neuron_count(self):
+        return self.dimensions.neuron_count
+
+    @property
+    def synapse_count(self):
+        return self.weights.edge_count
+
+    @property
+    def synapse_count_max(self):
+        return self.dimensions.neuron_count * (self.dimensions.neuron_count - self.dimensions.input_neuron_count - 1)

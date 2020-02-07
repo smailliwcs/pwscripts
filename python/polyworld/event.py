@@ -22,13 +22,6 @@ class Event:
             return self in {self.BIRTH, self.VIRTUAL}
 
     @classmethod
-    def read(cls, run):
-        with open(paths.events(run)) as f:
-            f.readline()
-            for line in f:
-                yield cls.parse(line)
-
-    @classmethod
     def parse(cls, line):
         chunks = line.split()
         time = int(chunks[0])
@@ -41,6 +34,13 @@ class Event:
                 int(chunks[4])
             }
         return cls(time, type_, agent, parents)
+
+    @classmethod
+    def read(cls, run):
+        with open(paths.events(run)) as f:
+            f.readline()
+            for line in f:
+                yield cls.parse(line)
 
     def __init__(self, time, type_, agent, parents):
         self.time = time

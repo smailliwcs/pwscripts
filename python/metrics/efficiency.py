@@ -29,12 +29,12 @@ class Efficiency(IndividualMetric):
     @classmethod
     def add_arguments(cls, parser):
         super().add_arguments(parser)
-        parser.add_argument("scope", metavar="SCOPE", choices=tuple(scope.value for scope in Efficiency.Scope))
+        parser.add_argument("scope", metavar="SCOPE", choices=tuple(scope.value for scope in cls.Scope))
         parser.add_argument("stage", metavar="STAGE", choices=tuple(stage.value for stage in pw.Stage))
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.scope = Efficiency.Scope(kwargs["scope"])
+        self.scope = self.Scope(kwargs["scope"])
         self.stage = pw.Stage(kwargs["stage"])
 
     def write_arguments(self, file):
@@ -47,8 +47,8 @@ class Efficiency(IndividualMetric):
         except FileNotFoundError:
             return None
         lengths = brain.weights.get_lengths()
-        if self.scope == Efficiency.Scope.LOCAL:
+        if self.scope == self.Scope.LOCAL:
             return get_local_efficiency(lengths)
-        if self.scope == Efficiency.Scope.GLOBAL:
+        if self.scope == self.Scope.GLOBAL:
             return get_global_efficiency(lengths)
         raise ValueError

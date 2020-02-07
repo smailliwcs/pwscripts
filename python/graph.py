@@ -44,6 +44,9 @@ class Graph:
     def edges(self):
         return iter(self._edges.items())
 
+    def values(self):
+        return iter(self._edges.values())
+
     def map(self, function, cls=None):
         if cls is None:
             cls = type(self)
