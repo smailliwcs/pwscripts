@@ -4,24 +4,24 @@ import operator
 
 
 class Graph:
-    _missing = math.nan
-    _is_missing = math.isnan
+    missing = math.nan
+    is_missing = math.isnan
 
     def __init__(self, vertices):
         self._vertices = set(vertices)
         self._edges = {}
-        self._out_edges = self._get_edge_dict()
-        self._in_edges = self._get_edge_dict()
+        self._out_edges = {vertex: {} for vertex in self._vertices}
+        self._in_edges = {vertex: {} for vertex in self._vertices}
 
-    def _get_edge_dict(self):
-        return {vertex: {} for vertex in self._vertices}
+    def __abs__(self):
+        return self.map(abs)
 
     def __getitem__(self, key):
-        return self._edges.get(key, self._missing)
+        return self._edges.get(key, self.missing)
 
     def __setitem__(self, key, value):
         i, j = key
-        if self._is_missing(value):
+        if self.is_missing(value):
             self._edges.pop(key, None)
             self._out_edges[i].pop(j, None)
             self._in_edges[j].pop(i, None)
@@ -44,6 +44,14 @@ class Graph:
     def edges(self):
         return iter(self._edges.items())
 
+    def map(self, function, cls=None):
+        if cls is None:
+            cls = type(self)
+        graph = cls(self._vertices)
+        for key, value in self._edges.items():
+            graph[key] = function(value)
+        return graph
+
     def get_neighbors(self, vertex):
         neighbors = set()
         neighbors.update(self._out_edges[vertex])
@@ -55,37 +63,28 @@ class Graph:
         neighbors = self.get_neighbors(vertex)
         neighborhood = type(self)(neighbors)
         for i in neighbors:
-            for j, value_ij in self._out_edges[i].items():
+            for j, value in self._out_edges[i].items():
                 if j not in neighbors:
                     continue
-                neighborhood[i, j] = value_ij
+                neighborhood[i, j] = value
         return neighborhood
-
-    def _map(self, cls, function):
-        graph = cls(self._vertices)
-        for key, value in self._edges.items():
-            graph[key] = function(value)
-        return graph
 
 
 class WeightGraph(Graph):
-    _missing = 0.0
-    _is_missing = functools.partial(operator.eq, _missing)
+    missing = 0.0
+    is_missing = functools.partial(operator.eq, missing)
 
     @classmethod
     def get_length(cls, weight):
         return 1.0 / abs(weight)
 
-    def __abs__(self):
-        return self._map(type(self), abs)
-
     def get_lengths(self):
-        return self._map(LengthGraph, self.get_length)
+        return self.map(self.get_length, LengthGraph)
 
 
 class LengthGraph(Graph):
-    _missing = math.inf
-    _is_missing = functools.partial(operator.eq, _missing)
+    missing = math.inf
+    is_missing = functools.partial(operator.eq, missing)
 
     def __setitem__(self, key, value):
         assert value > 0.0

@@ -3,7 +3,6 @@ import itertools
 import random
 
 import polyworld as pw
-from brain import Brain
 from graph import WeightGraph
 from .base import IndividualMetric
 
@@ -15,10 +14,10 @@ class Partition:
         self.communities_by_vertex = None
         self.vertices_by_community = None
         self.edge_modularities = None
-        self._initialize(weights)
-        self.modularity = sum(self.edge_modularities[edge] for edge in self._get_community_edges())
+        self.initialize(weights)
+        self.modularity = sum(self.edge_modularities[edge] for edge in self.get_community_edges())
 
-    def _initialize(self, weights):
+    def initialize(self, weights):
         self.weights = weights
         self.neighbors = {vertex: [] for vertex in weights.vertices()}
         self.communities_by_vertex = {vertex: vertex for vertex in weights.vertices()}
@@ -40,22 +39,22 @@ class Partition:
                 expected_weight = out_strength_i * in_strength_j / strength
                 self.edge_modularities[i, j] = (actual_weight - expected_weight) / strength
 
-    def _get_community_edges(self):
+    def get_community_edges(self):
         for community, vertices in self.vertices_by_community.items():
             for edge in itertools.product(vertices, repeat=2):
                 yield edge
 
-    def _get_community_neighbors(self, vertex, community):
-        neighbors = set(self.vertices_by_community[community])
+    def get_community_neighbors(self, vertex, community):
+        neighbors = self.vertices_by_community[community].copy()
         neighbors.discard(vertex)
         return neighbors
 
-    def _get_modularity_change(self, vertex, community):
+    def get_modularity_change(self, vertex, community):
         i = vertex
-        js = self._get_community_neighbors(vertex, community)
+        js = self.get_community_neighbors(vertex, community)
         return sum(self.edge_modularities[i, j] + self.edge_modularities[j, i] for j in js)
 
-    def _optimize_once(self):
+    def optimize_once(self):
         changed = False
         vertices = list(self.weights.vertices())
         random.shuffle(vertices)
@@ -66,9 +65,9 @@ class Partition:
             if not communities_new:
                 continue
             changes = {}
-            removal_change = self._get_modularity_change(vertex, community_old)
+            removal_change = self.get_modularity_change(vertex, community_old)
             for community_new in communities_new:
-                addition_change = self._get_modularity_change(vertex, community_new)
+                addition_change = self.get_modularity_change(vertex, community_new)
                 changes[community_new] = addition_change - removal_change
             change_max = max(changes.values())
             if change_max <= 0.0:
@@ -87,21 +86,21 @@ class Partition:
 
     def optimize(self):
         changed = False
-        while self._optimize_once():
+        while self.optimize_once():
             changed = True
         return changed
 
     def combine(self):
         weights = WeightGraph(set(self.vertices_by_community))
-        for (i, j), weight_ij in self.weights.edges():
-            weights[self.communities_by_vertex[i], self.communities_by_vertex[j]] += weight_ij
-        self._initialize(weights)
+        for (i, j), weight in self.weights.edges():
+            weights[self.communities_by_vertex[i], self.communities_by_vertex[j]] += weight
+        self.initialize(weights)
 
 
-_THRESHOLD = 1e-6
+THRESHOLD = 1e-6
 
 
-def get_partition(weights, threshold=_THRESHOLD):
+def get_partition(weights, threshold=THRESHOLD):
     if weights.vertex_count <= 1:
         return 0.0
     partition = Partition(abs(weights))
@@ -114,7 +113,7 @@ def get_partition(weights, threshold=_THRESHOLD):
     return partition
 
 
-def get_modularity(weights, threshold=_THRESHOLD):
+def get_modularity(weights, threshold=THRESHOLD):
     return get_partition(weights, threshold).modularity
 
 
@@ -132,7 +131,8 @@ class Modularity(IndividualMetric):
         file.write(f"# STAGE = {self.stage.value}\n")
 
     def _get_value(self, agent):
-        brain = Brain.read(self.run, agent, self.stage)
-        if brain is None:
+        try:
+            brain = pw.Brain.read(self.run, agent, self.stage)
+        except FileNotFoundError:
             return None
         return get_modularity(brain.weights)

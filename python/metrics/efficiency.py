@@ -2,14 +2,13 @@ import enum
 import statistics
 
 import polyworld as pw
-from brain import Brain
 from .base import IndividualMetric
 
 
 def get_efficiency(lengths):
     if lengths.vertex_count <= 1:
         return 0.0
-    return statistics.mean(1.0 / distance_ij for (i, j), distance_ij in lengths.get_distances() if j != i)
+    return statistics.mean(1.0 / distance for (i, j), distance in lengths.get_distances() if j != i)
 
 
 def get_global_efficiency(lengths):
@@ -43,13 +42,13 @@ class Efficiency(IndividualMetric):
         file.write(f"# STAGE = {self.stage.value}\n")
 
     def _get_value(self, agent):
-        brain = Brain.read(self.run, agent, self.stage)
-        if brain is None:
+        try:
+            brain = pw.Brain.read(self.run, agent, self.stage)
+        except FileNotFoundError:
             return None
         lengths = brain.weights.get_lengths()
         if self.scope == Efficiency.Scope.LOCAL:
             return get_local_efficiency(lengths)
-        elif self.scope == Efficiency.Scope.GLOBAL:
+        if self.scope == Efficiency.Scope.GLOBAL:
             return get_global_efficiency(lengths)
-        else:
-            raise ValueError
+        raise ValueError

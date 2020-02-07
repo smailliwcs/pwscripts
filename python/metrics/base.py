@@ -8,18 +8,18 @@ import polyworld as pw
 
 
 class Metric(abc.ABC):
-    _index_label = None
-    _value_label = "value"
+    index_label = None
+    value_label = "value"
 
     @classmethod
-    def _parse_run_arg(cls, arg):
+    def parse_run_arg(cls, arg):
         if not pw.run_exists(arg):
             raise argparse.ArgumentTypeError(f"not a Polyworld run: '{arg}'")
         return arg
 
     @classmethod
     def add_arguments(cls, parser):
-        parser.add_argument("run", metavar="RUN", type=cls._parse_run_arg)
+        parser.add_argument("run", metavar="RUN", type=cls.parse_run_arg)
         parser.add_argument("metric", metavar=cls.__name__)
 
     @classmethod
@@ -43,12 +43,12 @@ class Metric(abc.ABC):
 
     def calculate(self):
         indices, values = self._calculate()
-        index = pd.Index(indices, name=self._index_label)
-        return pd.Series(values, index, name=self._value_label)
+        index = pd.Index(indices, name=self.index_label)
+        return pd.Series(values, index, name=self.value_label)
 
 
 class PopulationMetric(Metric, abc.ABC):
-    _index_label = "time"
+    index_label = "time"
 
 
 class IndividualMetric(Metric, abc.ABC):
@@ -68,8 +68,8 @@ class IndividualMetric(Metric, abc.ABC):
                 values.append(self.function(self.data.loc[agents]))
             return times, values
 
-    _index_label = "agent"
-    _aggregator = "mean"
+    index_label = "agent"
+    aggregator = "mean"
 
     @abc.abstractmethod
     def _get_value(self, agent):
@@ -84,5 +84,5 @@ class IndividualMetric(Metric, abc.ABC):
         if data is None:
             data = self.calculate()
         if function is None:
-            function = self._aggregator
+            function = self.aggregator
         return self.Aggregator(self.run, data, function).calculate()
