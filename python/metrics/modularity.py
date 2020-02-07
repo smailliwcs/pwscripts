@@ -70,7 +70,7 @@ class Partition:
                 addition_change = self.get_modularity_change(vertex, community_new)
                 changes[community_new] = addition_change - removal_change
             change_max = max(changes.values())
-            if change_max <= 0.0:
+            if change_max <= 0:
                 continue
             communities_max = tuple(community for community, change in changes.items() if change == change_max)
             community_max = random.choice(communities_max)

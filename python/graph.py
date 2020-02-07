@@ -76,7 +76,7 @@ class WeightGraph(Graph):
 
     @classmethod
     def get_length(cls, weight):
-        return 1.0 / abs(weight)
+        return 1 / abs(weight)
 
     def get_lengths(self):
         return self.map(self.get_length, LengthGraph)
@@ -87,7 +87,7 @@ class LengthGraph(Graph):
     is_missing = functools.partial(operator.eq, missing)
 
     def __setitem__(self, key, value):
-        assert value > 0.0
+        assert value > 0
         super().__setitem__(key, value)
 
     def get_distances(self):

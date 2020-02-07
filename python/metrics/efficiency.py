@@ -8,7 +8,7 @@ from .base import IndividualMetric
 def get_efficiency(lengths):
     if lengths.vertex_count <= 1:
         return 0.0
-    return statistics.mean(1.0 / distance for (i, j), distance in lengths.get_distances() if j != i)
+    return statistics.mean(1 / distance for (i, j), distance in lengths.get_distances() if j != i)
 
 
 def get_global_efficiency(lengths):
