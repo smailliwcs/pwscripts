@@ -4,8 +4,14 @@ import textwrap
 
 from .density import Density
 from .efficiency import Efficiency
+from .event_count import EventCount
+from .food_consumption import FoodConsumption
+from .food_energy import FoodEnergy
+from .gene import Gene
+from .lifespan import Lifespan
 from .modularity import Modularity
 from .neuron_count import NeuronCount
+from .population import Population
 from .synapse_count import SynapseCount
 from .weight import Weight
 
@@ -14,15 +20,14 @@ def parse_args(args=None):
     metrics = {metric.__name__: metric for metric in (
         Density,
         Efficiency,
-        # EventCount
-        # FoodConsumption
-        # FoodEnergy
-        # Gene
-        # LearningRate
-        # Lifespan
+        EventCount,
+        FoodConsumption,
+        FoodEnergy,
+        Gene,
+        Lifespan,
         Modularity,
         NeuronCount,
-        # Population
+        Population,
         SynapseCount,
         Weight
     )}

@@ -37,7 +37,7 @@ class Event:
 
     @classmethod
     def read(cls, run):
-        with open(paths.events(run)) as f:
+        with utility.open(paths.events(run)) as f:
             f.readline()
             for line in f:
                 yield cls.parse(line)

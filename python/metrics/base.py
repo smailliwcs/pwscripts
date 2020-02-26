@@ -1,10 +1,24 @@
 import abc
 import argparse
 import math
+import re
 
 import pandas as pd
 
 import polyworld as pw
+
+
+def parse_run_arg(arg):
+    if not pw.run_exists(arg):
+        raise argparse.ArgumentTypeError(f"not a Polyworld run: '{arg}'")
+    return arg
+
+
+def parse_regex_arg(arg):
+    try:
+        return re.compile(arg)
+    except re.error as err:
+        raise argparse.ArgumentTypeError(err.msg)
 
 
 class Metric(abc.ABC):
@@ -12,14 +26,8 @@ class Metric(abc.ABC):
     value_label = "value"
 
     @classmethod
-    def parse_run_arg(cls, arg):
-        if not pw.run_exists(arg):
-            raise argparse.ArgumentTypeError(f"not a Polyworld run: '{arg}'")
-        return arg
-
-    @classmethod
     def add_arguments(cls, parser):
-        parser.add_argument("run", metavar="RUN", type=cls.parse_run_arg)
+        parser.add_argument("run", metavar="RUN", type=parse_run_arg)
         parser.add_argument("metric", metavar=cls.__name__)
 
     @classmethod
