@@ -127,12 +127,12 @@ class Modularity(IndividualMetric):
         super().__init__(**kwargs)
         self.stage = pw.Stage(kwargs["stage"])
 
-    def write_arguments(self, file):
-        file.write(f"# STAGE = {self.stage.value}\n")
-
     def _get_value(self, agent):
         try:
             brain = pw.Brain.read(self.run, agent, self.stage)
         except FileNotFoundError:
             return None
         return get_modularity(brain.weights)
+
+    def _write_arguments(self, file):
+        file.write(f"# STAGE = {self.stage.value}\n")

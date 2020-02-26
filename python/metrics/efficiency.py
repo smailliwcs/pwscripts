@@ -37,10 +37,6 @@ class Efficiency(IndividualMetric):
         self.scope = self.Scope(kwargs["scope"])
         self.stage = pw.Stage(kwargs["stage"])
 
-    def write_arguments(self, file):
-        file.write(f"# SCOPE = {self.scope.value}\n")
-        file.write(f"# STAGE = {self.stage.value}\n")
-
     def _get_value(self, agent):
         try:
             brain = pw.Brain.read(self.run, agent, self.stage)
@@ -52,3 +48,7 @@ class Efficiency(IndividualMetric):
         if self.scope == self.Scope.GLOBAL:
             return get_global_efficiency(lengths)
         raise ValueError
+
+    def _write_arguments(self, file):
+        file.write(f"# SCOPE = {self.scope.value}\n")
+        file.write(f"# STAGE = {self.stage.value}\n")
