@@ -76,7 +76,7 @@ class IndividualMetric(Metric, abc.ABC):
         raise NotImplementedError
 
     def _calculate(self):
-        agents = range(1, pw.get_agent_count(self.run) + 1)
+        agents = pw.get_agents(self.run)
         values = (self._get_value(agent) for agent in agents)
         return agents, values
 

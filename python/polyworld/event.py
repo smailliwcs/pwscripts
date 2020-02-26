@@ -57,9 +57,9 @@ def get_events(run):
 
 
 def get_populations(run):
-    agents = set(range(1, utility.get_initial_agent_count(run) + 1))
+    agents = set(utility.get_initial_agents(run))
     events = get_events(run)
-    for time in range(0, utility.get_final_time(run) + 1):
+    for time in utility.get_times(run):
         for event in events[time]:
             if event.type.adds_agent():
                 agents.add(event.agent)

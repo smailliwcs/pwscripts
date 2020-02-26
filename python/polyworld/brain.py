@@ -1,14 +1,21 @@
+import enum
 import re
 
 from graph import WeightGraph
 from . import paths
 from . import utility
-from .layer import Layer
 from .stage import Stage
 from .synapse import Synapse
 
 
 class Brain:
+    class Layer(enum.Enum):
+        ALL = "all"
+        INPUT = "input"
+        PROCESSING = "processing"
+        OUTPUT = "output"
+        INTERNAL = "internal"
+
     class Dimensions:
         REGEX = re.compile(
             r"^synapses (?P<agent>\d+) "
@@ -40,15 +47,15 @@ class Brain:
             self.weight_max = weight_max
 
         def get_neurons(self, layer):
-            if layer == Layer.ALL:
+            if layer == Brain.Layer.ALL:
                 return range(self.neuron_count)
-            if layer == Layer.INPUT:
+            if layer == Brain.Layer.INPUT:
                 return range(self.input_neuron_count)
-            if layer == Layer.PROCESSING:
+            if layer == Brain.Layer.PROCESSING:
                 return range(self.input_neuron_count, self.neuron_count)
-            if layer == Layer.OUTPUT:
+            if layer == Brain.Layer.OUTPUT:
                 return range(self.input_neuron_count, self.input_neuron_count + self.output_neuron_count)
-            if layer == Layer.INTERNAL:
+            if layer == Brain.Layer.INTERNAL:
                 return range(self.input_neuron_count + self.output_neuron_count, self.neuron_count)
             raise ValueError
 
@@ -56,7 +63,7 @@ class Brain:
     def read(cls, run, agent, stage=Stage.BIRTH):
         with utility.open_file(paths.synapses(run, agent, stage)) as f:
             dimensions = cls.Dimensions.parse(f.readline(), agent)
-            input_neurons = dimensions.get_neurons(Layer.INPUT)
+            input_neurons = dimensions.get_neurons(Brain.Layer.INPUT)
             brain = cls(dimensions)
             for line in f:
                 synapse = Synapse.parse(line)

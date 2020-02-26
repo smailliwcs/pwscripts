@@ -5,7 +5,7 @@ def events(run):
     return os.path.join(run, "BirthsDeaths.log")
 
 
-def final_time(run):
+def end_time(run):
     return os.path.join(run, "endStep.txt")
 
 
