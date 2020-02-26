@@ -37,7 +37,7 @@ class Brain:
 
         @classmethod
         def read(cls, run, agent, stage=Stage.BIRTH):
-            with utility.open_file(paths.synapses(run, agent, stage)) as f:
+            with utility.open(paths.synapses(run, agent, stage)) as f:
                 return cls.parse(f.readline(), agent)
 
         def __init__(self, neuron_count, input_neuron_count, output_neuron_count, weight_max):
@@ -61,7 +61,7 @@ class Brain:
 
     @classmethod
     def read(cls, run, agent, stage=Stage.BIRTH):
-        with utility.open_file(paths.synapses(run, agent, stage)) as f:
+        with utility.open(paths.synapses(run, agent, stage)) as f:
             dimensions = cls.Dimensions.parse(f.readline(), agent)
             input_neurons = dimensions.get_neurons(Brain.Layer.INPUT)
             brain = cls(dimensions)
