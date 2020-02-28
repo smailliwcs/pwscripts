@@ -80,7 +80,7 @@ On the fly:
 
     polyworld$ mkfifo genetics
     polyworld$ java Diversity 0 < genetics > diversity.txt &
-    polyworld$ ./Polyworld ../pwscripts/config/legacy.wf --PopulationGeneticsLog "{ On True; }"
+    polyworld$ ./Polyworld ../pwscripts/config/legacy.wf --PopulationGeneticsLog '{ On True; }'
     polyworld$ rm genetics
 
 ### Calculating information-theoretic metrics
@@ -93,12 +93,13 @@ On the fly:
 
     polyworld$ mkfifo timeseries
     polyworld$ java Complexity < timeseries > complexity.txt &
-    polyworld$ ./Polyworld ../pwscripts/config/legacy.wf --TimeSeriesLog "{ On True; }"
+    polyworld$ ./Polyworld ../pwscripts/config/legacy.wf --TimeSeriesLog '{ On True; }'
     polyworld$ rm timeseries
 
 Other metrics include `Entropy`, `CompleteTransferEntropy`, `CollectiveTransferEntropy`, and `InfoDynamics` (which calculates the following metrics in one pass: active information storage, apparent transfer entropy, and separable information).
 In general, multiple and/or longer time series may be required to achieve numerical stability.
-To achieve this, increase the first and/or last numeric arguments to `timeseries`.
+To accomplish this when calculating post hoc, increase the first and/or last numeric arguments to `timeseries`.
+When calculating on the fly, specify the `Repeats` and/or `Steps` subparameters of `TimeSeriesLog`.
 For some metrics, additional arguments to `java` are required.
 
 ### Calculating other metrics
