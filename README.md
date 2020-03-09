@@ -96,7 +96,7 @@ On the fly:
     polyworld$ ./Polyworld ../pwscripts/config/legacy.wf --TimeSeriesLog '{ On True; }'
     polyworld$ rm timeseries
 
-Other metrics include `Entropy`, `CompleteTransferEntropy`, `CollectiveTransferEntropy`, and `InfoDynamics` (which calculates the following metrics in one pass: active information storage, apparent transfer entropy, and separable information).
+Information-theoretic metrics include `Complexity`, `Entropy`, `CompleteTransferEntropy`, `CollectiveTransferEntropy`, and `InfoDynamics` (which calculates the following metrics in one pass: active information storage, apparent transfer entropy, and separable information).
 In general, multiple and/or longer time series may be required to achieve numerical stability.
 To accomplish this when calculating post hoc, increase the first and/or last numeric arguments to `timeseries`.
 When calculating on the fly, specify the `Repeats` and/or `Steps` subparameters of `TimeSeriesLog`.
