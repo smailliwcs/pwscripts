@@ -4,7 +4,9 @@ import metrics
 
 
 def main():
-    metrics.parse_args().write(sys.stdout)
+    metric = metrics.parse_args()
+    values = metric.calculate()
+    metric.write(sys.stdout, values)
 
 
 if __name__ == "__main__":

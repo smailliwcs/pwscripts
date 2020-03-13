@@ -3,6 +3,7 @@ import argparse
 import math
 import re
 
+import numpy as np
 import pandas as pd
 
 import polyworld as pw
@@ -50,9 +51,7 @@ class Metric(abc.ABC):
     def _write_arguments(self, file):
         pass
 
-    def write(self, file, values=None):
-        if values is None:
-            values = self.calculate()
+    def write(self, file, values):
         self._write_arguments(file)
         values.to_csv(file, sep=" ", na_rep=str(math.nan), header=True)
 
@@ -62,20 +61,7 @@ class PopulationMetric(Metric, abc.ABC):
 
 
 class IndividualMetric(Metric, abc.ABC):
-    class Aggregator(PopulationMetric):
-        def __init__(self, run, values, function):
-            super().__init__(run=run)
-            if isinstance(function, str):
-                function = getattr(pd.Series, function)
-            self.values = values
-            self.function = function
-
-        def _calculate(self):
-            for time, agents in pw.get_populations(self.run):
-                yield time, self.function(self.values.loc[agents])
-
     index_label = "agent"
-    aggregator = "mean"
 
     @abc.abstractmethod
     def _get_value(self, agent):
@@ -85,9 +71,36 @@ class IndividualMetric(Metric, abc.ABC):
         for agent in pw.get_agents(self.run):
             yield agent, self._get_value(agent)
 
-    def aggregate(self, values=None, function=None):
-        if values is None:
-            values = self.calculate()
-        if function is None:
-            function = self.aggregator
-        return self.Aggregator(self.run, values, function).calculate()
+
+class Aggregator(PopulationMetric):
+    class ValueBuffer:
+        def __init__(self, values):
+            self.values = values
+            self.buffer = {}
+
+        def add(self, agent):
+            self.buffer[agent] = self.values.get(agent, math.nan)
+
+        def remove(self, agent):
+            del self.buffer[agent]
+
+        def to_array(self):
+            return np.array(tuple(self.buffer.values()))
+
+    def __init__(self, run, values, function=np.nanmean):
+        super().__init__(run=run)
+        self.values = values
+        self.function = function
+
+    def _calculate(self):
+        buffer = self.ValueBuffer(self.values)
+        for agent in pw.get_initial_agents(self.run):
+            buffer.add(agent)
+        events = pw.get_events(self.run)
+        for time in pw.get_times(self.run):
+            for event in events[time]:
+                if event.type.adds_agent():
+                    buffer.add(event.agent)
+                if event.type.removes_agent():
+                    buffer.remove(event.agent)
+            yield time, self.function(buffer.to_array())

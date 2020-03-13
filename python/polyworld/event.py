@@ -54,15 +54,3 @@ def get_events(run):
     for event in Event.read(run):
         events[event.time].append(event)
     return events
-
-
-def get_populations(run):
-    agents = set(utility.get_initial_agents(run))
-    events = get_events(run)
-    for time in utility.get_times(run):
-        for event in events[time]:
-            if event.type.adds_agent():
-                agents.add(event.agent)
-            if event.type.removes_agent():
-                agents.remove(event.agent)
-        yield time, agents
