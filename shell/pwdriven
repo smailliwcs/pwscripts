@@ -17,11 +17,11 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     usage
     exit 0
 fi
-complete=
+complete=0
 while [ "$(expr substr "$1" 1 1)" = "-" ]; do
     case "$1" in
         --complete)
-            complete=true
+            complete=1
             shift
             ;;
         *)
@@ -44,16 +44,16 @@ else
 fi
 ([ -f Polyworld ] && [ -x Polyworld ]) || fail "Polyworld not found"
 mkdir -p "$output"
-for index in $(seq $count); do
+for index in $(seq "$count"); do
     while true; do
         ./Polyworld "$worldfile" --InitSeed "$(date +%s)" "$@" || fail "Polyworld error"
-        if [ ! $complete ] || [ "$(cat run/endReason.txt)" = "MaxSteps" ]; then
+        if [ "$complete" -eq 0 ] || [ "$(cat run/endReason.txt)" = "MaxSteps" ]; then
             break
         fi
         rm -rf run
     done
-    if [ $count -gt 1 ]; then
-        mv -T run "$(printf "$output/run_%0${#count}d" $index)"
+    if [ "$count" -gt 1 ]; then
+        mv -T run "$(printf "$output/run_%0${#count}d" "$index")"
     else
         mv -T run "$output"
     fi
