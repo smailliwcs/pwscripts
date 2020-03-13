@@ -1,5 +1,4 @@
 name: pwscripts
 dependencies:
   - python=3
-  - numpy
   - pandas
