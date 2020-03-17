@@ -73,34 +73,25 @@ class IndividualMetric(Metric, abc.ABC):
 
 
 class Aggregator(PopulationMetric):
-    class ValueBuffer:
-        def __init__(self, values):
-            self.values = values
-            self.buffer = {}
-
-        def add(self, agent):
-            self.buffer[agent] = self.values.get(agent, math.nan)
-
-        def remove(self, agent):
-            del self.buffer[agent]
-
-        def to_array(self):
-            return np.array(tuple(self.buffer.values()))
-
-    def __init__(self, run, values, function=np.nanmean):
+    def __init__(self, run, values, function=np.nanmean, step=1):
         super().__init__(run=run)
         self.values = values
         self.function = function
+        self.step = step
 
     def _calculate(self):
-        buffer = self.ValueBuffer(self.values)
+        values = {}
+        buffer = []
         for agent in pw.get_initial_agents(self.run):
-            buffer.add(agent)
+            values[agent] = self.values.get(agent, math.nan)
         events = pw.get_events(self.run)
         for time in pw.get_times(self.run):
             for event in events[time]:
                 if event.type.adds_agent():
-                    buffer.add(event.agent)
+                    values[event.agent] = self.values.get(event.agent, math.nan)
                 if event.type.removes_agent():
-                    buffer.remove(event.agent)
-            yield time, self.function(buffer.to_array())
+                    del values[event.agent]
+            buffer.extend(values.values())
+            if time % self.step == 0:
+                yield time, self.function(buffer)
+                buffer.clear()
