@@ -23,13 +23,41 @@ def parse_regex_arg(arg):
 
 
 class Metric(abc.ABC):
-    index_label = None
-    value_label = "value"
+    index_name = None
+    aggregator = np.nanmean
 
     @classmethod
     def add_arguments(cls, parser):
         parser.add_argument("run", metavar="RUN", type=parse_run_arg)
         parser.add_argument("metric", metavar=cls.__name__)
+
+    @classmethod
+    def to_series(cls, observations, index_name=None):
+        if index_name is None:
+            index_name = cls.index_name
+        series = pd.Series(dict(observations), name="value")
+        series.index.name = index_name
+        return series
+
+    @classmethod
+    @abc.abstractmethod
+    def _group(cls, run, series):
+        raise NotImplementedError
+
+    @classmethod
+    def _aggregate(cls, run, series, function, step):
+        buffer = []
+        for time, values in cls._group(run, series):
+            buffer.extend(values)
+            if time % step == 0:
+                yield time, function(buffer)
+                buffer.clear()
+
+    @classmethod
+    def aggregate(cls, run, series, function=None, step=1):
+        if function is None:
+            function = cls.aggregator
+        return cls.to_series(cls._aggregate(run, series, function, step), "time")
 
     @classmethod
     def read(cls, file):
@@ -44,24 +72,41 @@ class Metric(abc.ABC):
         raise NotImplementedError
 
     def calculate(self):
-        values = pd.Series(dict(self._calculate()), name=self.value_label)
-        values.index.name = self.index_label
-        return values
+        return self.to_series(self._calculate())
 
     def _write_arguments(self, file):
         pass
 
-    def write(self, file, values):
+    def write(self, file, series):
         self._write_arguments(file)
-        values.to_csv(file, sep=" ", na_rep=str(math.nan), header=True)
+        series.to_csv(file, sep=" ", na_rep=str(math.nan), header=True)
 
 
 class PopulationMetric(Metric, abc.ABC):
-    index_label = "time"
+    index_name = "time"
+
+    @classmethod
+    def _group(cls, run, series):
+        for time in pw.get_times(run):
+            yield time, (series.get(time, math.nan),)
 
 
 class IndividualMetric(Metric, abc.ABC):
-    index_label = "agent"
+    index_name = "agent"
+
+    @classmethod
+    def _group(cls, run, series):
+        values = {}
+        for agent in pw.get_initial_agents(run):
+            values[agent] = series.get(agent, math.nan)
+        events = pw.get_events(run)
+        for time in pw.get_times(run):
+            for event in events[time]:
+                if event.type.adds_agent():
+                    values[event.agent] = series.get(event.agent, math.nan)
+                if event.type.removes_agent():
+                    del values[event.agent]
+            yield time, values.values()
 
     @abc.abstractmethod
     def _get_value(self, agent):
@@ -70,28 +115,3 @@ class IndividualMetric(Metric, abc.ABC):
     def _calculate(self):
         for agent in pw.get_agents(self.run):
             yield agent, self._get_value(agent)
-
-
-class Aggregator(PopulationMetric):
-    def __init__(self, run, values, function=np.nanmean, step=1):
-        super().__init__(run=run)
-        self.values = values
-        self.function = function
-        self.step = step
-
-    def _calculate(self):
-        values = {}
-        buffer = []
-        for agent in pw.get_initial_agents(self.run):
-            values[agent] = self.values.get(agent, math.nan)
-        events = pw.get_events(self.run)
-        for time in pw.get_times(self.run):
-            for event in events[time]:
-                if event.type.adds_agent():
-                    values[event.agent] = self.values.get(event.agent, math.nan)
-                if event.type.removes_agent():
-                    del values[event.agent]
-            buffer.extend(values.values())
-            if time % self.step == 0:
-                yield time, self.function(buffer)
-                buffer.clear()

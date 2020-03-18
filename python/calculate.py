@@ -5,8 +5,8 @@ import metrics
 
 def main():
     metric = metrics.parse_args()
-    values = metric.calculate()
-    metric.write(sys.stdout, values)
+    series = metric.calculate()
+    metric.write(sys.stdout, series)
 
 
 if __name__ == "__main__":
