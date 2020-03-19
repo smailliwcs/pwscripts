@@ -27,6 +27,11 @@ parse() {
     echo "$default"
 }
 
+check() {
+    name="$1"
+    type "$name" > /dev/null || fail "$name: Not found"
+}
+
 if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     usage
     exit 0
@@ -51,8 +56,8 @@ start="$(parse -s 1 "$@")"
 delta="$(parse -d 1 "$@")"
 [ "$delta" -ge 1 ] || fail "$delta: Expected positive integer"
 filter="vflip,drawtext=x=10:y=10:fontcolor=white:text='%{eif\:$start+n*$delta\:d}'"
-([ -f bin/PwMoviePlayer ] && [ -x bin/PwMoviePlayer ]) || fail "PwMoviePlayer not found"
-command -v ffmpeg > /dev/null || fail "ffmpeg not found"
+check bin/PwMoviePlayer
+check ffmpeg
 ./bin/PwMoviePlayer -f "$input" "$@" -w | \
 ffmpeg \
     -f rawvideo -pix_fmt rgba -s "${width}x${height}" -r 60 -i pipe:0 \

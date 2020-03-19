@@ -1,0 +1,60 @@
+#!/usr/bin/env sh
+
+usage() {
+    echo "Usage: $0 [--backup[=CONTROL]] INPUT..."
+}
+
+fail() {
+    if [ -z "$1" ]; then
+        usage >&2
+    else
+        echo "$0: $1" >&2
+    fi
+    exit 1
+}
+
+check() {
+    name="$1"
+    type "$name" > /dev/null || fail "$name: Not found"
+}
+
+temppdf() {
+    mode="$(printf "%04o" $((0666 & ~$(umask))))"
+    tempfile -m "$mode" -s .pdf
+}
+
+if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    usage
+    exit 0
+fi
+backup=
+while [ "$(expr substr "$1" 1 1)" = "-" ]; do
+    case "$1" in
+        --backup|--backup=*)
+            backup="$1"
+            shift
+            ;;
+        *)
+            fail "$1: Unrecognized option"
+            ;;
+    esac
+done
+[ $# -ge 1 ] || fail
+for input in "$@"; do
+    [ -f "$input" ] || fail "$input: Not found"
+done
+check gs
+check exiftool
+check qpdf
+for input in "$@"; do
+    temp="$(temppdf)"
+    gs -dBATCH -dNOPAUSE -dQUIET -dSAFER -sDEVICE=pdfwrite -dCompatibilityLevel=1.5 -sOutputFile=- "$input" | \
+    exiftool -m -q -all:all= -o - - > "$temp"
+    [ $? -eq 0 ] || exit 1
+    output="$(temppdf)"
+    qpdf --linearize --deterministic-id "$temp" - | \
+    sed -E 's/\/ID \[<[[:xdigit:]]{32}><([[:xdigit:]]{32})>\]/\/ID [<\1><\1>]/g' > "$output"
+    [ $? -eq 0 ] || exit 1
+    rm "$temp"
+    mv $backup "$output" "$input"
+done
