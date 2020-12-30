@@ -58,7 +58,7 @@ This discards simulations that terminate prematurely (e.g., due to a population 
 
 ### Running passive simulations
 
-    polyworld$ pwpassive runs/passive runs/driven
+    polyworld$ pwpassive runs/passive runs/driven/*
 
 ### Encoding a Polyworld "movie" in another video format (requires FFmpeg)
 
