@@ -103,10 +103,10 @@ public class TimeSeriesEnsembleReader extends BufferedReader {
 
     private TimeSeries readTimeSeries(int dimension) throws IOException {
         String line = readLine();
-        if (line.equals("# BEGIN ENSEMBLE")) {
+        if (line.equals("# BEGIN TIME SERIES ENSEMBLE")) {
             line = readLine();
         }
-        if (line.equals("# END ENSEMBLE")) {
+        if (line.equals("# END TIME SERIES ENSEMBLE")) {
             return null;
         }
         assert line.equals("# BEGIN TIME SERIES");

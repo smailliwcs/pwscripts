@@ -87,7 +87,7 @@ On the fly:
 
 Post hoc:
 
-    polyworld$ ./bin/timeseries runs/legacy death 1 10 1000 | java Complexity > complexity.txt
+    polyworld$ ./bin/timeseries in-vitro runs/legacy death 1 10 1000 | java Complexity > complexity.txt
 
 On the fly:
 
