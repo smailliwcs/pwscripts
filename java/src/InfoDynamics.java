@@ -193,7 +193,7 @@ public class InfoDynamics {
         return getSeparableInfo(values, value -> true, null);
     }
 
-    private static double getSeparableInfo(double[] values, Predicate<Double> predicate, String subset) {
+    private static double getSeparableInfo(double[] values, DoublePredicate predicate, String subset) {
         double result = Arrays.stream(values)
                 .map(value -> predicate.test(value) ? value : 0.0)
                 .average()
