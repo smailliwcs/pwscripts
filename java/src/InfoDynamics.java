@@ -120,12 +120,13 @@ public class InfoDynamics {
         }
     }
 
-    private static void print(Metric metric, String subset, Number count, double value) {
-        System.out.printf("%d %s %s %g%n", ensemble.getAgentId(), metric.getId(subset), count.toString(), value);
-    }
-
     private static void print(Metric metric, String subset, Result result) {
-        print(metric, subset, result.getCount(), result.getSum());
+        System.out.printf(
+                "%d %s %d %g%n",
+                ensemble.getAgentId(),
+                metric.getId(subset),
+                result.getCount(),
+                result.getSum());
     }
 
     private static Result getActiveInfoStorage() throws Exception {
@@ -178,27 +179,21 @@ public class InfoDynamics {
         return result;
     }
 
-    private static double getSeparableInfo() throws Exception {
-        int neuronStartIndex = ensemble.getBrain().getNeuronStartIndex(Brain.Layer.PROCESSING);
-        double[] values = new double[locals.get(neuronStartIndex).length];
-        for (int neuronIndex : ensemble.getBrain().getNeuronIndices(Brain.Layer.PROCESSING)) {
-            MatrixUtils.addInPlace(values, locals.get(neuronIndex));
-        }
-        int neuronCount = ensemble.getBrain().getNeuronCount(Brain.Layer.PROCESSING);
-        for (int time = 0; time < values.length; time++) {
-            values[time] /= neuronCount;
-        }
-        getSeparableInfo(values, value -> value > 0.0, "Positive");
-        getSeparableInfo(values, value -> value < 0.0, "Negative");
-        return getSeparableInfo(values, value -> true, null);
+    private static Result getSeparableInfo() {
+        getSeparableInfo(value -> value > 0.0, "Positive");
+        getSeparableInfo(value -> value < 0.0, "Negative");
+        return getSeparableInfo(value -> true, null);
     }
 
-    private static double getSeparableInfo(double[] values, DoublePredicate predicate, String subset) {
-        double result = Arrays.stream(values)
-                .map(value -> predicate.test(value) ? value : 0.0)
-                .average()
-                .getAsDouble();
-        print(Metric.SEPARABLE_INFO, subset, Double.NaN, result);
+    private static Result getSeparableInfo(DoublePredicate predicate, String subset) {
+        Result result = new Result();
+        for (int neuronIndex : ensemble.getBrain().getNeuronIndices(Brain.Layer.PROCESSING)) {
+            result.add(Arrays.stream(locals.get(neuronIndex))
+                    .map(value -> predicate.test(value) ? value : 0.0)
+                    .average()
+                    .getAsDouble());
+        }
+        print(Metric.SEPARABLE_INFO, subset, result);
         return result;
     }
 }
