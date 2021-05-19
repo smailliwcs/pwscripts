@@ -1,9 +1,9 @@
 dnl Options:
 dnl   poison[=TIME]  Grow poisonous food items
 dnl                  Reach full potency at TIME (default: 20000)
-dnl   quiet          Suppress recording of agent-specific data
+dnl   record={pegb}  Record (p)opulation, (e)nergy, (g)enomes, and/or (b)rains
+define(`record', ifdef(`record', record, `pegb'))
 define(`min_max', `Min$1 $2; Max$1 ifelse($3, `', `Min$1', `$3')')dnl
-define(`verbose', `ifdef(`quiet', `False', `True')')dnl
 @version 2
 
 # ----------
@@ -169,13 +169,21 @@ SeedType Simple
 # ---------
 # Recording
 # ---------
-RecordAgentEnergy verbose
-RecordBirthsDeaths True
-RecordBrainAnatomy verbose
-RecordBrainFunction verbose
-RecordFoodConsumption True
-RecordFoodEnergy True
-RecordGenomes verbose
 RecordGitRevision True
-RecordPopulation True
-RecordSynapses verbose
+dnl
+ifelse(index(record, `p'), -1, `dnl', `
+RecordBirthsDeaths True
+RecordPopulation True')
+dnl
+ifelse(index(record, `e'), -1, `dnl', `
+RecordAgentEnergy True
+RecordFoodConsumption True
+RecordFoodEnergy True')
+dnl
+ifelse(index(record, `g'), -1, `dnl', `
+RecordGenomes True')
+dnl
+ifelse(index(record, `b'), -1, `dnl', `
+RecordBrainAnatomy True
+RecordBrainFunction True
+RecordSynapses True')
