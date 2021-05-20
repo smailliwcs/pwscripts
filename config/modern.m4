@@ -2,7 +2,7 @@ dnl Options:
 dnl   poison[=TIME]  Grow poisonous food items
 dnl                  Reach full potency at TIME (default: 20000)
 dnl   record={pegb}  Record (p)opulation, (e)nergy, (g)enomes, and/or (b)rains
-define(`record', ifdef(`record', record, `pegb'))
+define(`record', ifdef(`record', record, `pegb'))dnl
 define(`min_max', `Min$1 $2; Max$1 ifelse($3, `', `Min$1', `$3')')dnl
 @version 2
 
