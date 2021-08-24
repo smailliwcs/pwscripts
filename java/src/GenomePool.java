@@ -1,9 +1,8 @@
 import java.util.*;
 
 @SuppressWarnings("serial")
-public class GenomePool extends HashMap<Integer, Genome> {
+public class GenomePool extends LinkedList<Genome> {
     private int time;
-    private boolean dirty;
 
     public int getTime() {
         return time;
@@ -11,13 +10,5 @@ public class GenomePool extends HashMap<Integer, Genome> {
 
     public void setTime(int time) {
         this.time = time;
-    }
-
-    public boolean isDirty() {
-        return dirty;
-    }
-
-    public void setDirty(boolean dirty) {
-        this.dirty = dirty;
     }
 }

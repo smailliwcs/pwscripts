@@ -72,16 +72,7 @@ A segment of the simulation:
 
 ### Calculating genetic diversity
 
-Post hoc:
-
     polyworld$ ./bin/genetics runs/legacy | java Diversity 0 > diversity.txt
-
-On the fly:
-
-    polyworld$ mkfifo genetics
-    polyworld$ java Diversity 0 < genetics > diversity.txt &
-    polyworld$ ./Polyworld ../pwscripts/config/legacy.wf --PopulationGeneticsLog '{ On True; }'
-    polyworld$ rm genetics
 
 ### Calculating information-theoretic metrics
 
