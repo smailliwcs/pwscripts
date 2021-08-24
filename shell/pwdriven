@@ -44,7 +44,8 @@ else
 fi
 ([ -f Polyworld ] && [ -x Polyworld ]) || fail "Polyworld not found"
 mkdir -p "$output"
-for index in $(seq "$count"); do
+max_index=$(($count - 1))
+for index in $(seq 0 "$max_index"); do
     while true; do
         ./Polyworld "$worldfile" --InitSeed "$(date +%s)" "$@" || fail "Polyworld error"
         if [ "$complete" -eq 0 ] || [ "$(cat run/endReason.txt)" = "MaxSteps" ]; then
@@ -53,7 +54,7 @@ for index in $(seq "$count"); do
         rm -rf run
     done
     if [ "$count" -gt 1 ]; then
-        mv -T run "$(printf "$output/run_%0${#count}d" "$index")"
+        mv -T run "$(printf "$output/run_%0${#max_index}d" "$index")"
     else
         mv -T run "$output"
     fi
