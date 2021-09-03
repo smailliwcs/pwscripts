@@ -23,13 +23,15 @@ def parse_regex_arg(arg):
 
 
 class Metric(abc.ABC):
+    has_run_arg = True
     index_name = None
     aggregator = np.nanmean
 
     @classmethod
     def add_arguments(cls, parser):
-        parser.add_argument("run", metavar="RUN", type=parse_run_arg)
         parser.add_argument("metric", metavar=cls.__name__)
+        if cls.has_run_arg:
+            parser.add_argument("run", metavar="RUN", type=parse_run_arg)
 
     @classmethod
     def to_series(cls, observations, index_name=None):
@@ -65,7 +67,8 @@ class Metric(abc.ABC):
 
     def __init__(self, **kwargs):
         self.arguments = kwargs
-        self.run = kwargs["run"]
+        if self.has_run_arg:
+            self.run = kwargs["run"]
 
     @abc.abstractmethod
     def _calculate(self):

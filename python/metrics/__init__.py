@@ -38,7 +38,6 @@ def parse_args(args=None):
     parser = argparse.ArgumentParser(epilog=epilog, formatter_class=argparse.RawDescriptionHelpFormatter)
     metric_name = next(filter(metrics.__contains__, args), None)
     if metric_name is None:
-        parser.add_argument("run", metavar="RUN")
         parser.add_argument("metric", metavar="METRIC")
         parser.add_argument("option", metavar="OPTION", nargs="*")
         parser.print_help(sys.stderr)
