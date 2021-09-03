@@ -70,7 +70,7 @@ public class Diversity {
         System.out.print(arguments);
         try (GenomePoolReader reader = new GenomePoolReader(new InputStreamReader(System.in))) {
             reader.readSize();
-            System.out.print("time value");
+            System.out.print("time");
             for (int geneIndex = 0; geneIndex < reader.getSize(); geneIndex++) {
                 System.out.printf(" value%d", geneIndex);
             }
