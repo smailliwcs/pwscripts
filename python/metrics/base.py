@@ -9,17 +9,46 @@ import pandas as pd
 import polyworld as pw
 
 
+class Range:
+    @staticmethod
+    def parse(text):
+        values = text.split("..")
+        if len(values) != 2:
+            raise ValueError
+        return Range(*values)
+
+    @staticmethod
+    def _convert(value):
+        if value == "":
+            return None
+        return int(value)
+
+    def __init__(self, min_, max_):
+        self.min = Range._convert(min_)
+        self.max = Range._convert(max_)
+
+    def __contains__(self, value):
+        return (self.min is None or value >= self.min) and (self.max is None or value <= self.max)
+
+
 def parse_run_arg(arg):
     if not pw.run_exists(arg):
-        raise argparse.ArgumentTypeError(f"not a Polyworld run: '{arg}'")
+        raise argparse.ArgumentTypeError(f"invalid run: '{arg}'")
     return arg
+
+
+def parse_range_arg(arg):
+    try:
+        return Range.parse(arg)
+    except Exception as ex:
+        raise argparse.ArgumentTypeError(f"invalid range: '{arg}'") from ex
 
 
 def parse_regex_arg(arg):
     try:
         return re.compile(arg)
-    except re.error as err:
-        raise argparse.ArgumentTypeError(err.msg)
+    except re.error as ex:
+        raise argparse.ArgumentTypeError(f"invalid regex: '{arg}'") from ex
 
 
 class Metric(abc.ABC):

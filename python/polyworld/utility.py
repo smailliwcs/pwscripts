@@ -8,9 +8,12 @@ from . import paths
 
 
 def open(path):
-    if os.path.exists(path):
-        return builtins.open(path)
-    gzip_path = f"{path}.gz"
+    if path.lower().endswith(".gz"):
+        gzip_path = path
+    else:
+        if os.path.exists(path):
+            return builtins.open(path)
+        gzip_path = f"{path}.gz"
     if os.path.exists(gzip_path):
         return gzip.open(gzip_path, "rt")
     raise FileNotFoundError

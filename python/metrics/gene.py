@@ -1,7 +1,7 @@
+import statistics
+
 import polyworld as pw
 from .base import IndividualMetric, parse_regex_arg
-
-import statistics
 
 
 class Gene(IndividualMetric):

@@ -3,6 +3,7 @@ import sys
 import textwrap
 
 from .density import Density
+from .diversity import Diversity
 from .efficiency import Efficiency
 from .event_count import EventCount
 from .food_consumption import FoodConsumption
@@ -12,6 +13,7 @@ from .lifespan import Lifespan
 from .modularity import Modularity
 from .neuron_count import NeuronCount
 from .population import Population
+from .selection import Selection
 from .synapse_count import SynapseCount
 from .weight import Weight
 
@@ -19,6 +21,7 @@ from .weight import Weight
 def parse_args(args=None):
     metrics = {metric.__name__: metric for metric in (
         Density,
+        Diversity,
         Efficiency,
         EventCount,
         FoodConsumption,
@@ -28,6 +31,7 @@ def parse_args(args=None):
         Modularity,
         NeuronCount,
         Population,
+        Selection,
         SynapseCount,
         Weight
     )}
