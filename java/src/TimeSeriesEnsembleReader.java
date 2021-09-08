@@ -9,8 +9,8 @@ public class TimeSeriesEnsembleReader extends BufferedReader {
             "^# DIMENSIONS (?<neuronCount>\\d+) (?<inputNeuronCount>\\d+) (?<outputNeuronCount>\\d+)$");
     private static final Pattern SPACE_PATTERN = Pattern.compile(" ");
 
-    public TimeSeriesEnsembleReader(Reader in) {
-        super(in);
+    public TimeSeriesEnsembleReader(InputStream in) {
+        super(new InputStreamReader(in));
     }
 
     public void readArguments(PrintStream out) throws IOException {

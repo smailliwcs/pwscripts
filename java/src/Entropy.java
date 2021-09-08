@@ -25,7 +25,7 @@ public class Entropy {
         try (ArgumentParser parser = new ArgumentParser(getUsage(), Entropy.class.getName(), args)) {
         }
         Calculator calculator = new Calculator();
-        try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(new InputStreamReader(System.in))) {
+        try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(System.in)) {
             reader.readArguments(System.out);
             System.out.println("agent count value");
             while (true) {

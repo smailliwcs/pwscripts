@@ -11,4 +11,10 @@ public class GenomePool extends LinkedList<Genome> {
     public void setTime(int time) {
         this.time = time;
     }
+
+    public int[] getGenes(int geneIndex, int groupingParameter) {
+        return stream()
+                .mapToInt(genome -> genome.get(geneIndex) >> groupingParameter)
+                .toArray();
+    }
 }

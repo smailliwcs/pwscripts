@@ -60,7 +60,7 @@ public class Complexity {
     public static void main(String[] args) throws Exception {
         try (ArgumentParser parser = new ArgumentParser(getUsage(), Complexity.class.getName(), args)) {
         }
-        try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(new InputStreamReader(System.in))) {
+        try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(System.in)) {
             reader.readArguments(System.out);
             System.out.println("agent count value");
             while (true) {

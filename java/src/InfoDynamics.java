@@ -103,7 +103,7 @@ public class InfoDynamics {
     public static void main(String[] args) throws Exception {
         Arguments arguments = Arguments.parse(args);
         calculator = new Calculator(arguments.useGpu, arguments.embeddingLength);
-        try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(new InputStreamReader(System.in))) {
+        try (TimeSeriesEnsembleReader reader = new TimeSeriesEnsembleReader(System.in)) {
             reader.readArguments(System.out);
             System.out.print(arguments);
             System.out.println("agent metric count value");

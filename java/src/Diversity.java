@@ -7,29 +7,16 @@ import infodynamics.measures.discrete.*;
 public class Diversity {
     private static class Calculator extends EntropyCalculatorDiscrete {
         private int groupingParameter;
-        private int geneCount;
 
-        public Calculator(int groupingParameter, int geneCount) {
+        public Calculator(int groupingParameter) {
             super(1 << (8 - groupingParameter));
             this.groupingParameter = groupingParameter;
-            this.geneCount = geneCount;
         }
 
-        private double getDiversity(Collection<Iterator<Integer>> genes) {
+        public double getDiversity(GenomePool pool, int geneIndex) {
             initialise();
-            addObservations(genes.stream()
-                    .mapToInt(gene -> gene.next() >> groupingParameter)
-                    .toArray());
+            addObservations(pool.getGenes(geneIndex, groupingParameter));
             return computeAverageLocalOfObservations() / (8 - groupingParameter);
-        }
-
-        public double[] getDiversities(GenomePool pool) {
-            Collection<Iterator<Integer>> genes = pool.stream()
-                    .map(Genome::iterator)
-                    .collect(Collectors.toList());
-            return DoubleStream.generate(() -> getDiversity(genes))
-                    .limit(geneCount)
-                    .toArray();
         }
     }
 
@@ -68,23 +55,23 @@ public class Diversity {
     public static void main(String[] args) throws Exception {
         Arguments arguments = Arguments.parse(args);
         System.out.print(arguments);
-        try (GenomePoolReader reader = new GenomePoolReader(new InputStreamReader(System.in))) {
-            reader.readSize();
+        try (GenomePoolReader reader = new GenomePoolReader(System.in)) {
+            reader.readGeneCount();
             System.out.print("time");
-            for (int geneIndex = 0; geneIndex < reader.getSize(); geneIndex++) {
+            for (int geneIndex = 0; geneIndex < reader.getGeneCount(); geneIndex++) {
                 System.out.printf(" value%d", geneIndex);
             }
             System.out.println();
-            Calculator calculator = new Calculator(arguments.groupingParameter, reader.getSize());
+            Calculator calculator = new Calculator(arguments.groupingParameter);
             while (true) {
                 GenomePool pool = reader.readGenomePool();
                 if (pool == null) {
                     break;
                 }
-                double[] diversities = calculator.getDiversities(pool);
-                System.out.printf("%d", pool.getTime());
-                for (int geneIndex = 0; geneIndex < reader.getSize(); geneIndex++) {
-                    System.out.printf(" %.3g", diversities[geneIndex]);
+                System.out.print(pool.getTime());
+                for (int geneIndex = 0; geneIndex < reader.getGeneCount(); geneIndex++) {
+                    double diversity = calculator.getDiversity(pool, geneIndex);
+                    System.out.printf(" %.3g", diversity);
                 }
                 System.out.println();
             }
