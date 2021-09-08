@@ -1,4 +1,5 @@
 import java.io.*;
+import java.util.*;
 import java.util.regex.*;
 
 public class GenomePoolReader extends InputStreamReader {
@@ -7,12 +8,13 @@ public class GenomePoolReader extends InputStreamReader {
     private static final Pattern STEP_PATTERN = Pattern.compile("^# STEP (?<time>\\d+)$");
 
     private InputStream in;
+    private List<Genome> genomes;
     private int geneCount;
-    private byte[] buffer;
 
     public GenomePoolReader(InputStream in) {
         super(in);
         this.in = in;
+        genomes = new ArrayList<Genome>();
     }
 
     private String readLine() throws IOException {
@@ -44,7 +46,6 @@ public class GenomePoolReader extends InputStreamReader {
         boolean isMatch = matcher.matches();
         assert isMatch;
         geneCount = Integer.parseInt(matcher.group("geneCount"));
-        buffer = new byte[geneCount];
     }
 
     public GenomePool readGenomePool() throws IOException {
@@ -54,7 +55,15 @@ public class GenomePoolReader extends InputStreamReader {
         }
         GenomePool pool = new GenomePool();
         for (int agentIndex = 0; agentIndex < agentCount; agentIndex++) {
-            pool.add(readGenome());
+            Genome genome;
+            if (agentIndex == genomes.size()) {
+                genome = new Genome(geneCount);
+                genomes.add(genome);
+            } else {
+                genome = genomes.get(agentIndex);
+            }
+            genome.read(in);
+            pool.add(genome);
         }
         pool.setTime(readTime());
         return pool;
@@ -69,23 +78,6 @@ public class GenomePoolReader extends InputStreamReader {
         boolean isMatch = matcher.matches();
         assert isMatch;
         return Integer.parseInt(matcher.group("agentCount"));
-    }
-
-    private Genome readGenome() throws IOException {
-        Genome genome = new Genome(geneCount);
-        while (true) {
-            int count = in.read(buffer, 0, geneCount - genome.size());
-            if (count == -1) {
-                throw new EOFException();
-            }
-            for (int index = 0; index < count; index++) {
-                genome.add(buffer[index] & 0xff);
-            }
-            if (genome.size() == geneCount) {
-                break;
-            }
-        }
-        return genome;
     }
 
     private int readTime() throws IOException {
