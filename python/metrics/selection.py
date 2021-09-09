@@ -18,4 +18,4 @@ class Selection(PopulationMetric):
         self.neutral = Diversity(data=kwargs["neutral"], genes=kwargs["genes"])
 
     def _calculate(self):
-        return (self.actual.get_data() / self.neutral.get_data() - 1).mean(axis=1)
+        return (self.actual.get_data() / self.neutral.get_data() - 1).median(axis=1)
