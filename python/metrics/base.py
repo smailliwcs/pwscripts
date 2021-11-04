@@ -12,23 +12,28 @@ import polyworld as pw
 class Range:
     @staticmethod
     def parse(text):
+        def convert(value):
+            if value == "":
+                return None
+            return int(value)
+
         values = text.split("..")
         if len(values) != 2:
             raise ValueError
-        return Range(*values)
-
-    @staticmethod
-    def _convert(value):
-        if value == "":
-            return None
-        return int(value)
+        return Range(convert(values[0]), convert(values[1]))
 
     def __init__(self, min_, max_):
-        self.min = Range._convert(min_)
-        self.max = Range._convert(max_)
+        self.min = min_
+        self.max = max_
 
     def __contains__(self, value):
         return (self.min is None or value >= self.min) and (self.max is None or value <= self.max)
+
+    def __iter__(self):
+        return range(self.min, self.max + 1).__iter__()
+
+    def is_finite(self):
+        return self.min is not None and self.max is not None
 
 
 def parse_run_arg(arg):
@@ -91,8 +96,14 @@ class Metric(abc.ABC):
         return cls.to_series(cls._aggregate(run, series, function, step), "time")
 
     @classmethod
-    def read(cls, file):
-        return pd.read_csv(file, sep=" ", index_col=0, squeeze=True, comment="#")
+    def read(cls, file, **kwargs):
+        default_kwargs = {
+            "sep": " ",
+            "index_col": 0,
+            "squeeze": True,
+            "comment": "#"
+        }
+        return pd.read_csv(file, **{**default_kwargs, **kwargs})
 
     def __init__(self, **kwargs):
         self.arguments = kwargs

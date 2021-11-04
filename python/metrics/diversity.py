@@ -16,9 +16,13 @@ class Diversity(PopulationMetric):
         self.genes = kwargs["genes"]
 
     def get_data(self):
-        data = self.read(self.data)
-        columns = [f"value{index}" for index in range(len(data.columns)) if index in self.genes]
-        return data[columns]
+        if self.genes.is_finite():
+            columns = ["time", *(f"value{index}" for index in self.genes)]
+            return self.read(self.data, usecols=columns, squeeze=False)
+        else:
+            data = self.read(self.data, squeeze=False)
+            columns = [f"value{index}" for index in range(len(data.columns)) if index in self.genes]
+            return data[columns]
 
     def _calculate(self):
         return self.get_data().mean(axis=1)
