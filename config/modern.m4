@@ -101,9 +101,7 @@ EnergyUseFocus 0.001
 EnergyUseMate 0.1
 EnergyUseMove 0.1
 EnergyUseMultiplier dyn(1.0) {
-    return AgentCount > InitAgents
-        ? pow((float)AgentCount / InitAgents - 1.0f, 2.0f) + 1.0f
-        : 1.0f;
+    return pow((float)AgentCount / InitAgents, 2.0f);
 }
 EnergyUseNeurons 0.1
 EnergyUseSynapses 0.1
