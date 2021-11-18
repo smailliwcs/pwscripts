@@ -1,7 +1,7 @@
 dnl Options:
 dnl   poison[=TIME]  Grow poisonous food items
-dnl                  Reach full potency at TIME (default: 20000)
-dnl   record={pegb}  Record (p)opulation, (e)nergy, (g)enomes, and/or (b)rains
+dnl                  Reach full potency at TIME (default: 10000)
+dnl   record={pegb}  Record (p)opulation, (e)nergy, (g)enomes, and/or (b)rains (default: pegb)
 define(`record', ifdef(`record', record, `pegb'))dnl
 define(`min_max', `Min$1 $2; Max$1 ifelse($3, `', `Min$1', `$3')')dnl
 @version 2
@@ -9,7 +9,7 @@ define(`min_max', `Min$1 $2; Max$1 ifelse($3, `', `Min$1', `$3')')dnl
 # ----------
 # Simulation
 # ----------
-MaxSteps 30000
+MaxSteps 20000
 
 # -----------
 # Environment
@@ -61,7 +61,7 @@ FoodTypes [
                 static float min = -std::numeric_limits<float>::min();
                 static float max = -1.0f;
                 static float range = max - min;
-                static long time = ifelse(poison, `', `20000', `poison')L;
+                static long time = ifelse(poison, `', `10000', poison)L;
                 return Step < time
                     ? min + range * Step / time
                     : max;
